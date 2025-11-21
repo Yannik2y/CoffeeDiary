@@ -1,0 +1,9 @@
+title: Coffee Diary
+description: Coffee Diary - Deine Barista-Notizen in der Hosentasche
+theme: jekyll-theme-minimal
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
+
