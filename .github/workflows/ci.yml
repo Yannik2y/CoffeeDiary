@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+        continue-on-error: true
+      - name: Build
+        run: xcodebuild -scheme CoffeeDiary -destination 'platform=iOS Simulator,name=iPhone 16' -quiet build
+      - name: Test
+        run: xcodebuild -scheme CoffeeDiary -destination 'platform=iOS Simulator,name=iPhone 16' -quiet test
+        env:
+          CI: true

@@ -1,0 +1,370 @@
+/* 
+  Localizable.strings (German)
+  CoffeeDiary
+  
+  German localization for the Coffee Diary app
+*/
+
+// MARK: - App & Navigation
+"Coffee Diary" = "Coffee Diary";
+"New Entry" = "Neuer Eintrag";
+"More actions" = "Weitere Aktionen";
+"Track your extractions with dose, yield, time and notes." = "Verfolge deine Bezüge mit Dosis, Extraktionsmenge, Zeit und Notizen.";
+"Add your first brew" = "Ersten Bezug anlegen";
+"Step %d of %d" = "Schritt %d von %d";
+"What coffee are you brewing?" = "Welchen Kaffee beziehst du?";
+"Coffee name" = "Kaffeename";
+"Shot size?" = "Shot-Größe?";
+"Grinder setting?" = "Mahlgradeinstellung?";
+"Grinder timer (seconds)?" = "Mühlentimer (Sekunden)?";
+"Range %.1f–%.1f s" = "Bereich %.1f–%.1f s";
+"Which brewer are you using?" = "Welches Brühgerät verwendest du?";
+"No brewers configured yet. Add one from the Equipment menu." = "Noch kein Brühgerät hinterlegt. Füge eines im Ausrüstungsmenü hinzu.";
+"Bloom details" = "Bloom-Details";
+"Bloom water: %d g" = "Bloom-Wasser: %d g";
+"Bloom time: %d s" = "Bloom-Zeit: %d s";
+"Adjust bloom time" = "Bloom-Zeit anpassen";
+"Total brew water" = "Gesamtbrühwasser";
+"Water temperature" = "Wassertemperatur";
+"Dose (g)?" = "Dosis (g)?";
+"Yield (g)?" = "Extraktionsmenge (g)?";
+"Brewed amount (g)?" = "Gebrühte Menge (g)?";
+"Brew duration" = "Bezugsdauer";
+"Gear (optional)" = "Ausrüstung (optional)";
+"Any notes?" = "Notizen?";
+"Optional notes" = "Optionale Notizen";
+"Review" = "Überblick";
+"Grinder timer" = "Mühlentimer";
+"Total water" = "Gesamtwasser";
+"Water temp" = "Wassertemperatur";
+"Pre-infusion time" = "Preinfusionszeit";
+"Brew pressure" = "Brühdruck";
+"Range %d–%d s" = "Bereich %d–%d s";
+"Typical espresso bars" = "Typischer Espresso-Bereich";
+"Next" = "Weiter";
+"Back" = "Zurück";
+"Track your extractions with dose, yield, time and notes." = "Verfolge deine Bezüge mit Dosis, Extraktionsmenge, Zeit und Notizen.";
+"Add your first brew" = "Ersten Bezug anlegen";
+
+// MARK: - Entry Types
+"Espresso" = "Espresso";
+"Filter" = "Filter";
+"Manual form" = "Manuelle Eingabe";
+
+// MARK: - Shot Types
+"Single" = "Single";
+"Double" = "Double";
+"Triple" = "Triple";
+
+// MARK: - Equipment
+"Beans" = "Bohnen";
+"Grinders" = "Mühlen";
+"Machines" = "Maschinen";
+"Brewers" = "Brühgeräte";
+"Brewer selection" = "Brühgerät-Auswahl";
+"Brewed" = "Gebrüht";
+"Equipment (Bean/Grinder/Machine)" = "Ausrüstung (Bohne/Mühle/Maschine)";
+"Equipment (Bean/Grinder)" = "Ausrüstung (Bohne/Mühle)";
+"Manage Equipment" = "Ausrüstung verwalten";
+"Equipment" = "Ausrüstung";
+"Add New" = "Neu hinzufügen";
+"New Bean" = "Neue Bohne";
+"Edit Bean" = "Bohne bearbeiten";
+"New Grinder" = "Neue Mühle";
+"Edit Grinder" = "Mühle bearbeiten";
+"New Machine" = "Neue Maschine";
+"Edit Machine" = "Maschine bearbeiten";
+"New Brewer" = "Neues Brühgerät";
+"Edit Brewer" = "Brühgerät bearbeiten";
+
+// MARK: - Form Fields
+"Coffee" = "Kaffee";
+"Name" = "Name";
+"Roaster" = "Rösterei";
+"Origin" = "Herkunft";
+"Process" = "Aufbereitung";
+"Variety" = "Sorte";
+"Notes" = "Notizen";
+"Optional notes" = "Optionale Notizen";
+"Brand" = "Marke";
+"Model" = "Modell";
+"Style" = "Stil";
+"Burr type" = "Mahlwerk-Typ";
+"Default setting" = "Standard-Einstellung";
+"Favorite" = "Favorit";
+
+// MARK: - Brew Details
+"Shot" = "Shot";
+"Grinder" = "Mühle";
+"Grinder setting" = "Mahlgrad";
+"Grinder timer" = "Mühlen-Timer";
+"Dose" = "Kaffeemenge";
+"Yield" = "Extrahiert";
+"Time" = "Zeit";
+"Brew time" = "Bezugszeit";
+"Gear" = "Ausrüstung";
+"Bean" = "Bohne";
+"Machine" = "Maschine";
+"Brewer" = "Brühgerät";
+"Bloom" = "Bloom";
+"Bloom water" = "Bloom-Wasser";
+"Bloom time" = "Bloom-Zeit";
+"Water" = "Wasser";
+"Total water" = "Gesamtwasser";
+"Water temp" = "Wassertemperatur";
+"Brew" = "Bezug";
+"Brew not found" = "Bezug nicht gefunden";
+"Delete this brew?" = "Diesen Bezug löschen?";
+"This action cannot be undone." = "Diese Aktion kann nicht rückgängig gemacht werden.";
+
+// MARK: - Actions
+"Add" = "Hinzufügen";
+"Save" = "Speichern";
+"Cancel" = "Abbrechen";
+"Close" = "Schließen";
+"Delete" = "Löschen";
+"Edit" = "Bearbeiten";
+"Duplicate" = "Duplizieren";
+"Continue" = "Weiter";
+"Skip" = "Überspringen";
+"Done" = "Fertig";
+"Clear All" = "Alle löschen";
+"More Filters" = "Weitere Filter";
+"Advanced Filters…" = "Erweiterte Filter…";
+"Clear All Filters" = "Alle Filter löschen";
+"Search coffee, bean, or roaster" = "Kaffee, Bohne oder Rösterei suchen";
+"Create entry" = "Eintrag erstellen";
+"Filter by Field" = "Nach Feldern filtern";
+"Use search bar to filter by coffee name, notes, bean, or roaster" = "Nutze die Suche, um nach Kaffee, Notizen, Bohne oder Rösterei zu filtern";
+"Date, ratio, and rating filters are configured above" = "Datum-, Verhältnis- und Bewertungsfilter stellst du oben ein";
+
+// MARK: - Charts & Statistics
+"Charts" = "Diagramme";
+"Stats" = "Statistik";
+"7d" = "7 T.";
+"30d" = "30 T.";
+"90d" = "90 T.";
+"Brew count" = "Anzahl Bezüge";
+"Avg rating" = "Ø Bewertung";
+"Avg ratio" = "Ø Verhältnis";
+"Avg shot time" = "Ø Shot-Zeit";
+"Avg brew time" = "Ø Bezugszeit";
+"vs prior period" = "vs. Vorperiode";
+"Time range" = "Zeitraum";
+"All beans" = "Alle Bohnen";
+"Bean" = "Bohne";
+"Filtered to %@" = "Gefiltert auf %@";
+"Clear" = "Zurücksetzen";
+"Ratio stability over time" = "Verhältnis-Stabilität über Zeit";
+"Grind setting vs ratio" = "Mahlgrad vs Verhältnis";
+"Shot time distribution" = "Shot-Zeit-Verteilung";
+"Weekly avg rating" = "Wöchentliche Ø-Bewertung";
+"Top coffees by rating" = "Top-Kaffees nach Bewertung";
+"Tap a bar to filter the dashboard." = "Tippe auf einen Balken, um das Dashboard zu filtern.";
+"Top brews" = "Beste Bezüge";
+"Highest rated brews in this period." = "Höchstbewertete Bezüge in diesem Zeitraum.";
+"Not enough data" = "Nicht genug Daten";
+"Need at least %d brews." = "Mindestens %d Bezüge erforderlich.";
+"Log doses and yields to track ratio stability." = "Erfasse Dosis und Ertrag, um die Verhältnis-Stabilität zu verfolgen.";
+"Avg ratio %@ in this period." = "Ø Verhältnis %@ in diesem Zeitraum.";
+"Need at least 3 espresso brews." = "Mindestens 3 Espresso-Bezüge erforderlich.";
+"See how grind changes affect your ratio." = "Sieh, wie Mahlgradänderungen dein Verhältnis beeinflussen.";
+"Need at least 3 rated filter brews with water temp." = "Mindestens 3 bewertete Filter-Bezüge mit Wassertemperatur erforderlich.";
+"Explore whether temperature correlates with taste." = "Prüfe, ob Temperatur mit dem Geschmack korreliert.";
+"Record brew time to spot consistency trends." = "Erfasse die Bezugszeit, um Konsistenz-Trends zu erkennen.";
+"Avg time %@ in this period." = "Ø Zeit %@ in diesem Zeitraum.";
+"Need at least 5 weather-tagged rated brews." = "Mindestens 5 bewertete Bezüge mit Wetterdaten erforderlich.";
+"n = %d brews" = "n = %d Bezüge";
+"Record shot times to see consistency." = "Erfasse Shot-Zeiten, um Konsistenz zu sehen.";
+"Most shots land around %ds." = "Die meisten Shots liegen bei ca. %d s.";
+"Rate more brews each week for reliable averages." = "Bewerte mehr Bezüge pro Woche für verlässliche Durchschnitte.";
+"Latest week avg: %.1f stars (%d brews)." = "Letzte Woche Ø: %.1f Sterne (%d Bezüge).";
+"n=%d" = "n=%d";
+"Ratio over time" = "Verhältnis über Zeit";
+"Dose vs Yield" = "Dosis vs Extraktionsmenge";
+"No data" = "Keine Daten";
+"Add a few brews to see trends." = "Füge einige Bezüge hinzu, um Trends zu sehen.";
+
+// MARK: - Filters
+"Shot Filter" = "Shot-Filter";
+"Shot Type" = "Shot-Typ";
+"Brew Style" = "Bezugsstil";
+"All" = "Alle";
+"Date Range" = "Datumsbereich";
+"Ratio" = "Verhältnis";
+"Min" = "Min";
+"Max" = "Max";
+
+// MARK: - Onboarding
+"Welcome to Coffee Diary" = "Willkommen im Kaffee-Tagebuch";
+"Let's set up your coffee equipment. This will help you track your brews more effectively." = "Richten wir deine Kaffeeausrüstung ein. Dies hilft dir, deine Bezüge effektiver zu verfolgen.";
+"Add Your First Bean" = "Füge deine erste Bohne hinzu";
+"Start by adding at least one coffee bean. You can add more later in settings." = "Beginne mit dem Hinzufügen mindestens einer Kaffeebohne. Du kannst später in den Einstellungen weitere hinzufügen.";
+"Add Your Grinder" = "Füge deine Mühle hinzu";
+"Add your grinder to track grind settings. You can skip this and add it later." = "Füge deine Mühle hinzu, um Mahlgradeinstellungen zu verfolgen. Du kannst dies überspringen und später hinzufügen.";
+"Add Your Machine" = "Füge deine Maschine hinzu";
+"Add your espresso machine. You can skip this and add it later." = "Füge deine Espressomaschine hinzu. Du kannst dies überspringen und später hinzufügen.";
+"Add Your Brewer" = "Füge dein Brühgerät hinzu";
+"Add your filter brewer (V60, Chemex, etc.). You can skip this and add it later." = "Füge dein Filterbrühgerät hinzu (V60, Chemex, etc.). Du kannst dies überspringen und später hinzufügen.";
+"You're All Set!" = "Alles bereit!";
+"You're ready to start tracking your coffee journey!" = "Du bist bereit, deine Kaffee-Reise zu verfolgen!";
+"Get Started" = "Loslegen";
+"Add Bean" = "Bohne hinzufügen";
+"Add Grinder" = "Mühle hinzufügen";
+"Add Machine" = "Maschine hinzufügen";
+"Add Brewer" = "Brühgerät hinzufügen";
+"Add Another Bean" = "Weitere Bohne hinzufügen";
+"Add Another Grinder" = "Weitere Mühle hinzufügen";
+"Add Another Machine" = "Weitere Maschine hinzufügen";
+"Add Another Brewer" = "Weiteres Brühgerät hinzufügen";
+"Start Brewing" = "Bezüge starten";
+
+// MARK: - Workflow Configuration
+"Workflow Settings" = "Workflow-Einstellungen";
+"Espresso Flow" = "Espresso-Workflow";
+"Filter Flow" = "Filter-Workflow";
+"Espresso Flow Settings" = "Espresso-Workflow-Einstellungen";
+"Filter Flow Settings" = "Filter-Workflow-Einstellungen";
+"Questions to Ask" = "Fragen im Workflow";
+"Disable questions you don't want to see in the workflow" = "Deaktiviere Fragen, die im Workflow nicht angezeigt werden sollen";
+"Configure %@ Workflow" = "%@-Workflow konfigurieren";
+"More Options" = "Weitere Optionen";
+"Flows" = "Workflows";
+"Configure which questions are asked during entry" = "Konfiguriere, welche Fragen beim Eintrag gestellt werden";
+"Coffee Name" = "Kaffee-Name";
+"Equipment (Bean/Grinder/Machine)" = "Ausrüstung (Bohne/Mühle/Maschine)";
+"Equipment (Bean/Grinder)" = "Ausrüstung (Bohne/Mühle)";
+"Brewed Amount" = "Extraktionsmenge";
+"Brewer Selection" = "Brühgerät-Auswahl";
+"Bloom Details" = "Bloom-Details";
+"Total Water" = "Gesamtwasser";
+"Water Temperature" = "Wassertemperatur";
+
+// MARK: - Photo/Document
+"Photo / Documents" = "Foto / Dokumente";
+"Add Photo" = "Foto hinzufügen";
+"Replace Photo" = "Foto ersetzen";
+"Take Photo" = "Foto aufnehmen";
+"Import Document" = "Dokument importieren";
+"Remove Photo" = "Foto entfernen";
+"Files must be smaller than 8 MB." = "Dateien müssen kleiner als 8 MB sein.";
+
+// MARK: - Blend
+"Blend" = "Mischung";
+"Arabica" = "Arabica";
+"Robusta" = "Robusta";
+
+// MARK: - Units
+"g" = "g";
+"s" = "s";
+"°C" = "°C";
+
+// MARK: - Rating
+"Rating" = "Bewertung";
+"Rate this brew" = "Diesen Bezug bewerten";
+"Rate this brew?" = "Diesen Bezug bewerten?";
+"Minimum rating" = "Mindestbewertung";
+"Clear rating filter" = "Bewertungsfilter löschen";
+"and above" = "und höher";
+
+// MARK: - Additional Strings
+"None" = "Keine";
+"New Brew" = "Neuer Bezug";
+"Edit Brew" = "Bezug bearbeiten";
+"Start" = "Start";
+"Stop" = "Stop";
+"Reset" = "Zurücksetzen";
+"Brew Ratio" = "Bezugsverhältnis";
+"Add new bean" = "Neue Bohne hinzufügen";
+"Add new grinder" = "Neue Mühle hinzufügen";
+"Add new machine" = "Neue Maschine hinzufügen";
+"Add new brewer" = "Neues Brühgerät hinzufügen";
+"Bean count singular" = "Bohne";
+"Bean count plural" = "Bohnen";
+"Grinder count singular" = "Mühle";
+"Grinder count plural" = "Mühlen";
+"Machine count singular" = "Maschine";
+"Machine count plural" = "Maschinen";
+"Brewer count singular" = "Brühgerät";
+"Brewer count plural" = "Brühgeräte";
+"About" = "Über";
+"App" = "App";
+"Version" = "Version";
+"Version %@ (%@)" = "Version %@ (%@)";
+"Resources" = "Ressourcen";
+"Website" = "Website";
+"Support" = "Support";
+"Privacy Policy" = "Datenschutzerklärung";
+"Acknowledgements" = "Danksagungen";
+"Weather data provided by Open-Meteo." = "Wetterdaten bereitgestellt von Open-Meteo.";
+"App about blurb" = "Coffee Diary hilft dir, Espresso- und Filterbezüge mit Workflows, Diagrammen und iCloud-Sync festzuhalten.";
+"Info" = "Info";
+"Weather" = "Wetter";
+"Capture weather context" = "Halte das Wetter fest, um Temperatur und Luftfeuchtigkeit später nachvollziehen zu können.";
+"Fetch current weather" = "Aktuelles Wetter abrufen";
+"Weather location" = "Ort";
+"Temperature" = "Temperatur";
+"Humidity" = "Luftfeuchtigkeit";
+"Weather last updated %@" = "Zuletzt aktualisiert %@";
+"Tap \"Fetch current weather\" to save temperature and humidity for this brew." = "Tippe auf „Aktuelles Wetter abrufen“, um Temperatur und Luftfeuchtigkeit für diesen Bezug zu speichern.";
+"Weather data saved" = "Wetterdaten gespeichert";
+"Weather unavailable" = "Wetter nicht verfügbar";
+"Requesting location permission…" = "Standortfreigabe wird angefragt…";
+"Locating you…" = "Standort wird ermittelt…";
+"Fetching weather data…" = "Wetterdaten werden geladen…";
+"Location permission required. Enable it in Settings to capture weather." = "Standortfreigabe benötigt. Aktiviere sie in den Einstellungen, um Wetterdaten zu erfassen.";
+"Unable to determine your location. Please try again." = "Dein Standort konnte nicht bestimmt werden. Bitte versuche es erneut.";
+"Weather service unavailable. Try again in a moment." = "Wetterdienst nicht verfügbar. Versuche es in Kürze erneut.";
+"Weather data not available for this location." = "Für diesen Ort sind keine Wetterdaten verfügbar.";
+"Current location" = "Aktueller Standort";
+
+// MARK: - iCloud Sync
+"iCloud Sync" = "iCloud-Sync";
+"iCloud Sync Active" = "iCloud-Sync aktiv";
+"iCloud Sync Unavailable" = "iCloud-Sync nicht verfügbar";
+"Local Storage Only" = "Nur lokale Speicherung";
+"Sign In to iCloud" = "Bei iCloud anmelden";
+"iCloud Restricted" = "iCloud eingeschränkt";
+"Checking iCloud…" = "iCloud wird geprüft…";
+"iCloud Temporarily Unavailable" = "iCloud vorübergehend nicht verfügbar";
+"iCloud Status Unknown" = "iCloud-Status unbekannt";
+"Brews and equipment sync across your iPhone and iPad when signed into the same iCloud account." = "Bezüge und Ausrüstung werden zwischen iPhone und iPad synchronisiert, wenn du mit demselben iCloud-Konto angemeldet bist.";
+"Sign in to iCloud in Settings to sync between your devices." = "Melde dich in den Einstellungen bei iCloud an, um zwischen deinen Geräten zu synchronisieren.";
+"iCloud access is restricted on this device. Check Screen Time or device management settings." = "iCloud-Zugriff ist auf diesem Gerät eingeschränkt. Prüfe Bildschirmzeit oder Geräteverwaltung.";
+"Verifying your iCloud account status…" = "iCloud-Kontostatus wird überprüft…";
+"iCloud is temporarily unavailable. Sync will resume automatically." = "iCloud ist vorübergehend nicht verfügbar. Die Synchronisation wird automatisch fortgesetzt.";
+"Unable to determine iCloud status." = "iCloud-Status konnte nicht ermittelt werden.";
+"Data is stored in memory only and will not persist or sync." = "Daten werden nur im Arbeitsspeicher gehalten und nicht gespeichert oder synchronisiert.";
+"iCloud could not be initialized. Data stays on this device only." = "iCloud konnte nicht initialisiert werden. Daten bleiben nur auf diesem Gerät.";
+"Syncs between iPhone and iPad" = "Synchronisiert zwischen iPhone und iPad";
+"Refresh Status" = "Status aktualisieren";
+"No brews match your filters" = "Keine Bezüge entsprechen deinen Filtern";
+"Try adjusting or clearing your filters." = "Passe deine Filter an oder setze sie zurück.";
+
+// MARK: - Empty States
+"No brews yet" = "Noch keine Bezüge";
+"Start tracking your coffee journey" = "Beginne, deine Kaffee-Reise zu verfolgen";
+"Tap the + button to add your first brew entry" = "Tippe auf die + Schaltfläche, um deinen ersten Bezug hinzuzufügen";
+
+// MARK: - Errors & Messages
+"Failed to generate icon" = "Icon konnte nicht generiert werden";
+"Failed to save" = "Speichern fehlgeschlagen";
+"Check Settings → Privacy → Photos" = "Einstellungen → Datenschutz → Fotos prüfen";
+"Failed to delete brew entry. Please try again." = "Bezug konnte nicht gelöscht werden. Bitte erneut versuchen.";
+"Failed to delete brew entries. Please try again." = "Bezüge konnten nicht gelöscht werden. Bitte erneut versuchen.";
+"Failed to duplicate brew entry. Please try again." = "Bezug konnte nicht dupliziert werden. Bitte erneut versuchen.";
+"Failed to update favorite status. Please try again." = "Favoritenstatus konnte nicht aktualisiert werden. Bitte erneut versuchen.";
+"Failed to save bean. Please try again." = "Bohne konnte nicht gespeichert werden. Bitte erneut versuchen.";
+"Failed to save grinder. Please try again." = "Mühle konnte nicht gespeichert werden. Bitte erneut versuchen.";
+"Failed to save machine. Please try again." = "Maschine konnte nicht gespeichert werden. Bitte erneut versuchen.";
+"Failed to save brewer. Please try again." = "Brühgerät konnte nicht gespeichert werden. Bitte erneut versuchen.";
+"Failed to save brew entry. Please try again." = "Bezug konnte nicht gespeichert werden. Bitte erneut versuchen.";
+"Brew not found" = "Bezug nicht gefunden";
+"Failed to save changes. Please try again." = "Änderungen konnten nicht gespeichert werden. Bitte erneut versuchen.";
+
+"Select a brew" = "Bezug auswählen";
+"Dial-in tip" = "Dial-in-Tipp";
+"Set up later" = "Später einrichten";
+"Extraction time over time" = "Extraktionszeit im Verlauf";
+"Remove filter" = "Filter entfernen";
+

@@ -1,0 +1,4 @@
+"NSLocationWhenInUseUsageDescription" = "Coffee Diary uses your location to optionally record temperature and humidity when logging a brew.";
+"NSCameraUsageDescription" = "We need camera access to take photos of your coffee equipment and beans.";
+"NSPhotoLibraryUsageDescription" = "We need access to your photo library to select photos of your coffee equipment and beans.";
+"NSPhotoLibraryAddUsageDescription" = "We need access to save photos of your coffee equipment and beans to your photo library.";

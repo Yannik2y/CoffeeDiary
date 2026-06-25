@@ -12,7 +12,7 @@ Coffee Diary hilft Home-Baristas und Café-Profis, jeden Bezug nachzuvollziehen:
 - Diagramme zu Ratio & Dosis/Extraktionsmenge ansehen
 - Lokale Daten – optional mit iCloud synchronisiert
 
-![App Screenshot](/screenshot.png)
+![App Screenshot](./screenshot.png)
 
 ## Funktionen
 
