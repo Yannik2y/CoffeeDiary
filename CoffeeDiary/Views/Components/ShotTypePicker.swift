@@ -4,7 +4,7 @@ struct ShotTypePicker: View {
     @Binding var shotType: ShotType
     
     var body: some View {
-        Picker("Shot", selection: $shotType) {
+        Picker("Shot".localized, selection: $shotType) {
             ForEach(ShotType.allCases) { type in
                 Text(type.displayName).tag(type)
             }

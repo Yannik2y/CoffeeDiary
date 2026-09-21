@@ -46,18 +46,24 @@ struct CoffeeDiaryApp: App {
 
 enum ModelContainerFactory {
     static let iCloudContainerIdentifier = CloudSyncService.iCloudContainerIdentifier
+    /// Single durable store name so CloudKit and offline fallback share the same files.
+    static let storeName = "CoffeeDiary"
 
     static func makeContainer() -> ModelContainer {
         let schema = Schema(versionedSchema: CoffeeDiarySchemaV1.self)
 
         do {
             let cloudConfig = ModelConfiguration(
-                "Cloud",
+                storeName,
                 schema: schema,
                 isStoredInMemoryOnly: false,
                 cloudKitDatabase: .private(iCloudContainerIdentifier)
             )
-            let container = try ModelContainer(for: schema, configurations: [cloudConfig])
+            let container = try ModelContainer(
+                for: schema,
+                migrationPlan: CoffeeDiaryMigrationPlan.self,
+                configurations: [cloudConfig]
+            )
             Task { @MainActor in
                 CloudSyncService.shared.setStorageMode(.cloud)
             }
@@ -65,12 +71,19 @@ enum ModelContainerFactory {
         } catch {
             print("SwiftData Cloud container init failed: \(error)")
             do {
+                // Same store name as cloud — do not create a separate "Local" store
+                // that would orphan data when CloudKit becomes available again.
                 let localConfig = ModelConfiguration(
-                    "Local",
+                    storeName,
                     schema: schema,
-                    isStoredInMemoryOnly: false
+                    isStoredInMemoryOnly: false,
+                    cloudKitDatabase: .none
                 )
-                let container = try ModelContainer(for: schema, configurations: [localConfig])
+                let container = try ModelContainer(
+                    for: schema,
+                    migrationPlan: CoffeeDiaryMigrationPlan.self,
+                    configurations: [localConfig]
+                )
                 Task { @MainActor in
                     CloudSyncService.shared.setStorageMode(.local)
                 }
@@ -83,7 +96,11 @@ enum ModelContainerFactory {
                         schema: schema,
                         isStoredInMemoryOnly: true
                     )
-                    let container = try ModelContainer(for: schema, configurations: [memoryConfig])
+                    let container = try ModelContainer(
+                        for: schema,
+                        migrationPlan: CoffeeDiaryMigrationPlan.self,
+                        configurations: [memoryConfig]
+                    )
                     Task { @MainActor in
                         CloudSyncService.shared.setStorageMode(.memory)
                     }

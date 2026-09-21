@@ -436,7 +436,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CoffeeDiary/CoffeeDiary.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7PAQG44S9V;
 				ENABLE_APP_SANDBOX = YES;
@@ -446,11 +446,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CoffeeDiary/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Coffee Diary";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to take photos of your coffee equipment and beans.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Coffee Diary uses your location to optionally record temperature and humidity when logging a brew.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need access to save photos of your coffee equipment and beans to your photo library.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "We need access to your photo library to select photos of your coffee equipment and beans.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Coffee Diary uses your location to optionally record approximate temperature and humidity when logging a brew.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Coffee Diary needs photo library access so you can attach photos of your coffee equipment and beans.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -465,7 +465,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = YC.CoffeeDiary;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -491,7 +491,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CoffeeDiary/CoffeeDiary.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7PAQG44S9V;
 				ENABLE_APP_SANDBOX = YES;
@@ -501,11 +501,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CoffeeDiary/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Coffee Diary";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to take photos of your coffee equipment and beans.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Coffee Diary uses your location to optionally record temperature and humidity when logging a brew.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need access to save photos of your coffee equipment and beans to your photo library.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "We need access to your photo library to select photos of your coffee equipment and beans.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Coffee Diary uses your location to optionally record approximate temperature and humidity when logging a brew.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Coffee Diary needs photo library access so you can attach photos of your coffee equipment and beans.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -520,7 +520,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = YC.CoffeeDiary;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

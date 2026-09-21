@@ -31,6 +31,12 @@ struct BrewListView: View {
     @State private var showingEspressoConfig: Bool = false
     @State private var showingFilterConfig: Bool = false
     @State private var showingOverflowMenu: Bool = false
+    /// Deferred sheet destination after overflow menu dismisses (avoids sheet-from-sheet race).
+    @State private var pendingOverflowDestination: OverflowDestination? = nil
+
+    private enum OverflowDestination {
+        case filters, espressoConfig, filterConfig
+    }
 
     private let shotFilterAllTag = -1
     private let brewStyleFilterAllTag = -1
@@ -101,11 +107,21 @@ struct BrewListView: View {
                     .accessibilityLabel("More actions".localized)
                 }
             }
-            .sheet(isPresented: $showingOverflowMenu) {
+            .sheet(isPresented: $showingOverflowMenu, onDismiss: {
+                guard let destination = pendingOverflowDestination else { return }
+                pendingOverflowDestination = nil
+                DispatchQueue.main.async {
+                    switch destination {
+                    case .filters: showingFilters = true
+                    case .espressoConfig: showingEspressoConfig = true
+                    case .filterConfig: showingFilterConfig = true
+                    }
+                }
+            }) {
                 OverflowMenuView(
-                    showAdvancedFilters: { showingFilters = true },
-                    showEspressoConfig: { showingEspressoConfig = true },
-                    showFilterConfig: { showingFilterConfig = true }
+                    showAdvancedFilters: { pendingOverflowDestination = .filters },
+                    showEspressoConfig: { pendingOverflowDestination = .espressoConfig },
+                    showFilterConfig: { pendingOverflowDestination = .filterConfig }
                 )
             }
             .searchable(text: $searchText, prompt: Text("Search coffee, bean, or roaster".localized))
@@ -115,6 +131,10 @@ struct BrewListView: View {
                 let work = DispatchWorkItem { debouncedSearchText = newValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
                 searchDebounceWorkItem = work
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
+            }
+            .onDisappear {
+                searchDebounceWorkItem?.cancel()
+                searchDebounceWorkItem = nil
             }
             .confirmationDialog("Create entry".localized, isPresented: $showingFlowPicker, titleVisibility: .visible) {
                 Button("Espresso".localized) { showingEspressoFlow = true }
@@ -180,7 +200,7 @@ struct BrewListView: View {
             .onChange(of: filterMinRating) { _, _ in
                 updateCachedFilteredBrews()
             }
-            .onChange(of: brews.count) { _, _ in
+            .onChange(of: BrewListViewModel.contentFingerprint(for: brews)) { _, _ in
                 updateCachedFilteredBrews()
             }
             .errorAlert()
@@ -201,6 +221,10 @@ struct BrewListView: View {
 
     private func updateCachedFilteredBrews() {
         listViewModel.updateFilteredBrews(from: brews, criteria: filterCriteria)
+        if let selectedBrewId,
+           !listViewModel.cachedFilteredBrews.contains(where: { $0.id == selectedBrewId }) {
+            self.selectedBrewId = nil
+        }
     }
     
     private func delete(at offsets: IndexSet) {
@@ -254,7 +278,8 @@ struct BrewListView: View {
                     .frame(width: 120, height: 120)
                     .shadow(color: AppTheme.accent.opacity(0.12), radius: 16, x: 0, y: 8)
                 Image(systemName: "cup.and.saucer.fill")
-                    .font(.system(size: 48, weight: .medium))
+                    .font(.largeTitle.weight(.medium))
+                    .imageScale(.large)
                     .foregroundStyle(
                         LinearGradient(
                             colors: [AppTheme.accent, AppTheme.accentSecondary],
@@ -460,6 +485,7 @@ struct BrewListView: View {
     }
     
     private var hasActiveFilters: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
         filterShot != nil ||
         filterBrewStyle != nil ||
         filterStartDate != nil ||
@@ -472,7 +498,7 @@ struct BrewListView: View {
     @ViewBuilder
     private var filterChips: some View {
         if let shot = filterShot {
-            FilterChip(text: "Shot \(shot.displayName)") {
+            FilterChip(text: "Shot %@".localized(with: shot.displayName)) {
                 filterShot = nil
             }
         }
@@ -482,37 +508,40 @@ struct BrewListView: View {
             }
         }
         if let start = filterStartDate {
-            FilterChip(text: "From \(filterDateFormatter.string(from: start))") {
+            FilterChip(text: "From %@".localized(with: filterDateFormatter.string(from: start))) {
                 filterStartDate = nil
             }
         }
         if let end = filterEndDate {
-            FilterChip(text: "To \(filterDateFormatter.string(from: end))") {
+            FilterChip(text: "To %@".localized(with: filterDateFormatter.string(from: end))) {
                 filterEndDate = nil
             }
         }
         if let minR = filterMinRatio, let maxR = filterMaxRatio, maxR > 0 {
-            FilterChip(text: "Ratio \(formatRatio(minR))–\(formatRatio(maxR))") {
+            FilterChip(text: "Ratio %@–%@".localized(with: formatRatio(minR), formatRatio(maxR))) {
                 filterMinRatio = nil
                 filterMaxRatio = nil
             }
         } else if let minR = filterMinRatio {
-            FilterChip(text: "Ratio ≥\(formatRatio(minR))") {
+            FilterChip(text: "Ratio ≥%@".localized(with: formatRatio(minR))) {
                 filterMinRatio = nil
             }
         } else if let maxR = filterMaxRatio, maxR > 0 {
-            FilterChip(text: "Ratio ≤\(formatRatio(maxR))") {
+            FilterChip(text: "Ratio ≤%@".localized(with: formatRatio(maxR))) {
                 filterMaxRatio = nil
             }
         }
         if let minRating = filterMinRating, minRating > 0 {
-            FilterChip(text: "Rating ≥ \(minRating) ⭐") {
+            FilterChip(text: "Rating ≥ %d".localized(with: minRating)) {
                 filterMinRating = nil
             }
         }
     }
     
     private func clearAllFilters() {
+        searchText = ""
+        debouncedSearchText = ""
+        searchDebounceWorkItem?.cancel()
         filterShot = nil
         filterBrewStyle = nil
         filterStartDate = nil

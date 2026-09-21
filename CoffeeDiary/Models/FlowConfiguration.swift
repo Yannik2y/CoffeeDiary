@@ -33,6 +33,11 @@ struct FlowConfiguration: Codable, Equatable {
     private static let storageKey = "flowConfiguration"
 
     static func load() -> FlowConfiguration {
+        // Prefer iCloud KVS so flow prefs follow the user across devices, then fall back to UserDefaults.
+        if let data = NSUbiquitousKeyValueStore.default.data(forKey: storageKey),
+           let config = try? JSONDecoder().decode(FlowConfiguration.self, from: data) {
+            return config
+        }
         guard let data = UserDefaults.standard.data(forKey: storageKey),
               let config = try? JSONDecoder().decode(FlowConfiguration.self, from: data) else {
             return FlowConfiguration()
@@ -43,6 +48,8 @@ struct FlowConfiguration: Codable, Equatable {
     func save() {
         guard let data = try? JSONEncoder().encode(self) else { return }
         UserDefaults.standard.set(data, forKey: Self.storageKey)
+        NSUbiquitousKeyValueStore.default.set(data, forKey: Self.storageKey)
+        NSUbiquitousKeyValueStore.default.synchronize()
     }
 
     func isEnabled(_ step: FlowStep, for flow: BrewFlowType) -> Bool {

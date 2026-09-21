@@ -72,10 +72,9 @@ struct CoffeeStationCard: View {
     private func stationItem(title: String, subtitle: String, symbol: String, photoData: Data?) -> some View {
         HStack(spacing: 10) {
             Group {
-                if let photoData, let image = UIImage(data: photoData) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
+                if photoData != nil {
+                    CachedThumbnailImage(data: photoData, maxDimension: 88)
+                        .accessibilityHidden(true)
                 } else {
                     Image(systemName: symbol)
                         .font(.title3)

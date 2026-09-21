@@ -14,30 +14,38 @@ final class CoffeeDiaryUITests: XCTestCase {
     }
 
     @MainActor
-    func testNewEntryControlsVisible() throws {
-        // Skip if running in CI or if disk space is low (build may have failed)
-        if ProcessInfo.processInfo.environment["CI"] == "true" {
-            throw XCTSkip("UI tests skipped in CI environment")
-        }
-        
+    func testAppLaunchesToMainOrOnboarding() throws {
         let app = XCUIApplication()
         app.launchArguments.append("--ui-testing")
         app.launch()
 
-        // Wait for app to be ready - check for any main UI element
+        // Smoke test that runs in CI: app should show a navigation bar or onboarding content.
         let navigationBar = app.navigationBars.firstMatch
-        guard navigationBar.waitForExistence(timeout: 30) else {
-            throw XCTSkip("App did not launch in time - may be due to system issues")
+        let launched = navigationBar.waitForExistence(timeout: 45)
+        XCTAssertTrue(launched, "App should present a navigation bar after launch")
+    }
+
+    @MainActor
+    func testNewEntryControlsVisible() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("--ui-testing")
+        app.launch()
+
+        let navigationBar = app.navigationBars.firstMatch
+        guard navigationBar.waitForExistence(timeout: 45) else {
+            XCTFail("App did not launch in time")
+            return
         }
-        
-        // Check for either toolbar button (if list has items) or empty state button
+
         let toolbarButton = app.buttons["toolbarNewEntryButton"]
         let emptyStateButton = app.buttons["emptyStateAddButton"]
-        
-        let hasToolbarButton = toolbarButton.waitForExistence(timeout: 5)
+
+        let hasToolbarButton = toolbarButton.waitForExistence(timeout: 10)
         let hasEmptyStateButton = emptyStateButton.waitForExistence(timeout: 5)
-        
-        XCTAssertTrue(hasToolbarButton || hasEmptyStateButton, 
-                     "At least one new-entry control should exist (toolbar: \(hasToolbarButton), empty state: \(hasEmptyStateButton))")
+
+        XCTAssertTrue(
+            hasToolbarButton || hasEmptyStateButton,
+            "At least one new-entry control should exist (toolbar: \(hasToolbarButton), empty state: \(hasEmptyStateButton))"
+        )
     }
 }

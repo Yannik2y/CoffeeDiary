@@ -107,24 +107,42 @@ struct EquipmentManagementView: View {
             .sheet(isPresented: $showingGrinderForm) {
                 GrinderFormView { grinder in
                     modelContext.insert(grinder)
-                    BrewStore.shared.setActiveGrinder(grinder, allGrinders: grinders + [grinder])
+                    BrewStore.shared.applyActiveGrinderSelection(
+                        grinder,
+                        isActive: grinder.isActive || grinders.isEmpty,
+                        allGrinders: grinders + [grinder]
+                    )
                     ErrorHandler.save(modelContext, errorMessage: "Failed to save grinder. Please try again.".localized)
                 }
             }
             .sheet(item: $editingGrinder) { grinder in
-                GrinderFormView(grinder: grinder) { _ in
+                GrinderFormView(grinder: grinder) { updated in
+                    BrewStore.shared.applyActiveGrinderSelection(
+                        updated,
+                        isActive: updated.isActive,
+                        allGrinders: grinders
+                    )
                     ErrorHandler.save(modelContext, errorMessage: "Failed to save grinder. Please try again.".localized)
                 }
             }
             .sheet(isPresented: $showingMachineForm) {
                 MachineFormView { machine in
                     modelContext.insert(machine)
-                    BrewStore.shared.setActiveMachine(machine, allMachines: machines + [machine])
+                    BrewStore.shared.applyActiveMachineSelection(
+                        machine,
+                        isActive: machine.isActive || machines.isEmpty,
+                        allMachines: machines + [machine]
+                    )
                     ErrorHandler.save(modelContext, errorMessage: "Failed to save machine. Please try again.".localized)
                 }
             }
             .sheet(item: $editingMachine) { machine in
-                MachineFormView(machine: machine) { _ in
+                MachineFormView(machine: machine) { updated in
+                    BrewStore.shared.applyActiveMachineSelection(
+                        updated,
+                        isActive: updated.isActive,
+                        allMachines: machines
+                    )
                     ErrorHandler.save(modelContext, errorMessage: "Failed to save machine. Please try again.".localized)
                 }
             }
@@ -156,6 +174,9 @@ struct EquipmentManagementView: View {
                 }
             }
             .errorAlert()
+            .onAppear {
+                BrewStore.shared.reconcileActiveEquipment(machines: machines, grinders: grinders)
+            }
         }
     }
 
@@ -314,16 +335,8 @@ private struct EquipmentThumbnail: View {
 
     var body: some View {
         Group {
-            if let photoData,
-               let image = UIImage(data: photoData) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else if photoData != nil {
-                Image(systemName: "doc")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(AppTheme.accent)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if photoData != nil {
+                CachedThumbnailImage(data: photoData, maxDimension: 120)
             } else {
                 Image(systemName: systemImage)
                     .font(.system(size: 18, weight: .semibold))

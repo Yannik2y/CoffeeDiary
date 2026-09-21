@@ -6,9 +6,5 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Coffee Diary benötigt deinen Standort, um Temperatur und Luftfeuchtigkeit während eines Bezugs automatisch zu dokumentieren.</string>
 </dict>
 </plist>

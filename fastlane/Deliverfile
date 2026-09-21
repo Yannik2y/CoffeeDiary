@@ -1,0 +1,12 @@
+# Defaults for `deliver` — binary comes from Xcode Cloud
+force(true)
+skip_binary_upload(true)
+skip_screenshots(true)
+submit_for_review(false) # overridden in release lane
+automatic_release(false)
+phased_release(false)
+precheck_include_in_app_purchases(false)
+
+# Primary App Store locale for metadata
+# Additional locales can live under fastlane/metadata/<locale>/
+run_precheck_before_submit(true)

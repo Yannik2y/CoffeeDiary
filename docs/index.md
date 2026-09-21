@@ -25,6 +25,7 @@ Coffee Diary hilft Home-Baristas und Café-Profis, jeden Bezug nachzuvollziehen:
 
 - [Privacy Policy](./privacy-policy)
 - [Support](./support)
+- [Release (Xcode Cloud + Fastlane)](./release)
 - [GitHub Repo](https://github.com/Yannik2y/CoffeeDiary)
 
 > Aktiviere GitHub Pages (Settings → Pages → Source `main`, Folder `docs`), damit diese Landing-Page als Marketing-URL verfügbar ist.

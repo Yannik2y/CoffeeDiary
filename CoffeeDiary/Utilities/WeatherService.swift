@@ -80,42 +80,66 @@ final class WeatherCaptureViewModel: NSObject, ObservableObject {
     }
     
     private func loadSnapshot(for location: CLLocation) async throws -> WeatherSnapshot {
+        // Round coordinates to ~1km to match "approximate location" messaging.
+        let lat = (location.coordinate.latitude * 100).rounded() / 100
+        let lon = (location.coordinate.longitude * 100).rounded() / 100
+
         var components = URLComponents(string: "https://api.open-meteo.com/v1/forecast")
         components?.queryItems = [
-            URLQueryItem(name: "latitude", value: String(location.coordinate.latitude)),
-            URLQueryItem(name: "longitude", value: String(location.coordinate.longitude)),
+            URLQueryItem(name: "latitude", value: String(lat)),
+            URLQueryItem(name: "longitude", value: String(lon)),
             URLQueryItem(name: "current", value: "temperature_2m,relative_humidity_2m"),
             URLQueryItem(name: "timezone", value: "auto"),
             URLQueryItem(name: "forecast_days", value: "1")
         ]
-        
+
         guard let url = components?.url else {
             throw WeatherCaptureError.networkFailure
         }
-        
-        let (data, response) = try await URLSession.shared.data(from: url)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw WeatherCaptureError.networkFailure
+
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = 12
+        config.timeoutIntervalForResource = 20
+        let session = URLSession(configuration: config)
+
+        var lastError: Error?
+        for attempt in 0..<2 {
+            do {
+                let (data, response) = try await session.data(from: url)
+                guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                    throw WeatherCaptureError.networkFailure
+                }
+
+                let decoder = JSONDecoder()
+                let result = try decoder.decode(OpenMeteoResponse.self, from: data)
+                guard let current = result.current else {
+                    throw WeatherCaptureError.noPayload
+                }
+
+                geocoder.cancelGeocode()
+                let placemark = try? await geocoder.reverseGeocodeLocation(location).first
+                let locationName = placemark?.locality ??
+                    placemark?.name ??
+                    "Current location".localized
+
+                return WeatherSnapshot(
+                    locationName: locationName,
+                    temperatureCelsius: current.temperature2M,
+                    humidityPercent: current.relativeHumidity2M,
+                    timestamp: Date()
+                )
+            } catch {
+                lastError = error
+                if attempt == 0 {
+                    try? await Task.sleep(nanoseconds: 400_000_000)
+                }
+            }
         }
-        
-        let decoder = JSONDecoder()
-        let result = try decoder.decode(OpenMeteoResponse.self, from: data)
-        guard let current = result.current else {
-            throw WeatherCaptureError.noPayload
+
+        if lastError is WeatherCaptureError {
+            throw lastError!
         }
-        
-        geocoder.cancelGeocode()
-        let placemark = try? await geocoder.reverseGeocodeLocation(location).first
-        let locationName = placemark?.locality ??
-            placemark?.name ??
-            "Current location".localized
-        
-        return WeatherSnapshot(
-            locationName: locationName,
-            temperatureCelsius: current.temperature2M,
-            humidityPercent: current.relativeHumidity2M,
-            timestamp: Date()
-        )
+        throw WeatherCaptureError.networkFailure
     }
 }
 

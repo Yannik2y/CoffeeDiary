@@ -1,0 +1,23 @@
+Coffee Diary ist dein digitales Bezugs-Tagebuch für Zuhause-Baristas und Espresso-Enthusiasten.
+
+Erfasse jeden Shot und jeden Filterbezug mit Dosis, Extraktionsmenge, Zeit, Mahlgrad, Bewertung und Notizen. Verknüpfe Bohnen, Mühle, Maschine und Brühgerät – und finde so schneller zu deinem perfekten Setup.
+
+WAS DU MIT COFFEE DIARY MACHST
+
+• Bezüge festhalten – Espresso und Filter, geführt oder per Schnellformular
+• Ausrüstung verwalten – Bohnen, Mühlen, Maschinen, Brühgeräte inkl. Fotos
+• Statistik & Trends – KPIs, Zeiträume, Verhältnis-Stabilität, Mahlgrad-Analyse
+• Coffee Station – aktive Maschine und Mühle immer im Blick
+• Dial-in-Hilfe – Tipps aus deinen letzten Bezügen
+• Optional Wetter-Kontext – Temperatur und Luftfeuchtigkeit zum Bezug speichern
+
+SYNC & DATEN
+
+• Daten bleiben auf deinem Gerät (SwiftData)
+• Optional Synchronisation über dein persönliches iCloud-Konto – ideal für iPhone und iPad
+• Export als JSON oder CSV aus den Einstellungen
+
+Coffee Diary ist ohne Werbung, ohne Tracking und ohne Konto-Pflicht. Deine Daten gehören dir.
+
+Support: https://Yannik2y.github.io/CoffeeDiary/support
+Datenschutz: https://Yannik2y.github.io/CoffeeDiary/privacy-policy

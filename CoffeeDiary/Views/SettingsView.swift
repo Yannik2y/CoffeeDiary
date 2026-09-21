@@ -12,6 +12,7 @@ struct SettingsView: View {
     @State private var showingAbout = false
     @State private var exportURL: URL?
     @State private var showingExporter = false
+    @State private var exportErrorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -65,11 +66,27 @@ struct SettingsView: View {
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
-            .sheet(isPresented: $showingExporter) {
+            .sheet(isPresented: $showingExporter, onDismiss: {
+                if let exportURL {
+                    try? FileManager.default.removeItem(at: exportURL)
+                    self.exportURL = nil
+                }
+            }) {
                 if let exportURL {
                     ShareSheet(items: [exportURL])
                 }
             }
+            .alert("Error".localized, isPresented: Binding(
+                get: { exportErrorMessage != nil },
+                set: { if !$0 { exportErrorMessage = nil } }
+            )) {
+                Button("OK".localized, role: .cancel) { exportErrorMessage = nil }
+            } message: {
+                if let exportErrorMessage {
+                    Text(exportErrorMessage)
+                }
+            }
+            .errorAlert()
         }
     }
 
@@ -86,11 +103,17 @@ struct SettingsView: View {
             data = BrewExportService.exportCSV(brews: brews).data(using: .utf8)
             filename = "coffee-diary-export.csv"
         }
-        guard let data else { return }
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
-        try? data.write(to: url)
-        exportURL = url
-        showingExporter = true
+        guard let data else {
+            exportErrorMessage = "Export failed. Please try again.".localized
+            return
+        }
+        do {
+            let url = try BrewExportService.writeTemporaryFile(data: data, preferredName: filename)
+            exportURL = url
+            showingExporter = true
+        } catch {
+            exportErrorMessage = "Could not write export file.".localized
+        }
     }
 }
 

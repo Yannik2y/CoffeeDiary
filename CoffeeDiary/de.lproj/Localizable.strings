@@ -368,3 +368,37 @@
 "Extraction time over time" = "Extraktionszeit im Verlauf";
 "Remove filter" = "Filter entfernen";
 
+
+// MARK: - Remediation strings
+"Error" = "Fehler";
+"OK" = "OK";
+"Import Image" = "Bild importieren";
+"Only image files are supported." = "Nur Bilddateien werden unterstützt.";
+"Shot Time" = "Bezugszeit";
+"Brew Time" = "Brühzeit";
+"Shot" = "Shot";
+"Shot %@" = "Shot %@";
+"From %@" = "Von %@";
+"To %@" = "Bis %@";
+"Ratio %@–%@" = "Ratio %@–%@";
+"Ratio ≥%@" = "Ratio ≥%@";
+"Ratio ≤%@" = "Ratio ≤%@";
+"Rating ≥ %d" = "Bewertung ≥ %d";
+"Min ratio: %@" = "Min. Ratio: %@";
+"Max ratio: %@" = "Max. Ratio: %@";
+"Add Another Bean" = "Weitere Bohne hinzufügen";
+"Add Grinder" = "Mühle hinzufügen";
+"Add Another Grinder" = "Weitere Mühle hinzufügen";
+"Add Machine" = "Maschine hinzufügen";
+"Add Another Machine" = "Weitere Maschine hinzufügen";
+"Add Brewer" = "Brühgerät hinzufügen";
+"Add Another Brewer" = "Weiteres Brühgerät hinzufügen";
+"+ %d more" = "+ %d weitere";
+"Start timer" = "Timer starten";
+"Stop timer" = "Timer stoppen";
+"Swipe up or down to change rating. Double tap a star to set or clear." = "Wische nach oben oder unten, um die Bewertung zu ändern. Doppeltippe auf einen Stern zum Setzen oder Löschen.";
+"Export failed. Please try again." = "Export fehlgeschlagen. Bitte erneut versuchen.";
+"Could not write export file." = "Exportdatei konnte nicht geschrieben werden.";
+"Photo" = "Foto";
+"bar" = "bar";
+"Blend" = "Blend";

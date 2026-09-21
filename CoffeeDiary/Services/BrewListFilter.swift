@@ -24,6 +24,7 @@ struct BrewFilterCriteria: Equatable {
     }
 
     var hasActiveFilters: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
         shotType != nil ||
         brewStyle != nil ||
         startDate != nil ||
@@ -44,7 +45,7 @@ enum BrewListFilter {
             if let style = criteria.brewStyle {
                 ok = ok && entry.brewStyle == style
             }
-            let search = criteria.searchText
+            let search = criteria.searchText.lowercased()
             if !search.isEmpty {
                 if entry.coffeeName.lowercased().contains(search) {
                     // match

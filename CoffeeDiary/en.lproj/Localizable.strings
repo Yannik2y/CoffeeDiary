@@ -63,3 +63,37 @@
 "n=%d" = "n=%d";
 "No data" = "No data";
 "Add a few brews to see trends." = "Add a few brews to see trends.";
+
+// MARK: - Remediation strings
+"Error" = "Error";
+"OK" = "OK";
+"Import Image" = "Import Image";
+"Only image files are supported." = "Only image files are supported.";
+"Shot Time" = "Shot Time";
+"Brew Time" = "Brew Time";
+"Shot" = "Shot";
+"Shot %@" = "Shot %@";
+"From %@" = "From %@";
+"To %@" = "To %@";
+"Ratio %@–%@" = "Ratio %@–%@";
+"Ratio ≥%@" = "Ratio ≥%@";
+"Ratio ≤%@" = "Ratio ≤%@";
+"Rating ≥ %d" = "Rating ≥ %d";
+"Min ratio: %@" = "Min ratio: %@";
+"Max ratio: %@" = "Max ratio: %@";
+"Add Another Bean" = "Add Another Bean";
+"Add Grinder" = "Add Grinder";
+"Add Another Grinder" = "Add Another Grinder";
+"Add Machine" = "Add Machine";
+"Add Another Machine" = "Add Another Machine";
+"Add Brewer" = "Add Brewer";
+"Add Another Brewer" = "Add Another Brewer";
+"+ %d more" = "+ %d more";
+"Start timer" = "Start timer";
+"Stop timer" = "Stop timer";
+"Swipe up or down to change rating. Double tap a star to set or clear." = "Swipe up or down to change rating. Double tap a star to set or clear.";
+"Export failed. Please try again." = "Export failed. Please try again.";
+"Could not write export file." = "Could not write export file.";
+"Photo" = "Photo";
+"bar" = "bar";
+"Blend" = "Blend";

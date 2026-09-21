@@ -1,0 +1,9 @@
+# App Store Connect identifiers for Coffee Diary
+app_identifier("YC.CoffeeDiary")
+team_id("7PAQG44S9V")
+
+# Optional Apple ID for interactive flows (prefer ASC API key via ENV)
+# apple_id("you@example.com")
+
+# itc_team_id is the App Store Connect team ID (numeric) if you belong to multiple teams
+# itc_team_id("XXXXXXXXXX")

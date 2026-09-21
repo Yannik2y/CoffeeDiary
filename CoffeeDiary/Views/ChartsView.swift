@@ -37,7 +37,7 @@ struct ChartsView: View {
                 BrewDetailDestination(brewId: id, allBrews: brews)
             }
             .onAppear { refresh() }
-            .onChange(of: brews.count) { _, _ in refresh() }
+            .onChange(of: BrewListViewModel.contentFingerprint(for: brews)) { _, _ in refresh() }
             .onChange(of: selectedRatioDate) { _, newValue in
                 selectBrew(from: dashboard.ratioOverTime.points, date: newValue)
             }

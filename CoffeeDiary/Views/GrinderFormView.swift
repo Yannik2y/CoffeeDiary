@@ -58,7 +58,7 @@ struct GrinderFormView: View {
                     Toggle("Active Station".localized, isOn: $isActive)
                 }
 
-                Section("Photo / Documents".localized) {
+                Section("Photo".localized) {
                     if let photoData,
                        let image = UIImage(data: photoData) {
                         VStack(spacing: 8) {

@@ -1,4 +1,3 @@
-"NSLocationWhenInUseUsageDescription" = "Coffee Diary benötigt deinen Standort, um Temperatur und Luftfeuchtigkeit während eines Bezugs optional zu dokumentieren.";
+"NSLocationWhenInUseUsageDescription" = "Coffee Diary benötigt deinen Standort, um ungefähre Temperatur und Luftfeuchtigkeit während eines Bezugs optional zu dokumentieren.";
 "NSCameraUsageDescription" = "Wir benötigen Kamerazugriff, um Fotos deiner Kaffeeausrüstung und Bohnen aufzunehmen.";
 "NSPhotoLibraryUsageDescription" = "Wir benötigen Zugriff auf deine Fotomediathek, um Bilder deiner Ausrüstung und Bohnen auszuwählen.";
-"NSPhotoLibraryAddUsageDescription" = "Wir benötigen Zugriff, um Fotos deiner Ausrüstung und Bohnen in deiner Mediathek zu speichern.";

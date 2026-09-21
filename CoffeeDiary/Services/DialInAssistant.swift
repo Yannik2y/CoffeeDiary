@@ -12,6 +12,7 @@ enum DialInAssistant {
         guard let bean else { return nil }
         let related = brews
             .filter { $0.bean?.id == bean.id && $0.brewStyle == .espresso }
+            .sorted { $0.createdAt > $1.createdAt }
             .prefix(5)
         guard related.count >= 3 else { return nil }
 

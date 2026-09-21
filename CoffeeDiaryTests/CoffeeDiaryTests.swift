@@ -305,4 +305,127 @@ struct PhotoMigrationServiceTests {
         #expect(bean.photoPath == nil)
         #expect(bean.photoData!.count <= sourceData.count)
     }
+
+    @Test @MainActor func keepsPhotoPathWhenDataIsNotAnImage() throws {
+        let schema = Schema(versionedSchema: CoffeeDiarySchemaV1.self)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [config])
+        let context = container.mainContext
+
+        let filename = "\(UUID().uuidString).jpg"
+        let url = PhotoStorage.photosDirectory.appendingPathComponent(filename)
+        try Data("not-an-image".utf8).write(to: url)
+
+        let bean = Bean(name: "Corrupt Photo", photoPath: filename)
+        context.insert(bean)
+        try context.save()
+
+        PhotoMigrationService.migrateForTesting(container: container)
+
+        #expect(bean.photoData == nil)
+        #expect(bean.photoPath == filename)
+
+        try? FileManager.default.removeItem(at: url)
+    }
 }
+
+struct BrewExportServiceTests {
+    @Test func csvEscapeQuotesNewlinesAndCommas() {
+        #expect(BrewExportService.csvEscape("plain") == "plain")
+        #expect(BrewExportService.csvEscape("a,b") == "\"a,b\"")
+        #expect(BrewExportService.csvEscape("line1\nline2") == "\"line1\nline2\"")
+        #expect(BrewExportService.csvEscape("say \"hi\"") == "\"say \"\"hi\"\"\"")
+    }
+
+    @Test func exportCSVIncludesEscapedNotes() {
+        let brew = BrewEntry(
+            coffeeName: "Test",
+            grinderSetting: 2,
+            shotType: .double,
+            doseGrams: 18,
+            yieldGrams: 36,
+            brewTimeSeconds: 25,
+            notes: "First line\nSecond, quoted \"note\""
+        )
+        let csv = BrewExportService.exportCSV(brews: [brew])
+        #expect(csv.contains("\"First line\nSecond, quoted \"\"note\"\"\""))
+    }
+}
+
+struct BrewListSearchCaseTests {
+    @Test func searchIsCaseInsensitiveForQuery() {
+        let brew = BrewEntry(
+            coffeeName: "Yirgacheffe",
+            grinderSetting: 2,
+            shotType: .double,
+            doseGrams: 18,
+            yieldGrams: 36,
+            brewTimeSeconds: 25
+        )
+        let criteria = BrewFilterCriteria(searchText: "YIRGA")
+        let filtered = BrewListFilter.apply(criteria, to: [brew])
+        #expect(filtered.count == 1)
+    }
+}
+
+struct DialInAssistantOrderingTests {
+    @Test func usesMostRecentBrewAsLatestRegardlessOfInputOrder() {
+        let bean = Bean(name: "DialInBean")
+        let older = BrewEntry(
+            createdAt: Date().addingTimeInterval(-3600),
+            coffeeName: "Old",
+            grinderSetting: 2,
+            shotType: .double,
+            doseGrams: 18,
+            yieldGrams: 36,
+            brewTimeSeconds: 28,
+            rating: 2,
+            bean: bean
+        )
+        let mid = BrewEntry(
+            createdAt: Date().addingTimeInterval(-1800),
+            coffeeName: "Mid",
+            grinderSetting: 2,
+            shotType: .double,
+            doseGrams: 18,
+            yieldGrams: 36,
+            brewTimeSeconds: 28,
+            rating: 2,
+            bean: bean
+        )
+        let newest = BrewEntry(
+            createdAt: Date(),
+            coffeeName: "New",
+            grinderSetting: 2,
+            shotType: .double,
+            doseGrams: 18,
+            yieldGrams: 36,
+            brewTimeSeconds: 28,
+            rating: 5,
+            bean: bean
+        )
+        // Pass unsorted (oldest first) to ensure assistant sorts internally.
+        let suggestion = DialInAssistant.suggestion(for: bean, in: [older, mid, newest])
+        #expect(suggestion != nil)
+        #expect(suggestion?.suggestedDose == newest.doseGrams)
+    }
+}
+
+struct ActiveStationTests {
+    @Test @MainActor func setActiveMachineClearsOtherActives() {
+        let m1 = Machine(name: "A", isActive: true)
+        let m2 = Machine(name: "B", isActive: false)
+        BrewStore.shared.applyActiveMachineSelection(m2, isActive: true, allMachines: [m1, m2])
+        #expect(m1.isActive == false)
+        #expect(m2.isActive == true)
+    }
+
+    @Test @MainActor func reconcileKeepsSingleActiveMachine() {
+        let m1 = Machine(name: "A", isActive: true)
+        let m2 = Machine(name: "B", isActive: true)
+        BrewStore.shared.reconcileActiveEquipment(machines: [m1, m2], grinders: [])
+        let activeCount = [m1, m2].filter(\.isActive).count
+        #expect(activeCount == 1)
+    }
+}
+

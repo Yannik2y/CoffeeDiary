@@ -57,6 +57,10 @@ struct FlowConfigurationView: View {
                     }
                 }
             }
+            // Persist on any dismiss (swipe / Done) so mid-wizard reloads see saved toggles.
+            .onDisappear {
+                config.save()
+            }
         }
     }
 }

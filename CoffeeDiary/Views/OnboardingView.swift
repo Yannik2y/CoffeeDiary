@@ -97,13 +97,14 @@ struct OnboardingView: View {
                             Image(systemName: currentStep.icon)
                                 .font(.system(size: 50, weight: .medium))
                                 .foregroundStyle(AppTheme.accent)
+                                .imageScale(.large)
                         }
                         .padding(.top, currentStep == .welcome ? 60 : 40)
                         
                         // Title and description
                         VStack(spacing: 12) {
                             Text(currentStep.title)
-                                .font(.system(size: 32, weight: .bold))
+                                .font(.largeTitle.weight(.bold))
                                 .foregroundStyle(AppTheme.textPrimary)
                                 .multilineTextAlignment(.center)
                             
@@ -137,12 +138,22 @@ struct OnboardingView: View {
         .sheet(isPresented: $showingGrinderForm) {
             GrinderFormView { grinder in
                 modelContext.insert(grinder)
+                BrewStore.shared.applyActiveGrinderSelection(
+                    grinder,
+                    isActive: grinder.isActive || grinders.isEmpty,
+                    allGrinders: grinders + [grinder]
+                )
                 ErrorHandler.save(modelContext, errorMessage: "Failed to save grinder. Please try again.".localized)
             }
         }
         .sheet(isPresented: $showingMachineForm) {
             MachineFormView { machine in
                 modelContext.insert(machine)
+                BrewStore.shared.applyActiveMachineSelection(
+                    machine,
+                    isActive: machine.isActive || machines.isEmpty,
+                    allMachines: machines + [machine]
+                )
                 ErrorHandler.save(modelContext, errorMessage: "Failed to save machine. Please try again.".localized)
             }
         }
@@ -222,7 +233,7 @@ struct OnboardingView: View {
                     }
                     
                     if beans.count > 3 {
-                        Text("+ \(beans.count - 3) more")
+                        Text("+ %d more".localized(with: beans.count - 3))
                             .font(.caption)
                             .foregroundStyle(AppTheme.textSecondary)
                     }
@@ -230,7 +241,7 @@ struct OnboardingView: View {
                     Button {
                         showingBeanForm = true
                     } label: {
-                        Text("Add Another Bean")
+                        Text("Add Another Bean".localized)
                             .font(.subheadline)
                             .foregroundStyle(AppTheme.accent)
                     }
@@ -245,8 +256,8 @@ struct OnboardingView: View {
             items: grinders,
             icon: "gearshape.fill",
             itemName: { $0.name },
-            addButtonText: "Add Grinder",
-            addAnotherText: "Add Another Grinder",
+            addButtonText: "Add Grinder".localized,
+            addAnotherText: "Add Another Grinder".localized,
             onAdd: { showingGrinderForm = true }
         )
     }
@@ -256,8 +267,8 @@ struct OnboardingView: View {
             items: machines,
             icon: "cup.and.saucer.fill",
             itemName: { $0.name },
-            addButtonText: "Add Machine",
-            addAnotherText: "Add Another Machine",
+            addButtonText: "Add Machine".localized,
+            addAnotherText: "Add Another Machine".localized,
             onAdd: { showingMachineForm = true }
         )
     }
@@ -267,8 +278,8 @@ struct OnboardingView: View {
             items: brewers,
             icon: "drop.circle.fill",
             itemName: { $0.name },
-            addButtonText: "Add Brewer",
-            addAnotherText: "Add Another Brewer",
+            addButtonText: "Add Brewer".localized,
+            addAnotherText: "Add Another Brewer".localized,
             onAdd: { showingBrewerForm = true }
         )
     }
@@ -309,7 +320,7 @@ struct OnboardingView: View {
                     }
                     
                     if items.count > 3 {
-                        Text("+ \(items.count - 3) more")
+                        Text("+ %d more".localized(with: items.count - 3))
                             .font(.caption)
                             .foregroundStyle(AppTheme.textSecondary)
                     }

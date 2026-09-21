@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import UniformTypeIdentifiers
+import UIKit
 
 struct EquipmentPhotoPicker: View {
     @Binding var photoData: Data?
@@ -14,7 +15,7 @@ struct EquipmentPhotoPicker: View {
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
 
     var body: some View {
-        Section("Photo / Documents".localized) {
+        Section("Photo".localized) {
             if let photoData, let image = UIImage(data: photoData) {
                 VStack(spacing: 8) {
                     Image(uiImage: image)
@@ -39,7 +40,7 @@ struct EquipmentPhotoPicker: View {
             }
 
             Button { showingDocumentPicker = true } label: {
-                Label("Import Document".localized, systemImage: "doc")
+                Label("Import Image".localized, systemImage: "photo")
             }
 
             if let attachmentError {
@@ -56,7 +57,7 @@ struct EquipmentPhotoPicker: View {
                 }
             }
         }
-        .fileImporter(isPresented: $showingDocumentPicker, allowedContentTypes: [.image, .pdf]) { result in
+        .fileImporter(isPresented: $showingDocumentPicker, allowedContentTypes: [.image]) { result in
             if case .success(let url) = result {
                 let accessing = url.startAccessingSecurityScopedResource()
                 defer { if accessing { url.stopAccessingSecurityScopedResource() } }
@@ -76,6 +77,11 @@ struct EquipmentPhotoPicker: View {
     private func handleAttachmentData(_ data: Data) {
         if data.count > attachmentLimitBytes {
             attachmentError = "Files must be smaller than 8 MB.".localized
+            return
+        }
+        // Reject non-image payloads early (e.g. mislabeled files) so saves don't silently drop them.
+        guard UIImage(data: data) != nil else {
+            attachmentError = "Only image files are supported.".localized
             return
         }
         attachmentError = nil

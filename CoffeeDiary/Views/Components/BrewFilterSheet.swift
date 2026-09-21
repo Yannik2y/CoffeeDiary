@@ -34,13 +34,13 @@ struct BrewFilterSheet: View {
                         get: { filterMinRatio ?? 0 },
                         set: { filterMinRatio = $0 > 0 ? $0 : nil }
                     ), in: 0...10, step: 0.1) {
-                        Text("Min ratio: \(filterMinRatio ?? 0, specifier: "%.1f")")
+                        Text("Min ratio: %@".localized(with: String(format: "%.1f", filterMinRatio ?? 0)))
                     }
                     Stepper(value: Binding(
                         get: { filterMaxRatio ?? 0 },
                         set: { filterMaxRatio = $0 > 0 ? $0 : nil }
                     ), in: 0...10, step: 0.1) {
-                        Text("Max ratio: \(filterMaxRatio ?? 0, specifier: "%.1f")")
+                        Text("Max ratio: %@".localized(with: String(format: "%.1f", filterMaxRatio ?? 0)))
                     }
                     if filterMinRatio != nil || filterMaxRatio != nil {
                         Button("Clear ratio filters".localized) {

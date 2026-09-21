@@ -1,11 +1,18 @@
 import Foundation
 
 struct BrewExportService {
+    private static let iso8601 = ISO8601DateFormatter()
+
+    enum ExportError: Error {
+        case serializationFailed
+        case writeFailed
+    }
+
     static func exportJSON(brews: [BrewEntry]) -> Data? {
         let records: [[String: Any]] = brews.map { entry in
             [
                 "id": entry.id.uuidString,
-                "createdAt": ISO8601DateFormatter().string(from: entry.createdAt),
+                "createdAt": iso8601.string(from: entry.createdAt),
                 "coffeeName": entry.coffeeName,
                 "brewStyle": entry.brewStyleRaw,
                 "shotType": entry.shotType.rawValue,
@@ -26,10 +33,9 @@ struct BrewExportService {
 
     static func exportCSV(brews: [BrewEntry]) -> String {
         var lines = ["date,coffee,style,shot,dose,yield,time,grinder_setting,rating,bean,notes"]
-        let formatter = ISO8601DateFormatter()
         for entry in brews {
             let fields = [
-                formatter.string(from: entry.createdAt),
+                iso8601.string(from: entry.createdAt),
                 csvEscape(entry.coffeeName),
                 entry.brewStyleRaw,
                 "\(entry.shotType.rawValue)",
@@ -46,8 +52,20 @@ struct BrewExportService {
         return lines.joined(separator: "\n")
     }
 
-    private static func csvEscape(_ value: String) -> String {
-        if value.contains(",") || value.contains("\"") {
+    /// Writes export data to a unique temp file. Caller may delete after sharing.
+    static func writeTemporaryFile(data: Data, preferredName: String) throws -> URL {
+        let unique = "\(UUID().uuidString)-\(preferredName)"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(unique)
+        do {
+            try data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            throw ExportError.writeFailed
+        }
+    }
+
+    static func csvEscape(_ value: String) -> String {
+        if value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r") {
             return "\"\(value.replacingOccurrences(of: "\"", with: "\"\""))\""
         }
         return value

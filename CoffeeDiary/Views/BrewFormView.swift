@@ -131,10 +131,10 @@ struct BrewFormView: View {
                                         brewPressureBar = min(max(val, 0), 12)
                                     }
                                 }
-                            Text("bar").foregroundStyle(.secondary)
+                            Text("bar".localized).foregroundStyle(.secondary)
                         }
                         Stepper(value: $brewPressureBar, in: 0...12, step: 0.1) {
-                            Text(String(format: "%.1f bar", brewPressureBar))
+                            Text(String(format: "%.1f %@", brewPressureBar, "bar".localized))
                         }
                         .onChange(of: brewPressureBar) { _, new in
                             brewPressureText = Formatters.number.string(from: NSNumber(value: new)) ?? String(new)
@@ -304,31 +304,14 @@ struct BrewFormView: View {
                                 yieldText = Formatters.number.string(from: NSNumber(value: new)) ?? String(new)
                             }
                     }
-                    TimelineView(.periodic(from: Date(), by: 1)) { context in
-                        let displayed = {
-                            if isTiming, let start = timerStartDate {
-                                let elapsed = max(0, Int(context.date.timeIntervalSince(start).rounded()))
-                                return Formatters.secondsString(elapsed)
-                            } else {
-                                return Formatters.secondsString(brewTimeSeconds)
+                    Group {
+                        if isTiming {
+                            TimelineView(.periodic(from: Date(), by: 1)) { context in
+                                brewTimerLabel(contextDate: context.date)
                             }
-                        }()
-                        HStack {
-                            Text(brewStyle == .espresso ? "Shot Time" : "Brew Time")
-                            Spacer()
-                            Text(displayed)
-                                .font(.system(size: 42, weight: .bold, design: .rounded))
-                                .monospacedDigit()
+                        } else {
+                            brewTimerLabel(contextDate: Date())
                         }
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(
-                                    LinearGradient(colors: [AppTheme.accentSecondary.opacity(0.18), AppTheme.cardBackground],
-                                                   startPoint: .topLeading, endPoint: .bottomTrailing)
-                                )
-                        )
                     }
                     HStack {
                         Button {
@@ -459,6 +442,33 @@ struct BrewFormView: View {
             timerStartDate = Date()
             HapticFeedback.light()
         }
+    }
+
+    @ViewBuilder
+    private func brewTimerLabel(contextDate: Date) -> some View {
+        let displayed: String = {
+            if isTiming, let start = timerStartDate {
+                let elapsed = max(0, Int(contextDate.timeIntervalSince(start).rounded()))
+                return Formatters.secondsString(elapsed)
+            }
+            return Formatters.secondsString(brewTimeSeconds)
+        }()
+        HStack {
+            Text(brewStyle == .espresso ? "Shot Time".localized : "Brew Time".localized)
+            Spacer()
+            Text(displayed)
+                .font(.largeTitle.weight(.bold).monospacedDigit())
+                .monospacedDigit()
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(
+                    LinearGradient(colors: [AppTheme.accentSecondary.opacity(0.18), AppTheme.cardBackground],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                )
+        )
     }
     
     private func resetTimer() {

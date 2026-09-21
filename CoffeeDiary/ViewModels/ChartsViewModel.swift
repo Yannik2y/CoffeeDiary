@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 @Observable
+@MainActor
 final class ChartsViewModel {
     var filterOptions = ChartFilterOptions()
     private(set) var dashboard = ChartsDashboardSnapshot(
@@ -21,9 +22,22 @@ final class ChartsViewModel {
         shotTimeInsight: "",
         weeklyRatingInsight: ""
     )
+    private(set) var cachedBeansWithBrews: [(id: UUID, name: String)] = []
+    private var updateTask: Task<Void, Never>?
 
     func update(brews: [BrewEntry]) {
-        dashboard = ChartAnalyticsService.buildDashboard(from: brews, options: filterOptions)
+        updateTask?.cancel()
+        let options = filterOptions
+        // Snapshot value-type metrics off the model objects before leaving MainActor.
+        let snapshot = ChartAnalyticsService.buildDashboard(from: brews, options: options)
+        let beans = ChartAnalyticsService.beansWithBrews(
+            in: ChartAnalyticsService.filter(
+                brews,
+                options: ChartFilterOptions(timeRange: options.timeRange, brewStyle: options.brewStyle)
+            )
+        )
+        dashboard = snapshot
+        cachedBeansWithBrews = beans
     }
 
     func setTimeRange(_ range: ChartTimeRange) {
@@ -47,6 +61,9 @@ final class ChartsViewModel {
     }
 
     func beansWithBrews(from allBrews: [BrewEntry]) -> [(id: UUID, name: String)] {
+        if !cachedBeansWithBrews.isEmpty {
+            return cachedBeansWithBrews
+        }
         let filtered = ChartAnalyticsService.filter(
             allBrews,
             options: ChartFilterOptions(timeRange: filterOptions.timeRange, brewStyle: filterOptions.brewStyle)

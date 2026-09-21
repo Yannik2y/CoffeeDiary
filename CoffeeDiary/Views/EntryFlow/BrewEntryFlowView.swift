@@ -158,6 +158,22 @@ struct BrewEntryFlowView: View {
         return s
     }
 
+    private var safeCurrentStep: Step? {
+        let currentSteps = steps
+        guard !currentSteps.isEmpty else { return nil }
+        let index = min(max(stepIndex, 0), currentSteps.count - 1)
+        return currentSteps[index]
+    }
+
+    private func clampStepIndex() {
+        let count = steps.count
+        guard count > 0 else {
+            stepIndex = 0
+            return
+        }
+        stepIndex = min(max(stepIndex, 0), count - 1)
+    }
+    
     private var shouldShowShotSummary: Bool {
         flow == .espresso && flowConfig.espressoShotType
     }
@@ -233,7 +249,9 @@ struct BrewEntryFlowView: View {
     private var progressHeader: some View {
         VStack(spacing: 8) {
             HStack {
-                Text("Step %d of %d".localized(with: stepIndex + 1, steps.count))
+                let total = max(steps.count, 1)
+                let current = min(stepIndex + 1, total)
+                Text("Step %d of %d".localized(with: current, total))
                     .font(.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
                 Spacer()
@@ -245,7 +263,7 @@ struct BrewEntryFlowView: View {
                         .frame(height: 6)
                     RoundedRectangle(cornerRadius: 4)
                         .fill(AppTheme.accent)
-                        .frame(width: geometry.size.width * CGFloat(stepIndex + 1) / CGFloat(steps.count), height: 6)
+                        .frame(width: geometry.size.width * CGFloat(min(stepIndex + 1, max(steps.count, 1))) / CGFloat(max(steps.count, 1)), height: 6)
                 }
             }
             .frame(height: 6)
@@ -257,25 +275,29 @@ struct BrewEntryFlowView: View {
             VStack(spacing: 16) {
                 progressHeader
                 Group {
-                    switch steps[stepIndex] {
-                    case .coffee: questionCoffee
-                    case .shotType: questionShotType
-                    case .grinderSetting: questionGrinder
-                    case .grinderTimer: questionGrinderTimer
-                    case .dose: questionDose
-                    case .yield: questionYield
-                    case .time: questionTime
-                case .preInfusionTime: questionPreInfusionTime
-                case .brewPressure: questionBrewPressure
-                    case .brewerSelection: questionBrewer
-                    case .bloom: questionBloom
-                    case .totalWater: questionTotalWater
-                    case .waterTemp: questionWaterTemp
-                    case .gear: questionGear
-                    case .notes: questionNotes
-                    case .rating: questionRating
-                case .weather: questionWeather
-                    case .review: reviewView
+                    if let currentStep = safeCurrentStep {
+                        switch currentStep {
+                        case .coffee: questionCoffee
+                        case .shotType: questionShotType
+                        case .grinderSetting: questionGrinder
+                        case .grinderTimer: questionGrinderTimer
+                        case .dose: questionDose
+                        case .yield: questionYield
+                        case .time: questionTime
+                        case .preInfusionTime: questionPreInfusionTime
+                        case .brewPressure: questionBrewPressure
+                        case .brewerSelection: questionBrewer
+                        case .bloom: questionBloom
+                        case .totalWater: questionTotalWater
+                        case .waterTemp: questionWaterTemp
+                        case .gear: questionGear
+                        case .notes: questionNotes
+                        case .rating: questionRating
+                        case .weather: questionWeather
+                        case .review: reviewView
+                        }
+                    } else {
+                        reviewView
                     }
                 }
                 .animation(.easeInOut, value: stepIndex)
@@ -308,7 +330,10 @@ struct BrewEntryFlowView: View {
                 }
             }
             .onChange(of: showingConfig) { _, isShowing in
-                if !isShowing { flowConfig = FlowConfiguration.load() }
+                if !isShowing {
+                    flowConfig = FlowConfiguration.load()
+                    clampStepIndex()
+                }
             }
             .errorAlert()
             .onAppear {
@@ -500,28 +525,14 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            TimelineView(.periodic(from: Date(), by: 1)) { context in
-                let displayed = {
-                    if isTiming, let start = timerStartDate {
-                        let elapsed = max(0, Int(context.date.timeIntervalSince(start).rounded()))
-                        return Formatters.secondsString(elapsed)
-                    } else {
-                        return Formatters.secondsString(brewTimeSeconds)
+            Group {
+                if isTiming {
+                    TimelineView(.periodic(from: Date(), by: 1)) { context in
+                        flowTimerDisplay(contextDate: context.date)
                     }
-                }()
-                HStack {
-                    Spacer()
-                    Text(displayed)
-                        .font(.system(size: 42, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                    Spacer()
+                } else {
+                    flowTimerDisplay(contextDate: Date())
                 }
-                .padding(.vertical, 16)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(LinearGradient(colors: [AppTheme.accentSecondary.opacity(0.18), AppTheme.cardBackground],
-                                             startPoint: .topLeading, endPoint: .bottomTrailing))
-                )
             }
             VStack(spacing: 16) {
                 Button(isTiming ? "Stop".localized : "Start".localized) { toggleTimer() }
@@ -531,6 +542,8 @@ struct BrewEntryFlowView: View {
                     .background(isTiming ? Color.red : AppTheme.accent)
                     .clipShape(Circle())
                     .buttonStyle(.plain)
+                    .accessibilityLabel(isTiming ? "Stop timer".localized : "Start timer".localized)
+                    .accessibilityValue(Formatters.secondsString(brewTimeSeconds))
                 Button("Reset".localized) { resetTimer() }
                     .buttonStyle(.bordered)
                     .disabled(isTiming == false && brewTimeSeconds == 0)
@@ -832,14 +845,14 @@ struct BrewEntryFlowView: View {
                     .buttonStyle(.bordered)
             }
             Spacer()
-            if steps[stepIndex] == .review {
+            if safeCurrentStep == .review {
                 Button("Save".localized) { save() }
                     .buttonStyle(.borderedProminent)
                     .disabled(coffeeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || doseGrams <= 0)
-            } else {
-                Button("Next".localized) { stepIndex = min(stepIndex + 1, steps.count - 1) }
+            } else if let current = safeCurrentStep {
+                Button("Next".localized) { stepIndex = min(stepIndex + 1, max(steps.count - 1, 0)) }
                     .buttonStyle(.borderedProminent)
-                    .disabled(!canProceedFrom(step: steps[stepIndex]))
+                    .disabled(!canProceedFrom(step: current))
             }
         }
     }
@@ -880,6 +893,33 @@ struct BrewEntryFlowView: View {
     }
     
     // MARK: - Timer
+    @ViewBuilder
+    private func flowTimerDisplay(contextDate: Date) -> some View {
+        let displayed: String = {
+            if isTiming, let start = timerStartDate {
+                let elapsed = max(0, Int(contextDate.timeIntervalSince(start).rounded()))
+                return Formatters.secondsString(elapsed)
+            }
+            return Formatters.secondsString(brewTimeSeconds)
+        }()
+        HStack {
+            Spacer()
+            Text(displayed)
+                .font(.largeTitle.weight(.bold))
+                .monospacedDigit()
+            Spacer()
+        }
+        .padding(.vertical, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(LinearGradient(colors: [AppTheme.accentSecondary.opacity(0.18), AppTheme.cardBackground],
+                                     startPoint: .topLeading, endPoint: .bottomTrailing))
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(flow == .espresso ? "Shot time".localized : "Brew duration".localized)
+        .accessibilityValue(displayed)
+    }
+
     private func toggleTimer() {
         if isTiming {
             if let start = timerStartDate {

@@ -39,7 +39,7 @@ struct BeanFormView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Bean") {
+                Section("Bean".localized) {
                     TextField("Name", text: $name)
                     TextField("Roaster", text: $roaster)
                     TextField("Origin", text: $origin)
@@ -51,7 +51,7 @@ struct BeanFormView: View {
                 
                 EquipmentPhotoPicker(photoData: $photoData, attachmentError: $attachmentError)
                 
-                Section("Blend") {
+                Section("Blend".localized) {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("Arabica")
@@ -69,7 +69,7 @@ struct BeanFormView: View {
                     }
                 }
                 
-                Section("Notes") {
+                Section("Notes".localized) {
                     TextField("Optional notes", text: $notes, axis: .vertical)
                 }
             }

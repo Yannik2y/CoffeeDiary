@@ -1,15 +1,22 @@
 import UIKit
 
 enum HapticFeedback {
+    private static let lightGenerator = UIImpactFeedbackGenerator(style: .light)
+    private static let notificationGenerator = UINotificationFeedbackGenerator()
+    private static let selectionGenerator = UISelectionFeedbackGenerator()
+
     static func light() {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        lightGenerator.prepare()
+        lightGenerator.impactOccurred()
     }
 
     static func success() {
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        notificationGenerator.prepare()
+        notificationGenerator.notificationOccurred(.success)
     }
 
     static func selection() {
-        UISelectionFeedbackGenerator().selectionChanged()
+        selectionGenerator.prepare()
+        selectionGenerator.selectionChanged()
     }
 }

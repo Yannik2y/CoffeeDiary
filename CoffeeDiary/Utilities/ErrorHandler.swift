@@ -1,78 +1,54 @@
 import SwiftUI
 import SwiftData
 
-/// Utility for handling SwiftData save operations with user-facing error messages
+/// Utility for handling SwiftData save operations with user-facing error messages.
+/// Delegates to BrewStore so there is a single save + notification path.
 enum ErrorHandler {
     /// Saves the model context and shows an error alert if the save fails
-    /// - Parameters:
-    ///   - modelContext: The ModelContext to save
-    ///   - errorMessage: Optional custom error message to show
-    ///   - onSuccess: Optional closure to execute on successful save
+    @discardableResult
     static func save(
         _ modelContext: ModelContext,
         errorMessage: String? = nil,
         onSuccess: (() -> Void)? = nil
-    ) {
-        do {
-            try modelContext.save()
+    ) -> Bool {
+        let ok = BrewStore.shared.save(modelContext, errorMessage: errorMessage)
+        if ok {
             onSuccess?()
-        } catch {
-            let message = errorMessage ?? "Failed to save changes. Please try again.".localized
-            // Log error for debugging
-            print("ModelContext save failed: \(error.localizedDescription)")
-            
-            // Show error alert on main thread
-            DispatchQueue.main.async {
-                // Note: In a real app, you might want to use a more sophisticated
-                // error presentation system (e.g., a shared error state manager)
-                // For now, we'll use a simple approach that can be enhanced later
-                NotificationCenter.default.post(
-                    name: NSNotification.Name("ModelContextSaveError"),
-                    object: nil,
-                    userInfo: ["message": message]
-                )
-            }
         }
+        return ok
     }
-    
-    /// Saves the model context asynchronously
+
+    /// Saves the model context asynchronously (still on MainActor via BrewStore).
     @MainActor
+    @discardableResult
     static func saveAsync(
         _ modelContext: ModelContext,
         errorMessage: String? = nil,
         onSuccess: (() -> Void)? = nil
-    ) async {
-        do {
-            try modelContext.save()
+    ) async -> Bool {
+        let ok = await BrewStore.shared.saveAsync(modelContext, errorMessage: errorMessage)
+        if ok {
             onSuccess?()
-        } catch {
-            let message = errorMessage ?? "Failed to save changes. Please try again.".localized
-            print("ModelContext save failed: \(error.localizedDescription)")
-            
-            NotificationCenter.default.post(
-                name: NSNotification.Name("ModelContextSaveError"),
-                object: nil,
-                userInfo: ["message": message]
-            )
         }
+        return ok
     }
 }
 
-/// View modifier to show error alerts from ErrorHandler
+/// View modifier to show error alerts from ErrorHandler / BrewStore
 struct ErrorAlertModifier: ViewModifier {
     @State private var errorMessage: String?
     @State private var showError = false
-    
+
     func body(content: Content) -> some View {
         content
-            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ModelContextSaveError"))) { notification in
+            .onReceive(NotificationCenter.default.publisher(for: .modelContextSaveError)) { notification in
                 if let message = notification.userInfo?["message"] as? String {
                     errorMessage = message
                     showError = true
                 }
             }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) { }
+            .alert("Error".localized, isPresented: $showError) {
+                Button("OK".localized, role: .cancel) { }
             } message: {
                 if let errorMessage {
                     Text(errorMessage)
@@ -87,4 +63,3 @@ extension View {
         modifier(ErrorAlertModifier())
     }
 }
-
