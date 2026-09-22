@@ -429,6 +429,79 @@ struct ActiveStationTests {
     }
 }
 
+struct EquipmentCatalogTests {
+    @Test func catalogLoadsModelsForBothCategories() {
+        #expect(!EquipmentCatalog.models(for: .machine).isEmpty)
+        #expect(!EquipmentCatalog.models(for: .grinder).isEmpty)
+    }
+
+    @Test func everyModelReferencesKnownBrandAndMatchingSilhouette() {
+        for model in EquipmentCatalog.models {
+            #expect(BrandDatabase.brand(id: model.brandId) != nil, "Unknown brand \(model.brandId) for \(model.id)")
+            #expect(model.silhouette.category == model.category, "Silhouette mismatch for \(model.id)")
+        }
+    }
+
+    @Test func modelIdsAreUnique() {
+        let ids = EquipmentCatalog.models.map(\.id)
+        #expect(Set(ids).count == ids.count)
+    }
+
+    @Test func filtersByBrandAndCategory() {
+        let profitecMachines = EquipmentCatalog.models(for: .machine, brandId: "profitec")
+        #expect(!profitecMachines.isEmpty)
+        #expect(profitecMachines.allSatisfy { $0.brandId == "profitec" && $0.category == .machine })
+        #expect(EquipmentCatalog.models(for: .grinder, brandId: "profitec").isEmpty)
+    }
+
+    @Test func searchMatchesModelAndBrandName() {
+        let byModel = EquipmentCatalog.search("pro 700", category: .machine)
+        #expect(byModel.contains { $0.id == "profitec_pro_700" })
+        let byBrand = EquipmentCatalog.search("eureka", category: .grinder)
+        #expect(!byBrand.isEmpty)
+        #expect(byBrand.allSatisfy { $0.brandId == "eureka" })
+    }
+
+    @Test func burrDescriptionCombinesTypeAndSize() {
+        let model = EquipmentCatalog.model(id: "df64_gen_2")
+        #expect(model?.burrDescription == "\("Flat burrs".localized) 64 mm")
+        let handGrinder = EquipmentCatalog.model(id: "comandante_c40_mk4")
+        #expect(handGrinder?.burrDescription == "Conical burrs".localized)
+    }
+}
+
+struct EquipmentSilhouetteTests {
+    @Test func explicitChoiceWinsOverCatalogModel() {
+        let resolved = EquipmentSilhouette.resolve(
+            silhouetteId: EquipmentSilhouette.machineLever.rawValue,
+            modelId: "profitec_pro_700",
+            category: .machine
+        )
+        #expect(resolved == .machineLever)
+    }
+
+    @Test func catalogModelUsedWithoutExplicitChoice() {
+        let resolved = EquipmentSilhouette.resolve(silhouetteId: nil, modelId: "niche_zero", category: .grinder)
+        #expect(resolved == .grinderSingleDose)
+    }
+
+    @Test func ignoresSilhouetteFromOtherCategory() {
+        let resolved = EquipmentSilhouette.resolve(
+            silhouetteId: EquipmentSilhouette.grinderHand.rawValue,
+            modelId: nil,
+            category: .machine
+        )
+        #expect(resolved == EquipmentSilhouette.defaultSilhouette(for: .machine))
+    }
+
+    @Test func machineAndGrinderExposeResolvedSilhouette() {
+        let machine = Machine(name: "Bianca", modelId: "lelit_bianca")
+        #expect(machine.silhouette == .machineE61)
+        let grinder = Grinder(name: "Old", silhouetteId: "not_a_silhouette")
+        #expect(grinder.silhouette == .grinderHopper)
+    }
+}
+
 struct GeneratedCoffeeNameTests {
     @Test func usesTrimmedBeanName() {
         let bean = Bean(name: "  Ethiopia Yirgacheffe  ")

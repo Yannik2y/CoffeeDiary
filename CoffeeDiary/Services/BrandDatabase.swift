@@ -18,6 +18,15 @@ enum BrandDatabase {
         return brands
     }
 
+    private static let brandsById: [String: CoffeeBrand] = Dictionary(
+        brands.map { ($0.id, $0) },
+        uniquingKeysWith: { first, _ in first }
+    )
+
+    static func brand(id: String) -> CoffeeBrand? {
+        brandsById[id]
+    }
+
     static func search(_ query: String) -> [CoffeeBrand] {
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !q.isEmpty else { return brands }

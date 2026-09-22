@@ -266,6 +266,14 @@ enum EquipmentItem: Identifiable {
         case .brewer: return "drop.circle.fill"
         }
     }
+
+    var silhouette: EquipmentSilhouette? {
+        switch self {
+        case .grinder(let g): return g.silhouette
+        case .machine(let m): return m.silhouette
+        case .bean, .brewer: return nil
+        }
+    }
 }
 
 private struct EquipmentList: View {
@@ -307,7 +315,7 @@ private struct EquipmentRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            EquipmentThumbnail(photoData: item.photoData, systemImage: item.fallbackSymbol)
+            EquipmentThumbnail(photoData: item.photoData, systemImage: item.fallbackSymbol, silhouette: item.silhouette)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.name)
@@ -332,11 +340,15 @@ private struct EquipmentRow: View {
 private struct EquipmentThumbnail: View {
     let photoData: Data?
     let systemImage: String
+    var silhouette: EquipmentSilhouette? = nil
 
     var body: some View {
         Group {
             if photoData != nil {
                 CachedThumbnailImage(data: photoData, maxDimension: 120)
+            } else if let silhouette {
+                EquipmentSilhouetteView(silhouette: silhouette)
+                    .padding(4)
             } else {
                 Image(systemName: systemImage)
                     .font(.system(size: 18, weight: .semibold))

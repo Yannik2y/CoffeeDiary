@@ -97,3 +97,29 @@
 "Photo" = "Photo";
 "bar" = "bar";
 "Blend" = "Blend";
+
+// MARK: - Coffee Station & Equipment Catalog
+"Pick" = "Pick";
+"Select Brand" = "Select Brand";
+"Search brands" = "Search brands";
+"Select Model" = "Select Model";
+"Search models" = "Search models";
+"Model not listed? Close and type it in the Model field." = "Model not listed? Close and type it in the Model field.";
+"Selected" = "Selected";
+"Build Type" = "Build Type";
+"Burr Type" = "Burr Type";
+"Active Station" = "Active Station";
+"E61 / Dual Boiler" = "E61 / Dual Boiler";
+"Compact" = "Compact";
+"Commercial" = "Commercial";
+"Lever" = "Lever";
+"Built-in Grinder" = "Built-in Grinder";
+"Hopper Grinder" = "Hopper Grinder";
+"Single Dose" = "Single Dose";
+"Hand Grinder" = "Hand Grinder";
+"Shop Grinder" = "Shop Grinder";
+"Flat burrs" = "Flat burrs";
+"Conical burrs" = "Conical burrs";
+"Switch Machine" = "Switch Machine";
+"Switch Grinder" = "Switch Grinder";
+"Tap to set up" = "Tap to set up";

@@ -14,6 +14,10 @@ final class Grinder {
     var photoPath: String?
     var isActive: Bool = false
     var brandId: String?
+    var model: String?
+    /// Catalog references (EquipmentCatalog / EquipmentSilhouette raw values). Optional for CloudKit.
+    var modelId: String?
+    var silhouetteId: String?
     
     // Inverse relationship for CloudKit (must be optional)
     @Relationship(inverse: \BrewEntry.grinder) var brews: [BrewEntry]?
@@ -28,7 +32,10 @@ final class Grinder {
         photoData: Data? = nil,
         photoPath: String? = nil,
         isActive: Bool = false,
-        brandId: String? = nil
+        brandId: String? = nil,
+        model: String? = nil,
+        modelId: String? = nil,
+        silhouetteId: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -40,6 +47,9 @@ final class Grinder {
         self.photoPath = photoPath
         self.isActive = isActive
         self.brandId = brandId
+        self.model = model
+        self.modelId = modelId
+        self.silhouetteId = silhouetteId
     }
 }
 

@@ -403,3 +403,29 @@
 "Photo" = "Foto";
 "bar" = "bar";
 "Blend" = "Blend";
+
+// MARK: - Coffee Station & Equipment Catalog
+"Pick" = "Auswählen";
+"Select Brand" = "Marke auswählen";
+"Search brands" = "Marken suchen";
+"Select Model" = "Modell auswählen";
+"Search models" = "Modelle suchen";
+"Model not listed? Close and type it in the Model field." = "Modell nicht dabei? Schließen und im Feld „Modell“ eintippen.";
+"Selected" = "Ausgewählt";
+"Build Type" = "Bauart";
+"Burr Type" = "Mahlwerk";
+"Active Station" = "Aktive Station";
+"E61 / Dual Boiler" = "E61 / Dualboiler";
+"Compact" = "Kompakt";
+"Commercial" = "Gastro";
+"Lever" = "Handhebel";
+"Built-in Grinder" = "Mit Mahlwerk";
+"Hopper Grinder" = "Mit Bohnenbehälter";
+"Single Dose" = "Single Dose";
+"Hand Grinder" = "Handmühle";
+"Shop Grinder" = "Ladenmühle";
+"Flat burrs" = "Scheibenmahlwerk";
+"Conical burrs" = "Kegelmahlwerk";
+"Switch Machine" = "Maschine wechseln";
+"Switch Grinder" = "Mühle wechseln";
+"Tap to set up" = "Antippen zum Einrichten";

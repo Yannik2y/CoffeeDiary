@@ -1,8 +1,5 @@
 import SwiftUI
 import SwiftData
-import PhotosUI
-import UniformTypeIdentifiers
-import UIKit
 
 struct MachineFormView: View {
     @Environment(\.dismiss) private var dismiss
@@ -15,16 +12,11 @@ struct MachineFormView: View {
     @State private var modelName: String
     @State private var notes: String
     @State private var photoData: Data?
-    @State private var selectedPhoto: PhotosPickerItem?
-    @State private var showingDocumentPicker = false
-    @State private var showingCamera = false
     @State private var brandId: String?
+    @State private var modelId: String?
+    @State private var silhouetteId: String?
     @State private var isActive: Bool
-    @State private var showingBrandPicker = false
     @State private var attachmentError: String?
-    
-    private let attachmentLimitBytes = 8 * 1024 * 1024
-    private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
     
     init(machine: Machine? = nil, onSave: @escaping (Machine) -> Void) {
         self.machine = machine
@@ -35,157 +27,89 @@ struct MachineFormView: View {
         _notes = State(initialValue: machine?.notes ?? "")
         _photoData = State(initialValue: machine?.displayPhotoData)
         _brandId = State(initialValue: machine?.brandId)
+        _modelId = State(initialValue: machine?.modelId)
+        _silhouetteId = State(initialValue: machine?.silhouetteId)
         _isActive = State(initialValue: machine?.isActive ?? false)
     }
     
     private var isEditing: Bool { machine != nil }
+
+    private var silhouette: EquipmentSilhouette {
+        EquipmentSilhouette.resolve(silhouetteId: silhouetteId, modelId: modelId, category: .machine)
+    }
     
     var body: some View {
         NavigationStack {
             Form {
+                EquipmentPreviewSection(photoData: photoData, silhouette: silhouette)
+
                 Section("Machine".localized) {
                     TextField("Name".localized, text: $name)
-                    HStack {
-                        TextField("Brand".localized, text: $brand)
-                        Button("Pick".localized) { showingBrandPicker = true }
-                    }
-                    TextField("Model".localized, text: $modelName)
+                    EquipmentIdentityFields(
+                        category: .machine,
+                        name: $name,
+                        brand: $brand,
+                        brandId: $brandId,
+                        modelName: $modelName,
+                        modelId: $modelId,
+                        silhouetteId: $silhouetteId
+                    )
                     Toggle("Active Station".localized, isOn: $isActive)
                 }
                 
-                Section("Photo".localized) {
-                    if let photoData,
-                       let image = UIImage(data: photoData) {
-                        VStack(spacing: 8) {
-                            Image(uiImage: image)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxHeight: 180)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(AppTheme.accentSecondary.opacity(0.2), lineWidth: 1)
-                                )
-                            Button("Remove Photo", role: .destructive) {
-                                self.photoData = nil
-                            }
-                        }
-                    }
-                    
-                    PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
-                        Label(photoData == nil ? "Add Photo" : "Replace Photo", systemImage: "photo.on.rectangle")
-                    }
-                    
-                    if cameraAvailable {
-                        Button {
-                            showingCamera = true
-                        } label: {
-                            Label("Take Photo", systemImage: "camera")
-                        }
-                    }
-                    
-                    Button {
-                        showingDocumentPicker = true
-                    } label: {
-                        Label("Import Document", systemImage: "doc")
-                    }
-                    
-                    if let attachmentError {
-                        Text(attachmentError)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                    }
-                }
+                EquipmentPhotoPicker(photoData: $photoData, attachmentError: $attachmentError)
                 
-                Section("Notes") {
-                    TextField("Optional notes", text: $notes, axis: .vertical)
+                Section("Notes".localized) {
+                    TextField("Optional notes".localized, text: $notes, axis: .vertical)
                 }
-            }
-            .sheet(isPresented: $showingBrandPicker) {
-                BrandPickerView(selectedBrandId: $brandId, brandName: $brand)
             }
             .navigationTitle(isEditing ? "Edit Machine".localized : "New Machine".localized)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel".localized) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditing ? "Save" : "Add") {
+                    Button(isEditing ? "Save".localized : "Add".localized) {
                         save()
                         dismiss()
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
-            .onChange(of: selectedPhoto) { _, item in
-                guard let item else { return }
-                Task {
-                    if let data = try? await item.loadTransferable(type: Data.self) {
-                        await MainActor.run {
-                            handleAttachmentData(data)
-                        }
-                    }
-                }
-            }
-            .fileImporter(isPresented: $showingDocumentPicker, allowedContentTypes: [.image, .pdf]) { result in
-                switch result {
-                case .success(let url):
-                    let accessing = url.startAccessingSecurityScopedResource()
-                    defer {
-                        if accessing { url.stopAccessingSecurityScopedResource() }
-                    }
-                    if let data = try? Data(contentsOf: url) {
-                        handleAttachmentData(data)
-                    }
-                case .failure:
-                    break
-                }
-            }
-            .fullScreenCover(isPresented: $showingCamera) {
-                CameraCaptureView(onCapture: { data in
-                    handleAttachmentData(data)
-                    showingCamera = false
-                }, onDismiss: {
-                    showingCamera = false
-                })
-            }
         }
     }
     
     private func save() {
+        let trimmedBrand = brand.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedModel = modelName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let compressedPhoto = photoData.flatMap { PhotoStorage.compressedJPEG(from: $0) }
+
         if let machine {
             machine.name = name
-            machine.brand = brand.isEmpty ? nil : brand
-            machine.model = modelName.isEmpty ? nil : modelName
+            machine.brand = trimmedBrand.isEmpty ? nil : trimmedBrand
+            machine.model = trimmedModel.isEmpty ? nil : trimmedModel
             machine.notes = notes.isEmpty ? nil : notes
-            machine.photoData = photoData.flatMap { PhotoStorage.compressedJPEG(from: $0) }
+            machine.photoData = compressedPhoto
             machine.photoPath = nil
             machine.brandId = brandId
+            machine.modelId = modelId
+            machine.silhouetteId = silhouetteId
             machine.isActive = isActive
             onSave(machine)
         } else {
-            let compressedPhoto = photoData.flatMap { PhotoStorage.compressedJPEG(from: $0) }
             let newMachine = Machine(
                 name: name,
-                brand: brand.isEmpty ? nil : brand,
-                model: modelName.isEmpty ? nil : modelName,
+                brand: trimmedBrand.isEmpty ? nil : trimmedBrand,
+                model: trimmedModel.isEmpty ? nil : trimmedModel,
                 notes: notes.isEmpty ? nil : notes,
                 photoData: compressedPhoto,
                 photoPath: nil,
                 isActive: isActive,
-                brandId: brandId
+                brandId: brandId,
+                modelId: modelId,
+                silhouetteId: silhouetteId
             )
             onSave(newMachine)
         }
     }
-    
-    private func handleAttachmentData(_ data: Data) {
-        if data.count > attachmentLimitBytes {
-            attachmentError = "Files must be smaller than 8 MB."
-            return
-        }
-        attachmentError = nil
-        photoData = data
-    }
 }
-
