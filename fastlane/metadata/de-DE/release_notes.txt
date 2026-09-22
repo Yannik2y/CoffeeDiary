@@ -1,10 +1,6 @@
-• Neuer Statistik-Tab mit KPIs, Zeiträumen (7/30/90 Tage) und aussagekräftigen Diagrammen
-• Verhältnis-Stabilität, Mahlgrad-Analyse, Shot-Zeit-Verteilung und Wochen-Bewertungen
-• Tippe auf Diagrammpunkte, um direkt zum Bezug zu springen
-• Tab-Navigation: Tagebuch, Statistik, Ausrüstung, Einstellungen
-• Coffee Station: aktive Maschine & Mühle, Marken-Auswahl
-• Dial-in-Tipps auf Basis deiner letzten Shots
-• iCloud-Sync-Status und verbesserte Synchronisation zwischen iPhone und iPad
-• Export deiner Daten als JSON oder CSV
-• Wetter-Kontext auch im manuellen Bezugsformular
-• Vollständige deutsche Lokalisierung und iPad-Optimierungen
+• Der Kaffeenamen kommt automatisch von der gewählten Bohne
+• Bezüge zeigen Datum und Uhrzeit, Filter sitzen in der Leiste und scrollen mit
+• Kontrast in Hell und Dunkel angepasst
+• Werte im Workflow über Zahlfeld und Stepper statt Slider
+• Ausrüstung ist fester Schritt: Bohne, Mühle, Maschine oder Brühgerät direkt anlegen
+• Kaffeestation übersichtlicher, mit aktiver Maschine und Mühle

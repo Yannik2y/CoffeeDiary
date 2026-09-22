@@ -12,7 +12,7 @@ Push → Xcode Cloud (Archive) → ASC / TestFlight
                               ↓
               Cursor: bundle exec fastlane release
                               ↓
-                    App Review (manuell freigeben)
+                    App Review (automatische Freigabe)
 ```
 
 ---
@@ -123,7 +123,7 @@ Fastlane lädt **kein** Binary hoch (`skip_binary_upload: true`) — der Build k
 
 ### Schritt 6 – Nach dem Review
 
-`automatic_release: false` → nach Freigabe durch Apple die Version in App Store Connect **manuell freigeben** (oder Phased Release wählen).
+`automatic_release: true` → nach Freigabe durch Apple geht die Version automatisch in den App Store. Phased Release bleibt aus.
 
 ---
 

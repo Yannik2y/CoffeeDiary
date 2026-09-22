@@ -3,7 +3,7 @@ force(true)
 skip_binary_upload(true)
 skip_screenshots(true)
 submit_for_review(false) # overridden in release lane
-automatic_release(false)
+automatic_release(true)
 phased_release(false)
 precheck_include_in_app_purchases(false)
 

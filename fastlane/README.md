@@ -1,10 +1,48 @@
-# Fastlane for Coffee Diary
+fastlane documentation
+----
 
-See [docs/release.md](../docs/release.md) for the full Xcode Cloud + Fastlane release flow.
+# Installation
 
-```bash
-cp .env.example .env   # fill ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH
-bundle install
-bundle exec fastlane metadata   # metadata only
-bundle exec fastlane release    # metadata + submit for review
+Make sure you have the latest version of the Xcode command line tools installed:
+
+```sh
+xcode-select --install
 ```
+
+For _fastlane_ installation instructions, see [Installing _fastlane_](https://docs.fastlane.tools/#installing-fastlane)
+
+# Available Actions
+
+## iOS
+
+### ios beta
+
+```sh
+[bundle exec] fastlane ios beta
+```
+
+Print how to use Xcode Cloud + Fastlane together
+
+### ios release
+
+```sh
+[bundle exec] fastlane ios release
+```
+
+Upload metadata, attach latest processed build, submit for App Review
+
+### ios metadata
+
+```sh
+[bundle exec] fastlane ios metadata
+```
+
+Dry-run: push metadata only (no submit for review)
+
+----
+
+This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
+
+More information about _fastlane_ can be found on [fastlane.tools](https://fastlane.tools).
+
+The documentation of _fastlane_ can be found on [docs.fastlane.tools](https://docs.fastlane.tools).
