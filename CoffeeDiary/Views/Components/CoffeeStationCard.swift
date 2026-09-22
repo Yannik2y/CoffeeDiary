@@ -120,7 +120,7 @@ struct CoffeeStationCard: View {
             } label: {
                 StationTile(
                     title: machine.name,
-                    subtitle: machine.brand ?? machine.model ?? "Machine".localized,
+                    subtitle: equipmentSubtitle(brand: machine.brand, model: machine.model, fallback: "Machine".localized),
                     photoData: machine.displayPhotoData,
                     silhouette: machine.silhouette
                 )
@@ -166,7 +166,7 @@ struct CoffeeStationCard: View {
             } label: {
                 StationTile(
                     title: grinder.name,
-                    subtitle: grinderSubtitle(grinder),
+                    subtitle: equipmentSubtitle(brand: grinder.brand, model: grinder.model, fallback: "Grinder".localized),
                     photoData: grinder.displayPhotoData,
                     silhouette: grinder.silhouette
                 )
@@ -185,9 +185,9 @@ struct CoffeeStationCard: View {
         }
     }
 
-    private func grinderSubtitle(_ grinder: Grinder) -> String {
-        let parts = [grinder.brand, grinder.model].compactMap { $0 }.filter { !$0.isEmpty }
-        return parts.isEmpty ? "Grinder".localized : parts.joined(separator: " ")
+    private func equipmentSubtitle(brand: String?, model: String?, fallback: String) -> String {
+        let parts = [brand, model].compactMap { $0 }.filter { !$0.isEmpty }
+        return parts.isEmpty ? fallback : parts.joined(separator: " ")
     }
 
     private func activate(_ machine: Machine) {

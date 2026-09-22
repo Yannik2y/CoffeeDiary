@@ -33,6 +33,9 @@ struct EquipmentIdentityFields: View {
 
     @State private var showingBrandPicker = false
     @State private var showingModelPicker = false
+    @State private var openModelPickerAfterBrand = false
+    @State private var focusModelFieldAfterPicker = false
+    @FocusState private var modelFieldFocused: Bool
 
     private var resolvedSilhouette: EquipmentSilhouette {
         EquipmentSilhouette.resolve(silhouetteId: silhouetteId, modelId: modelId, category: category)
@@ -48,6 +51,7 @@ struct EquipmentIdentityFields: View {
 
         HStack {
             TextField("Model".localized, text: $modelName)
+                .focused($modelFieldFocused)
                 .accessibilityIdentifier("equipmentModelField")
             Button("Pick".localized) { showingModelPicker = true }
                 .accessibilityIdentifier("equipmentModelPickButton")
@@ -65,16 +69,39 @@ struct EquipmentIdentityFields: View {
             }
         }
         .padding(.vertical, 4)
-        .sheet(isPresented: $showingBrandPicker) {
+        .sheet(isPresented: $showingBrandPicker, onDismiss: {
+            // Presenting from onDismiss avoids the sheet-over-sheet race.
+            if openModelPickerAfterBrand {
+                openModelPickerAfterBrand = false
+                showingModelPicker = true
+            }
+        }) {
             BrandPickerView(selectedBrandId: $brandId, brandName: $brand)
         }
-        .sheet(isPresented: $showingModelPicker) {
+        .sheet(isPresented: $showingModelPicker, onDismiss: {
+            if focusModelFieldAfterPicker {
+                focusModelFieldAfterPicker = false
+                modelFieldFocused = true
+            }
+        }) {
             ModelPickerView(
                 category: category,
                 preferredBrandId: brandId,
                 selectedModelId: modelId,
-                onSelect: apply
+                onSelect: apply,
+                onCustom: useCustomModel
             )
+        }
+        .onChange(of: brandId) { _, newBrandId in
+            guard let newBrandId else { return }
+            // A stale catalog model from another brand no longer applies.
+            if let modelId, let model = EquipmentCatalog.model(id: modelId), model.brandId != newBrandId {
+                self.modelId = nil
+                modelName = ""
+            }
+            if showingBrandPicker, !EquipmentCatalog.models(for: category, brandId: newBrandId).isEmpty {
+                openModelPickerAfterBrand = true
+            }
         }
         .onChange(of: modelName) { _, newValue in
             // Free-text edits detach the entry from the catalog model.
@@ -109,6 +136,18 @@ struct EquipmentIdentityFields: View {
         .accessibilityLabel(silhouette.title)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
         .accessibilityIdentifier("silhouetteTile_\(silhouette.rawValue)")
+    }
+
+    private func useCustomModel(_ typed: String?) {
+        modelId = nil
+        if let typed, !typed.isEmpty {
+            modelName = typed
+            if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                name = typed
+            }
+        } else {
+            focusModelFieldAfterPicker = true
+        }
     }
 
     private func apply(_ model: EquipmentModel) {

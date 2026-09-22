@@ -10,22 +10,26 @@ struct CachedThumbnailImage: View {
     @State private var image: UIImage?
 
     var body: some View {
-        Group {
-            if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: contentMode)
+        // Color.clear keeps the view in the hierarchy while decoding; an empty conditional
+        // would never appear, so `.task` would not run (e.g. inside `.overlay`).
+        Color.clear
+            .overlay {
+                if let image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: contentMode)
+                }
             }
-        }
-        .task(id: data?.count) {
-            guard let data else {
-                image = nil
-                return
+            .clipped()
+            .task(id: data?.count) {
+                guard let data else {
+                    image = nil
+                    return
+                }
+                let dimension = maxDimension
+                image = await Task.detached(priority: .userInitiated) {
+                    PhotoStorage.thumbnailImage(from: data, maxDimension: dimension)
+                }.value
             }
-            let dimension = maxDimension
-            image = await Task.detached(priority: .userInitiated) {
-                PhotoStorage.thumbnailImage(from: data, maxDimension: dimension)
-            }.value
-        }
     }
 }

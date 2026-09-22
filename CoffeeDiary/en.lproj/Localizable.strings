@@ -104,7 +104,12 @@
 "Search brands" = "Search brands";
 "Select Model" = "Select Model";
 "Search models" = "Search models";
-"Model not listed? Close and type it in the Model field." = "Model not listed? Close and type it in the Model field.";
+"Model not listed? Type brand and model yourself; the build type sets the illustration." = "Model not listed? Type brand and model yourself; the build type sets the illustration.";
+"No matching model" = "No matching model";
+"You can still add it as your own model." = "You can still add it as your own model.";
+"Use “%@” as model" = "Use “%@” as model";
+"Show other brands" = "Show other brands";
+"Enter model manually" = "Enter model manually";
 "Selected" = "Selected";
 "Build Type" = "Build Type";
 "Burr Type" = "Burr Type";

@@ -241,9 +241,11 @@ enum EquipmentItem: Identifiable {
             }
             return b.roaster ?? b.origin
         case .grinder(let g):
-            return g.brand ?? g.burrType
+            let parts = [g.brand, g.model].compactMap { $0 }.filter { !$0.isEmpty }
+            return parts.isEmpty ? g.burrType : parts.joined(separator: " ")
         case .machine(let m):
-            return m.brand ?? m.model
+            let parts = [m.brand, m.model].compactMap { $0 }.filter { !$0.isEmpty }
+            return parts.isEmpty ? nil : parts.joined(separator: " ")
         case .brewer(let b):
             return b.style ?? b.brand
         }

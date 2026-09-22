@@ -410,7 +410,12 @@
 "Search brands" = "Marken suchen";
 "Select Model" = "Modell auswählen";
 "Search models" = "Modelle suchen";
-"Model not listed? Close and type it in the Model field." = "Modell nicht dabei? Schließen und im Feld „Modell“ eintippen.";
+"Model not listed? Type brand and model yourself; the build type sets the illustration." = "Modell nicht dabei? Marke und Modell selbst eintippen; die Bauart bestimmt die Illustration.";
+"No matching model" = "Kein passendes Modell";
+"You can still add it as your own model." = "Du kannst es trotzdem als eigenes Modell anlegen.";
+"Use “%@” as model" = "„%@“ als Modell verwenden";
+"Show other brands" = "Andere Marken anzeigen";
+"Enter model manually" = "Modell manuell eingeben";
 "Selected" = "Ausgewählt";
 "Build Type" = "Bauart";
 "Burr Type" = "Mahlwerk";
