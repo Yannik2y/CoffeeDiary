@@ -37,6 +37,9 @@ struct BrewEntryFlowView: View {
     @State private var timerStartDate: Date? = nil
     @State private var showingConfig = false
     @State private var showingBrewerForm = false
+    @State private var showingNewBean = false
+    @State private var showingNewGrinder = false
+    @State private var showingNewMachine = false
     @StateObject private var weatherViewModel = WeatherCaptureViewModel()
     @State private var weatherSnapshot: WeatherSnapshot?
     
@@ -126,21 +129,20 @@ struct BrewEntryFlowView: View {
             if flowConfig.espressoPreInfusionTime { s.append(.preInfusionTime) }
             if flowConfig.espressoBrewPressure { s.append(.brewPressure) }
             if flowConfig.espressoYield { s.append(.yield) }
-            if flowConfig.espressoGear { s.append(.gear) }
+            s.append(.gear)
             if flowConfig.espressoNotes { s.append(.notes) }
         } else {
             if flowConfig.filterGrinder {
                 s.append(.grinderSetting)
                 if flowConfig.filterGrinderTimer { s.append(.grinderTimer) }
             }
-            if flowConfig.filterBrewer { s.append(.brewerSelection) }
             if flowConfig.filterDose { s.append(.dose) }
             if flowConfig.filterTime { s.append(.time) }
             if flowConfig.filterYield { s.append(.yield) }
             if flowConfig.filterBloom { s.append(.bloom) }
             if flowConfig.filterTotalWater { s.append(.totalWater) }
             if flowConfig.filterWaterTemp { s.append(.waterTemp) }
-            if flowConfig.filterGear { s.append(.gear) }
+            s.append(.gear)
             if flowConfig.filterNotes { s.append(.notes) }
         }
         if flow == .espresso ? flowConfig.espressoRating : flowConfig.filterRating {
@@ -277,11 +279,36 @@ struct BrewEntryFlowView: View {
             .sheet(isPresented: $showingConfig) {
                 FlowConfigurationView(flowType: flow)
             }
+            .sheet(isPresented: $showingNewBean) {
+                BeanFormView { bean in
+                    modelContext.insert(bean)
+                    ErrorHandler.save(modelContext, errorMessage: "Failed to save bean. Please try again.".localized) {
+                        selectedBean = bean
+                    }
+                }
+            }
+            .sheet(isPresented: $showingNewGrinder) {
+                GrinderFormView { grinder in
+                    modelContext.insert(grinder)
+                    ErrorHandler.save(modelContext, errorMessage: "Failed to save grinder. Please try again.".localized) {
+                        selectedGrinder = grinder
+                    }
+                }
+            }
+            .sheet(isPresented: $showingNewMachine) {
+                MachineFormView { machine in
+                    modelContext.insert(machine)
+                    ErrorHandler.save(modelContext, errorMessage: "Failed to save machine. Please try again.".localized) {
+                        selectedMachine = machine
+                    }
+                }
+            }
             .sheet(isPresented: $showingBrewerForm) {
                 BrewerFormView { brewer in
                     modelContext.insert(brewer)
-                    ErrorHandler.save(modelContext, errorMessage: "Failed to save brewer. Please try again.".localized)
-                    selectedBrewer = brewer
+                    ErrorHandler.save(modelContext, errorMessage: "Failed to save brewer. Please try again.".localized) {
+                        selectedBrewer = brewer
+                    }
                 }
             }
             .onChange(of: showingConfig) { _, isShowing in
@@ -538,40 +565,113 @@ struct BrewEntryFlowView: View {
     }
     
     private var questionGear: some View {
-        VStack(spacing: 12) {
-            Text("Gear (optional)".localized)
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Equipment".localized)
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Picker("Bean".localized, selection: Binding(
-                get: { selectedBean?.id ?? PickerSelection.none },
-                set: { id in
-                    selectedBean = id == PickerSelection.none ? nil : beans.first(where: { $0.id == id })
-                }
-            )) {
-                Text("None".localized).tag(PickerSelection.none)
-                ForEach(beans.filter { !$0.isArchived }) { b in Text(b.name).tag(b.id) }
-            }
-            Picker("Grinder".localized, selection: Binding(
-                get: { selectedGrinder?.id ?? PickerSelection.none },
-                set: { id in
-                    selectedGrinder = id == PickerSelection.none ? nil : grinders.first(where: { $0.id == id })
-                }
-            )) {
-                Text("None".localized).tag(PickerSelection.none)
-                ForEach(grinders) { g in Text(g.name).tag(g.id) }
-            }
-            if flow == .espresso {
-                Picker("Machine".localized, selection: Binding(
-                    get: { selectedMachine?.id ?? PickerSelection.none },
+
+            equipmentRow(
+                title: "Bean".localized,
+                addLabel: "Add new bean".localized,
+                selection: Binding(
+                    get: { selectedBean?.id ?? PickerSelection.none },
                     set: { id in
-                        selectedMachine = id == PickerSelection.none ? nil : machines.first(where: { $0.id == id })
+                        selectedBean = id == PickerSelection.none ? nil : beans.first(where: { $0.id == id })
                     }
-                )) {
-                    Text("None".localized).tag(PickerSelection.none)
-                    ForEach(machines) { m in Text(m.name).tag(m.id) }
+                ),
+                onAdd: { showingNewBean = true }
+            ) {
+                Text("None".localized).tag(PickerSelection.none)
+                ForEach(beans.filter { !$0.isArchived }) { bean in
+                    Text(bean.name).tag(bean.id)
                 }
             }
+
+            equipmentRow(
+                title: "Grinder".localized,
+                addLabel: "Add new grinder".localized,
+                selection: Binding(
+                    get: { selectedGrinder?.id ?? PickerSelection.none },
+                    set: { id in
+                        selectedGrinder = id == PickerSelection.none ? nil : grinders.first(where: { $0.id == id })
+                    }
+                ),
+                onAdd: { showingNewGrinder = true }
+            ) {
+                Text("None".localized).tag(PickerSelection.none)
+                ForEach(grinders) { grinder in
+                    Text(grinder.name).tag(grinder.id)
+                }
+            }
+
+            if flow == .espresso {
+                equipmentRow(
+                    title: "Machine".localized,
+                    addLabel: "Add new machine".localized,
+                    selection: Binding(
+                        get: { selectedMachine?.id ?? PickerSelection.none },
+                        set: { id in
+                            selectedMachine = id == PickerSelection.none ? nil : machines.first(where: { $0.id == id })
+                        }
+                    ),
+                    onAdd: { showingNewMachine = true }
+                ) {
+                    Text("None".localized).tag(PickerSelection.none)
+                    ForEach(machines) { machine in
+                        Text(machine.name).tag(machine.id)
+                    }
+                }
+            } else {
+                equipmentRow(
+                    title: "Brewer".localized,
+                    addLabel: "Add new brewer".localized,
+                    selection: Binding(
+                        get: { selectedBrewer?.id ?? PickerSelection.none },
+                        set: { id in
+                            selectedBrewer = id == PickerSelection.none ? nil : brewers.first(where: { $0.id == id })
+                        }
+                    ),
+                    onAdd: { showingBrewerForm = true }
+                ) {
+                    Text("None".localized).tag(PickerSelection.none)
+                    ForEach(brewers) { brewer in
+                        Text(brewer.name).tag(brewer.id)
+                    }
+                }
+            }
+        }
+    }
+
+    private func equipmentRow<Content: View>(
+        title: String,
+        addLabel: String,
+        selection: Binding<UUID>,
+        onAdd: @escaping () -> Void,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(AppTheme.textSecondary)
+            HStack(spacing: 8) {
+                Picker(title, selection: selection, content: content)
+                    .pickerStyle(.menu)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                Button(action: onAdd) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(addLabel)
+            }
+            .padding(.leading, 12)
+            .padding(.trailing, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color(.secondarySystemFill))
+            )
         }
     }
     
@@ -731,7 +831,7 @@ struct BrewEntryFlowView: View {
                 if flow == .espresso, let machine = selectedMachine {
                     HStack { Text("Machine".localized); Spacer(); Text(machine.name) }
                 }
-                if flow == .filter, let brewer = selectedBrewer, flowConfig.filterBrewer {
+                if flow == .filter, let brewer = selectedBrewer {
                     HStack { Text("Brewer".localized); Spacer(); Text(brewer.name) }
                 }
                 if flow == .filter, flowConfig.filterBloom, bloomWaterGrams > 0 || bloomTimeSeconds > 0 {

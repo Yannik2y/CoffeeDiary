@@ -63,7 +63,7 @@ struct FlowConfiguration: Codable, Equatable {
         case (.espresso, .preInfusionTime): return espressoPreInfusionTime
         case (.espresso, .brewPressure): return espressoBrewPressure
         case (.espresso, .yield): return espressoYield
-        case (.espresso, .gear): return espressoGear
+        case (.espresso, .gear): return true
         case (.espresso, .notes): return espressoNotes
         case (.espresso, .rating): return espressoRating
         case (.espresso, .weather): return espressoWeather
@@ -73,9 +73,9 @@ struct FlowConfiguration: Codable, Equatable {
         case (.filter, .dose): return filterDose
         case (.filter, .time): return filterTime
         case (.filter, .yield): return filterYield
-        case (.filter, .gear): return filterGear
+        case (.filter, .gear): return true
         case (.filter, .notes): return filterNotes
-        case (.filter, .brewer): return filterBrewer
+        case (.filter, .brewer): return true
         case (.filter, .bloom): return filterBloom
         case (.filter, .totalWater): return filterTotalWater
         case (.filter, .waterTemp): return filterWaterTemp

@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftData
 
 struct CoffeeStationCard: View {
-    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Machine.name) private var machines: [Machine]
     @Query(sort: \Grinder.name) private var grinders: [Grinder]
 
@@ -21,15 +20,10 @@ struct CoffeeStationCard: View {
     var body: some View {
         if activeMachine != nil || activeGrinder != nil {
             VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    Text("Coffee Station".localized)
-                        .font(.headline)
-                    Spacer()
-                    Image(systemName: "bolt.fill")
-                        .foregroundStyle(Color.accentColor)
-                }
+                Text("Coffee Station".localized)
+                    .font(.headline)
 
-                HStack(spacing: 12) {
+                VStack(spacing: 10) {
                     if let machine = activeMachine {
                         stationItem(
                             title: machine.name,
@@ -53,15 +47,17 @@ struct CoffeeStationCard: View {
                         Label("Espresso".localized, systemImage: "cup.and.saucer.fill")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppTheme.accent)
+                    .buttonStyle(.bordered)
+                    .tint(Color.accentColor)
 
                     Button(action: onLogFilter) {
                         Label("Filter".localized, systemImage: "drop.fill")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
+                    .tint(Color.accentColor)
                 }
+                .controlSize(.regular)
             }
             .padding(16)
             .cardStyle(cornerRadius: 20)
@@ -71,32 +67,33 @@ struct CoffeeStationCard: View {
 
     @ViewBuilder
     private func stationItem(title: String, subtitle: String, symbol: String, photoData: Data?) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             Group {
                 if photoData != nil {
                     CachedThumbnailImage(data: photoData, maxDimension: 88)
                         .accessibilityHidden(true)
                 } else {
                     Image(systemName: symbol)
-                        .font(.title3)
-                        .foregroundStyle(AppTheme.accent)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.accentColor)
                 }
             }
-            .frame(width: 44, height: 44)
-            .background(AppTheme.subtleBackground)
+            .frame(width: 36, height: 36)
+            .background(Color.accentColor.opacity(0.16))
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.primary)
                     .lineLimit(1)
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(AppTheme.textSecondary)
+                    .foregroundStyle(Color.secondary)
                     .lineLimit(1)
             }
             Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }
