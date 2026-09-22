@@ -5,9 +5,15 @@ struct CoffeeStationCard: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Machine.name) private var machines: [Machine]
     @Query(sort: \Grinder.name) private var grinders: [Grinder]
+    @Query(sort: \Brewer.name) private var brewers: [Brewer]
 
     var onLogEspresso: () -> Void
     var onLogFilter: () -> Void
+    /// Fallback when the setup has neither a machine nor a brewer (opens the style picker).
+    var onNewBrew: () -> Void = {}
+    /// Equipment filters of the brew list; the station toggles them from the tile menus.
+    var machineFilterId: Binding<UUID?> = .constant(nil)
+    var grinderFilterId: Binding<UUID?> = .constant(nil)
     var embeddedInList: Bool = false
 
     @State private var editingMachine: Machine?
@@ -23,6 +29,9 @@ struct CoffeeStationCard: View {
         grinders.first(where: \.isActive) ?? grinders.first
     }
 
+    private var canLogEspresso: Bool { activeMachine != nil }
+    private var canLogFilter: Bool { !brewers.isEmpty }
+
     var body: some View {
         if activeMachine != nil || activeGrinder != nil {
             VStack(alignment: .leading, spacing: 14) {
@@ -34,22 +43,7 @@ struct CoffeeStationCard: View {
                     grinderSlot
                 }
 
-                HStack(spacing: 10) {
-                    Button(action: onLogEspresso) {
-                        Label("Espresso".localized, systemImage: "cup.and.saucer.fill")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(Color.accentColor)
-
-                    Button(action: onLogFilter) {
-                        Label("Filter".localized, systemImage: "drop.fill")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(Color.accentColor)
-                }
-                .controlSize(.regular)
+                actionRow
             }
             .padding(16)
             .cardStyle(cornerRadius: 20)
@@ -91,16 +85,68 @@ struct CoffeeStationCard: View {
         }
     }
 
+    // MARK: Actions
+
+    /// Mirrors the setup: espresso needs a machine, filter needs a brewer.
+    /// A single action fills the width; with both, espresso is the primary one.
+    @ViewBuilder
+    private var actionRow: some View {
+        HStack(spacing: 10) {
+            if canLogEspresso {
+                StationActionButton(
+                    title: "Log Espresso".localized,
+                    symbol: "cup.and.saucer.fill",
+                    prominent: true,
+                    action: onLogEspresso
+                )
+                .accessibilityIdentifier("stationLogEspressoButton")
+            }
+
+            if canLogFilter {
+                StationActionButton(
+                    title: "Log Filter".localized,
+                    symbol: "drop.fill",
+                    prominent: !canLogEspresso,
+                    action: onLogFilter
+                )
+                .accessibilityIdentifier("stationLogFilterButton")
+            }
+
+            if !canLogEspresso && !canLogFilter {
+                StationActionButton(
+                    title: "New Brew".localized,
+                    symbol: "plus.circle.fill",
+                    prominent: true,
+                    action: onNewBrew
+                )
+                .accessibilityIdentifier("stationNewBrewButton")
+            }
+        }
+        .controlSize(.large)
+        .tint(Color.accentColor)
+    }
+
     // MARK: Slots
 
     @ViewBuilder
     private var machineSlot: some View {
         if let machine = activeMachine {
+            let isFiltered = machineFilterId.wrappedValue == machine.id
             Menu {
                 Button {
                     editingMachine = machine
                 } label: {
                     Label("Edit".localized, systemImage: "pencil")
+                }
+
+                Button {
+                    machineFilterId.wrappedValue = isFiltered ? nil : machine.id
+                } label: {
+                    if isFiltered {
+                        Label("Remove Machine Filter".localized, systemImage: "line.3.horizontal.decrease.circle.fill")
+                    } else {
+                        Label("Show Brews With This Machine".localized, systemImage: "line.3.horizontal.decrease.circle")
+                    }
                 }
 
                 let others = machines.filter { $0.id != machine.id }
@@ -122,11 +168,13 @@ struct CoffeeStationCard: View {
                     title: machine.name,
                     subtitle: equipmentSubtitle(brand: machine.brand, model: machine.model, fallback: "Machine".localized),
                     photoData: machine.displayPhotoData,
-                    silhouette: machine.silhouette
+                    silhouette: machine.silhouette,
+                    isFiltering: isFiltered
                 )
             }
             .buttonStyle(.plain)
             .accessibilityLabel("\("Machine".localized): \(machine.name), \(machine.brand ?? "")")
+            .accessibilityValue(isFiltered ? "Filters active".localized : "")
             .accessibilityIdentifier("stationMachineTile")
         } else {
             Button {
@@ -142,11 +190,22 @@ struct CoffeeStationCard: View {
     @ViewBuilder
     private var grinderSlot: some View {
         if let grinder = activeGrinder {
+            let isFiltered = grinderFilterId.wrappedValue == grinder.id
             Menu {
                 Button {
                     editingGrinder = grinder
                 } label: {
                     Label("Edit".localized, systemImage: "pencil")
+                }
+
+                Button {
+                    grinderFilterId.wrappedValue = isFiltered ? nil : grinder.id
+                } label: {
+                    if isFiltered {
+                        Label("Remove Grinder Filter".localized, systemImage: "line.3.horizontal.decrease.circle.fill")
+                    } else {
+                        Label("Show Brews With This Grinder".localized, systemImage: "line.3.horizontal.decrease.circle")
+                    }
                 }
 
                 let others = grinders.filter { $0.id != grinder.id }
@@ -168,11 +227,13 @@ struct CoffeeStationCard: View {
                     title: grinder.name,
                     subtitle: equipmentSubtitle(brand: grinder.brand, model: grinder.model, fallback: "Grinder".localized),
                     photoData: grinder.displayPhotoData,
-                    silhouette: grinder.silhouette
+                    silhouette: grinder.silhouette,
+                    isFiltering: isFiltered
                 )
             }
             .buttonStyle(.plain)
             .accessibilityLabel("\("Grinder".localized): \(grinder.name), \(grinder.brand ?? "")")
+            .accessibilityValue(isFiltered ? "Filters active".localized : "")
             .accessibilityIdentifier("stationGrinderTile")
         } else {
             Button {
@@ -203,16 +264,50 @@ struct CoffeeStationCard: View {
 
 // MARK: - Tiles
 
+private struct StationActionButton: View {
+    let title: String
+    let symbol: String
+    let prominent: Bool
+    let action: () -> Void
+
+    var body: some View {
+        if prominent {
+            Button(action: action) { label }
+                .buttonStyle(.borderedProminent)
+        } else {
+            Button(action: action) { label }
+                .buttonStyle(.bordered)
+        }
+    }
+
+    private var label: some View {
+        Label(title, systemImage: symbol)
+            .font(.subheadline.weight(.semibold))
+            .frame(maxWidth: .infinity)
+    }
+}
+
 struct StationTile: View {
     let title: String
     let subtitle: String
     let photoData: Data?
     let silhouette: EquipmentSilhouette
+    var isFiltering: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             EquipmentVisual(photoData: photoData, silhouette: silhouette, cornerRadius: 16)
                 .aspectRatio(1, contentMode: .fit)
+                .overlay(alignment: .topTrailing) {
+                    if isFiltering {
+                        Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                            .font(.title3)
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(Color.white, Color.accentColor)
+                            .padding(6)
+                            .accessibilityHidden(true)
+                    }
+                }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)

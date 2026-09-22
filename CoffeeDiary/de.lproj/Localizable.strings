@@ -434,3 +434,13 @@
 "Switch Machine" = "Maschine wechseln";
 "Switch Grinder" = "Mühle wechseln";
 "Tap to set up" = "Antippen zum Einrichten";
+"Log Espresso" = "Espresso loggen";
+"Log Filter" = "Filter loggen";
+"Show Brews With This Machine" = "Bezüge mit dieser Maschine zeigen";
+"Remove Machine Filter" = "Maschinenfilter entfernen";
+"Show Brews With This Grinder" = "Bezüge mit dieser Mühle zeigen";
+"Remove Grinder Filter" = "Mühlenfilter entfernen";
+"Machine: %@" = "Maschine: %@";
+"Grinder: %@" = "Mühle: %@";
+"Filters active" = "Filter aktiv";
+"No filters" = "Keine Filter";

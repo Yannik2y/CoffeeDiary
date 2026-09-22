@@ -9,6 +9,8 @@ struct BrewFilterCriteria: Equatable {
     var minRatio: Double?
     var maxRatio: Double?
     var minRating: Int?
+    var machineId: UUID?
+    var grinderId: UUID?
 
     var hashValue: Int {
         var hasher = Hasher()
@@ -20,6 +22,8 @@ struct BrewFilterCriteria: Equatable {
         hasher.combine(minRatio ?? -1)
         hasher.combine(maxRatio ?? -1)
         hasher.combine(minRating ?? 0)
+        hasher.combine(machineId)
+        hasher.combine(grinderId)
         return hasher.finalize()
     }
 
@@ -31,7 +35,9 @@ struct BrewFilterCriteria: Equatable {
         endDate != nil ||
         (minRatio ?? 0) > 0 ||
         (maxRatio ?? 0) > 0 ||
-        (minRating ?? 0) > 0
+        (minRating ?? 0) > 0 ||
+        machineId != nil ||
+        grinderId != nil
     }
 }
 
@@ -44,6 +50,12 @@ enum BrewListFilter {
             }
             if let style = criteria.brewStyle {
                 ok = ok && entry.brewStyle == style
+            }
+            if let machineId = criteria.machineId {
+                ok = ok && entry.machine?.id == machineId
+            }
+            if let grinderId = criteria.grinderId {
+                ok = ok && entry.grinder?.id == grinderId
             }
             let search = criteria.searchText.lowercased()
             if !search.isEmpty {

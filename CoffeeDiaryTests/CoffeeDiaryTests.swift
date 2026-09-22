@@ -148,6 +148,27 @@ struct BrewListFilterTests {
         let filtered = BrewListFilter.apply(criteria, to: [brew])
         #expect(filtered.count == 1)
     }
+
+    @Test @MainActor func filtersByMachineAndGrinder() {
+        let machineA = Machine(name: "A")
+        let machineB = Machine(name: "B")
+        let grinder = Grinder(name: "G")
+        let onA = BrewEntry(coffeeName: "onA", grinderSetting: 2, shotType: .double, doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, grinder: grinder, machine: machineA)
+        let onB = BrewEntry(coffeeName: "onB", grinderSetting: 2, shotType: .double, doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, machine: machineB)
+        let none = BrewEntry(coffeeName: "none", grinderSetting: 2, shotType: .double, doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25)
+
+        let byMachine = BrewListFilter.apply(BrewFilterCriteria(machineId: machineA.id), to: [onA, onB, none])
+        #expect(byMachine.map(\.coffeeName) == ["onA"])
+
+        let byGrinder = BrewListFilter.apply(BrewFilterCriteria(grinderId: grinder.id), to: [onA, onB, none])
+        #expect(byGrinder.map(\.coffeeName) == ["onA"])
+
+        let mismatch = BrewListFilter.apply(BrewFilterCriteria(machineId: machineB.id, grinderId: grinder.id), to: [onA, onB, none])
+        #expect(mismatch.isEmpty)
+
+        #expect(BrewFilterCriteria(machineId: machineA.id).hasActiveFilters)
+        #expect(BrewFilterCriteria(machineId: machineA.id).hashValue != BrewFilterCriteria().hashValue)
+    }
 }
 
 struct FlowConfigurationTests {

@@ -128,3 +128,11 @@
 "Switch Machine" = "Switch Machine";
 "Switch Grinder" = "Switch Grinder";
 "Tap to set up" = "Tap to set up";
+"Log Espresso" = "Log Espresso";
+"Log Filter" = "Log Filter";
+"Show Brews With This Machine" = "Show Brews With This Machine";
+"Remove Machine Filter" = "Remove Machine Filter";
+"Show Brews With This Grinder" = "Show Brews With This Grinder";
+"Remove Grinder Filter" = "Remove Grinder Filter";
+"Machine: %@" = "Machine: %@";
+"Grinder: %@" = "Grinder: %@";

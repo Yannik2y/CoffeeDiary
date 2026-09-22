@@ -7,7 +7,9 @@ struct BrewListView: View {
 
     @Query(sort: \BrewEntry.createdAt, order: .reverse)
     private var brews: [BrewEntry]
-
+    @Query(sort: \Machine.name) private var machines: [Machine]
+    @Query(sort: \Grinder.name) private var grinders: [Grinder]
+    
     @State private var listViewModel = BrewListViewModel()
     @State private var selectedBrewId: UUID?
     @State private var showingAdd = false
@@ -22,6 +24,8 @@ struct BrewListView: View {
     @State private var filterMinRatio: Double? = nil
     @State private var filterMaxRatio: Double? = nil
     @State private var filterMinRating: Int? = nil
+    @State private var filterMachineId: UUID? = nil
+    @State private var filterGrinderId: UUID? = nil
     @State private var showingCharts: Bool = false
     @State private var showingFlowPicker: Bool = false
     @State private var showingEspressoFlow: Bool = false
@@ -98,6 +102,22 @@ struct BrewListView: View {
                             Text("All".localized).tag(shotFilterAllTag)
                             ForEach(ShotType.allCases) { type in
                                 Text(type.displayName).tag(type.rawValue)
+                            }
+                        }
+                        if !machines.isEmpty {
+                            Picker("Machine".localized, selection: $filterMachineId) {
+                                Text("All".localized).tag(UUID?.none)
+                                ForEach(machines) { machine in
+                                    Text(machine.name).tag(Optional(machine.id))
+                                }
+                            }
+                        }
+                        if !grinders.isEmpty {
+                            Picker("Grinder".localized, selection: $filterGrinderId) {
+                                Text("All".localized).tag(UUID?.none)
+                                ForEach(grinders) { grinder in
+                                    Text(grinder.name).tag(Optional(grinder.id))
+                                }
                             }
                         }
                         Button("More Filters".localized, systemImage: "slider.horizontal.3") {
@@ -228,6 +248,12 @@ struct BrewListView: View {
             .onChange(of: filterMinRating) { _, _ in
                 updateCachedFilteredBrews()
             }
+            .onChange(of: filterMachineId) { _, _ in
+                updateCachedFilteredBrews()
+            }
+            .onChange(of: filterGrinderId) { _, _ in
+                updateCachedFilteredBrews()
+            }
             .onChange(of: BrewListViewModel.contentFingerprint(for: brews)) { _, _ in
                 updateCachedFilteredBrews()
             }
@@ -243,7 +269,9 @@ struct BrewListView: View {
             endDate: filterEndDate,
             minRatio: filterMinRatio,
             maxRatio: filterMaxRatio,
-            minRating: filterMinRating
+            minRating: filterMinRating,
+            machineId: filterMachineId,
+            grinderId: filterGrinderId
         )
     }
 
@@ -360,6 +388,9 @@ struct BrewListView: View {
                 CoffeeStationCard(
                     onLogEspresso: { showingEspressoFlow = true },
                     onLogFilter: { showingFilterFlow = true },
+                    onNewBrew: { showingFlowPicker = true },
+                    machineFilterId: $filterMachineId,
+                    grinderFilterId: $filterGrinderId,
                     embeddedInList: true
                 )
                 if let suggestion = dialInSuggestion {
@@ -491,7 +522,9 @@ struct BrewListView: View {
         filterEndDate != nil ||
         (filterMinRatio ?? 0) > 0 ||
         (filterMaxRatio ?? 0) > 0 ||
-        (filterMinRating ?? 0) > 0
+        (filterMinRating ?? 0) > 0 ||
+        filterMachineId != nil ||
+        filterGrinderId != nil
     }
     
     @ViewBuilder
@@ -504,6 +537,18 @@ struct BrewListView: View {
         if let style = filterBrewStyle {
             FilterChip(text: style.title) {
                 filterBrewStyle = nil
+            }
+        }
+        if let machineId = filterMachineId {
+            let name = machines.first { $0.id == machineId }?.name ?? "Machine".localized
+            FilterChip(text: "Machine: %@".localized(with: name)) {
+                filterMachineId = nil
+            }
+        }
+        if let grinderId = filterGrinderId {
+            let name = grinders.first { $0.id == grinderId }?.name ?? "Grinder".localized
+            FilterChip(text: "Grinder: %@".localized(with: name)) {
+                filterGrinderId = nil
             }
         }
         if let start = filterStartDate {
@@ -548,6 +593,8 @@ struct BrewListView: View {
         filterMinRatio = nil
         filterMaxRatio = nil
         filterMinRating = nil
+        filterMachineId = nil
+        filterGrinderId = nil
     }
     
     private func formatRatio(_ value: Double) -> String {
