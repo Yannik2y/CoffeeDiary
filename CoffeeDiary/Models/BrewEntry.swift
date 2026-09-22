@@ -127,6 +127,13 @@ extension BrewEntry {
         return yieldGrams / doseGrams
     }
 
+    /// Title stored on the brew: selected bean name, or the brew style if no bean is set.
+    static func generatedCoffeeName(bean: Bean?, style: BrewFlowType) -> String {
+        let beanName = bean?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !beanName.isEmpty { return beanName }
+        return style.title
+    }
+
     static func duplicate(from entry: BrewEntry) -> BrewEntry {
         BrewEntry(
             coffeeName: entry.coffeeName,

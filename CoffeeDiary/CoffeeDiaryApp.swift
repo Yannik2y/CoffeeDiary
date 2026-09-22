@@ -26,7 +26,7 @@ struct CoffeeDiaryApp: App {
                     OnboardingView()
                 }
             }
-            .tint(AppTheme.accent)
+            .tint(Color.accentColor)
             .task {
                 await CloudSyncService.shared.refreshAccountStatus()
                 PhotoMigrationService.migrateIfNeeded(container: sharedModelContainer)

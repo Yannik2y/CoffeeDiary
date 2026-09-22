@@ -23,7 +23,7 @@ struct BrewRow: View {
 
                 Spacer(minLength: 8)
 
-                Text(entry.createdAt, style: .date)
+                Text(entry.createdAt.formatted(date: .abbreviated, time: .shortened))
                     .font(.system(.subheadline, design: .rounded, weight: .regular))
                     .foregroundStyle(AppTheme.textSecondary)
             }
@@ -82,7 +82,7 @@ struct BrewRow: View {
     }
 
     private var accessibilityDescription: String {
-        "\(entry.coffeeName), \(entry.shotType.displayName), ratio \(Formatters.ratioString(dose: entry.doseGrams, yield: entry.yieldGrams)), rating \(entry.rating), date \(entry.createdAt.formatted(date: .abbreviated, time: .omitted))"
+        "\(entry.coffeeName), \(entry.shotType.displayName), ratio \(Formatters.ratioString(dose: entry.doseGrams, yield: entry.yieldGrams)), rating \(entry.rating), date \(entry.createdAt.formatted(date: .abbreviated, time: .shortened))"
     }
 }
 
@@ -95,18 +95,18 @@ struct MetricBadge: View {
         HStack(spacing: 5) {
             Image(systemName: icon)
                 .font(.system(.caption2, weight: .semibold))
+                .foregroundStyle(color)
             Text(text)
                 .font(.system(.caption, design: .rounded, weight: .medium))
+                .foregroundStyle(Color.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
         }
-        .foregroundStyle(color)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(
             Capsule()
-                .fill(color.opacity(0.12))
-                .overlay(Capsule().strokeBorder(color.opacity(0.2), lineWidth: 0.5))
+                .fill(Color(.secondarySystemFill))
         )
         .accessibilityLabel(text)
     }

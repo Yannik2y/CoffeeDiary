@@ -10,7 +10,6 @@ struct FlowConfigurationView: View {
             Form {
                 Section {
                     if flowType == .espresso {
-                        Toggle("Coffee Name".localized, isOn: $config.espressoCoffee)
                         Toggle("Shot Type".localized, isOn: $config.espressoShotType)
                         Toggle("Grinder Setting".localized, isOn: $config.espressoGrinder)
                         Toggle("Grinder Timer".localized, isOn: $config.espressoGrinderTimer)
@@ -26,7 +25,6 @@ struct FlowConfigurationView: View {
                         Toggle("Rating".localized, isOn: $config.espressoRating)
                         Toggle("Weather".localized, isOn: $config.espressoWeather)
                     } else {
-                        Toggle("Coffee Name".localized, isOn: $config.filterCoffee)
                         Toggle("Grinder Setting".localized, isOn: $config.filterGrinder)
                         Toggle("Grinder Timer".localized, isOn: $config.filterGrinderTimer)
                             .disabled(!config.filterGrinder)

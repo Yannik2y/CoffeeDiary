@@ -8,6 +8,7 @@ struct CoffeeStationCard: View {
 
     var onLogEspresso: () -> Void
     var onLogFilter: () -> Void
+    var embeddedInList: Bool = false
 
     private var activeMachine: Machine? {
         machines.first(where: \.isActive) ?? machines.first
@@ -25,7 +26,7 @@ struct CoffeeStationCard: View {
                         .font(.headline)
                     Spacer()
                     Image(systemName: "bolt.fill")
-                        .foregroundStyle(AppTheme.accentSecondary)
+                        .foregroundStyle(Color.accentColor)
                 }
 
                 HStack(spacing: 12) {
@@ -64,7 +65,7 @@ struct CoffeeStationCard: View {
             }
             .padding(16)
             .cardStyle(cornerRadius: 20)
-            .padding(.horizontal, 20)
+            .padding(.horizontal, embeddedInList ? 0 : 20)
         }
     }
 

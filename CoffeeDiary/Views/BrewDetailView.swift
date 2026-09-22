@@ -316,19 +316,16 @@ struct BrewDetailView: View {
             HStack(spacing: 6) {
                 Image(systemName: systemImage)
                     .font(.system(.caption2, weight: .semibold))
+                    .foregroundStyle(color)
                 Text(text)
                     .font(.system(.caption, design: .rounded, weight: .medium))
+                    .foregroundStyle(Color.primary)
             }
-            .foregroundStyle(color)
             .padding(.vertical, 6)
             .padding(.horizontal, 10)
             .background(
                 Capsule()
-                    .fill(color.opacity(0.12))
-                    .overlay(
-                        Capsule()
-                            .strokeBorder(color.opacity(0.2), lineWidth: 0.5)
-                    )
+                    .fill(Color(.secondarySystemFill))
             )
         }
     }

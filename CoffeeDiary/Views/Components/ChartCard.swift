@@ -57,7 +57,7 @@ struct KPIGrid: View {
                     if let delta = stat.delta {
                         Text(delta)
                             .font(.caption2)
-                            .foregroundStyle(AppTheme.accentSecondary)
+                            .foregroundStyle(Color.secondary)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

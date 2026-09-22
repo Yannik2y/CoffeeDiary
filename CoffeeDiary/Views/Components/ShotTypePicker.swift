@@ -10,7 +10,7 @@ struct ShotTypePicker: View {
             }
         }
         .pickerStyle(.segmented)
-        .tint(AppTheme.accentSecondary)
+        .tint(.accentColor)
     }
 }
 

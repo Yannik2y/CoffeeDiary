@@ -14,7 +14,6 @@ struct BrewEntryFlowView: View {
     @State private var stepIndex: Int = 0
     
     // Collected answers
-    @State private var coffeeName: String = ""
     @State private var shotType: ShotType = .double
     @State private var grinderSetting: Double = 2.0
     @State private var doseGrams: Double = 18.0
@@ -75,7 +74,6 @@ struct BrewEntryFlowView: View {
         
         guard let lastEntry = lastEntry else { return }
         
-        coffeeName = lastEntry.coffeeName
         grinderSetting = lastEntry.grinderSetting
         shotType = lastEntry.shotType
         doseGrams = lastEntry.doseGrams
@@ -103,7 +101,6 @@ struct BrewEntryFlowView: View {
         }) else { return }
         
         // Update values from the matching entry
-        coffeeName = matchingEntry.coffeeName
         grinderSetting = matchingEntry.grinderSetting
         doseGrams = matchingEntry.doseGrams
         selectedBean = matchingEntry.bean
@@ -119,7 +116,6 @@ struct BrewEntryFlowView: View {
     private var steps: [Step] {
         var s: [Step] = []
         if flow == .espresso {
-            if flowConfig.espressoCoffee { s.append(.coffee) }
             if flowConfig.espressoShotType { s.append(.shotType) }
             if flowConfig.espressoGrinder {
                 s.append(.grinderSetting)
@@ -133,7 +129,6 @@ struct BrewEntryFlowView: View {
             if flowConfig.espressoGear { s.append(.gear) }
             if flowConfig.espressoNotes { s.append(.notes) }
         } else {
-            if flowConfig.filterCoffee { s.append(.coffee) }
             if flowConfig.filterGrinder {
                 s.append(.grinderSetting)
                 if flowConfig.filterGrinderTimer { s.append(.grinderTimer) }
@@ -174,6 +169,10 @@ struct BrewEntryFlowView: View {
         stepIndex = min(max(stepIndex, 0), count - 1)
     }
     
+    private var generatedCoffeeName: String {
+        BrewEntry.generatedCoffeeName(bean: selectedBean, style: flow)
+    }
+    
     private var shouldShowShotSummary: Bool {
         flow == .espresso && flowConfig.espressoShotType
     }
@@ -195,53 +194,10 @@ struct BrewEntryFlowView: View {
     private var waterTempRange: ClosedRange<Double> { 0...100 }
     private let preInfusionTimeRange: ClosedRange<Int> = 0...30
     private let brewPressureRange: ClosedRange<Double> = 0...12
-    
-    private var doseBinding: Binding<Double> {
+    private var preInfusionTimeDouble: Binding<Double> {
         Binding(
-            get: { min(max(doseGrams, doseRange.lowerBound), doseRange.upperBound) },
-            set: { doseGrams = min(max($0, doseRange.lowerBound), doseRange.upperBound) }
-        )
-    }
-    
-    private var yieldBinding: Binding<Double> {
-        Binding(
-            get: { min(max(yieldGrams, yieldRange.lowerBound), yieldRange.upperBound) },
-            set: { yieldGrams = min(max($0, yieldRange.lowerBound), yieldRange.upperBound) }
-        )
-    }
-    
-    private var grinderTimerBinding: Binding<Double> {
-        Binding(
-            get: { min(max(grinderTimerSeconds, grinderTimerRange.lowerBound), grinderTimerRange.upperBound) },
-            set: { grinderTimerSeconds = min(max($0, grinderTimerRange.lowerBound), grinderTimerRange.upperBound) }
-        )
-    }
-    
-    private var bloomWaterBinding: Binding<Double> {
-        Binding(
-            get: { min(max(bloomWaterGrams, bloomWaterRange.lowerBound), bloomWaterRange.upperBound) },
-            set: { bloomWaterGrams = min(max($0, bloomWaterRange.lowerBound), bloomWaterRange.upperBound) }
-        )
-    }
-    
-    private var totalWaterBinding: Binding<Double> {
-        Binding(
-            get: { min(max(totalWaterGrams, totalWaterRange.lowerBound), totalWaterRange.upperBound) },
-            set: { totalWaterGrams = min(max($0, totalWaterRange.lowerBound), totalWaterRange.upperBound) }
-        )
-    }
-    
-    private var waterTempBinding: Binding<Double> {
-        Binding(
-            get: { min(max(waterTemperatureCelsius, waterTempRange.lowerBound), waterTempRange.upperBound) },
-            set: { waterTemperatureCelsius = min(max($0, waterTempRange.lowerBound), waterTempRange.upperBound) }
-        )
-    }
-
-    private var brewPressureBinding: Binding<Double> {
-        Binding(
-            get: { min(max(brewPressureBar, brewPressureRange.lowerBound), brewPressureRange.upperBound) },
-            set: { brewPressureBar = min(max($0, brewPressureRange.lowerBound), brewPressureRange.upperBound) }
+            get: { Double(preInfusionTimeSeconds) },
+            set: { preInfusionTimeSeconds = Int($0.rounded()) }
         )
     }
     
@@ -277,7 +233,6 @@ struct BrewEntryFlowView: View {
                 Group {
                     if let currentStep = safeCurrentStep {
                         switch currentStep {
-                        case .coffee: questionCoffee
                         case .shotType: questionShotType
                         case .grinderSetting: questionGrinder
                         case .grinderTimer: questionGrinderTimer
@@ -338,13 +293,11 @@ struct BrewEntryFlowView: View {
             .errorAlert()
             .onAppear {
                 loadLastEntryDefaults()
-                clampValuesToRanges()
             }
             .onChange(of: shotType) { oldValue, newValue in
                 // When shot type changes, load defaults for the new shot type
                 if flow == .espresso && oldValue != newValue {
                     loadDefaultsForShotType(newValue)
-                    clampValuesToRanges()
                 }
             }
             .onReceive(weatherViewModel.$snapshot) { snapshot in
@@ -360,17 +313,6 @@ struct BrewEntryFlowView: View {
     }
     
     // MARK: - Steps
-    private var questionCoffee: some View {
-        VStack(spacing: 12) {
-            Text("What coffee are you brewing?".localized)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(AppTheme.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            TextField("Coffee name".localized, text: $coffeeName)
-                .textFieldStyle(.roundedBorder)
-        }
-    }
-    
     private var questionShotType: some View {
         VStack(spacing: 12) {
             Text("Shot size?".localized)
@@ -399,16 +341,13 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Slider(value: grinderTimerBinding, in: grinderTimerRange, step: 0.1)
-            HStack {
-                Text("\(Formatters.number.string(from: NSNumber(value: grinderTimerSeconds)) ?? String(format: "%.1f", grinderTimerSeconds)) s")
-                Spacer()
-                if grinderTimerRange.upperBound > 0 {
-                    Text("Range %.1f–%.1f s".localized(with: grinderTimerRange.lowerBound, grinderTimerRange.upperBound))
-                        .font(.caption)
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-            }
+            PrecisionValueControl(
+                value: $grinderTimerSeconds,
+                step: 0.1,
+                unit: "s".localized,
+                suggestedRange: grinderTimerRange,
+                rangeHint: "Range %.1f–%.1f s".localized(with: grinderTimerRange.lowerBound, grinderTimerRange.upperBound)
+            )
         }
     }
     
@@ -426,7 +365,6 @@ struct BrewEntryFlowView: View {
                     showingBrewerForm = true
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(AppTheme.accent)
             } else {
                 Picker("Brewer".localized, selection: Binding(
                     get: { selectedBrewer?.id ?? PickerSelection.none },
@@ -450,12 +388,15 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Slider(value: bloomWaterBinding, in: bloomWaterRange, step: 1)
-            HStack {
-                Text("Bloom water: %d g".localized(with: Int(bloomWaterGrams)))
-                Spacer()
-                Text("Bloom time: %d s".localized(with: bloomTimeSeconds))
-            }
+            PrecisionValueControl(
+                value: $bloomWaterGrams,
+                step: 1,
+                unit: "g".localized,
+                suggestedRange: bloomWaterRange,
+                fractionDigits: 0
+            )
+            Text("Bloom time: %d s".localized(with: bloomTimeSeconds))
+                .frame(maxWidth: .infinity, alignment: .leading)
             Stepper(value: $bloomTimeSeconds, in: 0...120, step: 1) {
                 Text("Adjust bloom time".localized)
             }
@@ -468,9 +409,13 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Slider(value: totalWaterBinding, in: totalWaterRange, step: 5)
-            Text("\(Int(totalWaterGrams)) g")
-                .frame(maxWidth: .infinity, alignment: .leading)
+            PrecisionValueControl(
+                value: $totalWaterGrams,
+                step: 5,
+                unit: "g".localized,
+                suggestedRange: totalWaterRange,
+                fractionDigits: 0
+            )
         }
     }
     
@@ -480,9 +425,13 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Slider(value: waterTempBinding, in: waterTempRange, step: 1)
-            Text("\(Int(waterTemperatureCelsius)) °C")
-                .frame(maxWidth: .infinity, alignment: .leading)
+            PrecisionValueControl(
+                value: $waterTemperatureCelsius,
+                step: 1,
+                unit: "°C".localized,
+                suggestedRange: waterTempRange,
+                fractionDigits: 0
+            )
         }
     }
     
@@ -492,14 +441,13 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Slider(value: doseBinding, in: doseRange, step: 0.1)
-            HStack {
-                Text(Formatters.number.string(from: NSNumber(value: doseGrams)) ?? String(doseGrams))
-                Spacer()
-                Text("\(Int(doseRange.lowerBound))–\(Int(doseRange.upperBound)) g")
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .font(.caption)
-            }
+            PrecisionValueControl(
+                value: $doseGrams,
+                step: 0.1,
+                unit: "g".localized,
+                suggestedRange: doseRange,
+                rangeHint: "\(Int(doseRange.lowerBound))–\(Int(doseRange.upperBound)) g"
+            )
         }
     }
     
@@ -509,13 +457,15 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Slider(value: yieldBinding, in: yieldRange, step: 0.5)
-            HStack {
-                Text(Formatters.number.string(from: NSNumber(value: yieldGrams)) ?? String(yieldGrams))
-                Spacer()
-                Text("Ratio".localized + " \(Formatters.ratioString(dose: doseGrams, yield: yieldGrams))")
-                    .foregroundStyle(AppTheme.textSecondary)
-            }
+            PrecisionValueControl(
+                value: $yieldGrams,
+                step: 0.5,
+                unit: "g".localized,
+                suggestedRange: yieldRange
+            )
+            Text("Ratio".localized + " \(Formatters.ratioString(dose: doseGrams, yield: yieldGrams))")
+                .foregroundStyle(AppTheme.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
     
@@ -537,9 +487,9 @@ struct BrewEntryFlowView: View {
             VStack(spacing: 16) {
                 Button(isTiming ? "Stop".localized : "Start".localized) { toggleTimer() }
                     .font(.title.weight(.semibold))
-                    .foregroundColor(.white)
+                    .foregroundStyle(.white)
                     .frame(width: 120, height: 120)
-                    .background(isTiming ? Color.red : AppTheme.accent)
+                    .background(isTiming ? Color.red : Color.accentColor)
                     .clipShape(Circle())
                     .buttonStyle(.plain)
                     .accessibilityLabel(isTiming ? "Stop timer".localized : "Start timer".localized)
@@ -560,17 +510,14 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Slider(value: Binding(
-                get: { Double(preInfusionTimeSeconds) },
-                set: { preInfusionTimeSeconds = Int($0.rounded()) }
-            ), in: Double(preInfusionTimeRange.lowerBound)...Double(preInfusionTimeRange.upperBound), step: 1)
-            HStack {
-                Text("\(preInfusionTimeSeconds) " + "s".localized)
-                Spacer()
-                Text("Range %d–%d s".localized(with: preInfusionTimeRange.lowerBound, preInfusionTimeRange.upperBound))
-                    .font(.caption)
-                    .foregroundStyle(AppTheme.textSecondary)
-            }
+            PrecisionValueControl(
+                value: preInfusionTimeDouble,
+                step: 1,
+                unit: "s".localized,
+                suggestedRange: Double(preInfusionTimeRange.lowerBound)...Double(preInfusionTimeRange.upperBound),
+                rangeHint: "Range %d–%d s".localized(with: preInfusionTimeRange.lowerBound, preInfusionTimeRange.upperBound),
+                fractionDigits: 0
+            )
         }
     }
     
@@ -580,14 +527,13 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Slider(value: brewPressureBinding, in: brewPressureRange, step: 0.1)
-            HStack {
-                Text(String(format: "%.1f bar", brewPressureBar))
-                Spacer()
-                Text("Typical espresso bars".localized)
-                    .font(.caption)
-                    .foregroundStyle(AppTheme.textSecondary)
-            }
+            PrecisionValueControl(
+                value: $brewPressureBar,
+                step: 0.1,
+                unit: "bar".localized,
+                suggestedRange: brewPressureRange,
+                rangeHint: "Typical espresso bars".localized
+            )
         }
     }
     
@@ -690,7 +636,7 @@ struct BrewEntryFlowView: View {
         case .fetching:
             weatherStatusText("Fetching weather data…".localized, color: AppTheme.textSecondary)
         case .success:
-            weatherStatusText("Weather data saved".localized, color: AppTheme.accent)
+            weatherStatusText("Weather data saved".localized, color: AppTheme.success)
         case .failure(let error):
             weatherStatusText(error.message, color: .red)
         }
@@ -750,7 +696,7 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .frame(maxWidth: .infinity, alignment: .leading)
             VStack(spacing: 8) {
-                HStack { Text("Coffee".localized); Spacer(); Text(coffeeName) }
+                HStack { Text("Coffee".localized); Spacer(); Text(generatedCoffeeName) }
                 HStack { Text("Style".localized); Spacer(); Text(flow.title) }
                 if shouldShowShotSummary {
                     HStack { Text("Shot".localized); Spacer(); Text(shotType.displayName) }
@@ -848,18 +794,19 @@ struct BrewEntryFlowView: View {
             if safeCurrentStep == .review {
                 Button("Save".localized) { save() }
                     .buttonStyle(.borderedProminent)
-                    .disabled(coffeeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || doseGrams <= 0)
+                    .disabled(doseGrams <= 0)
+                    .accessibilityIdentifier("flowSaveButton")
             } else if let current = safeCurrentStep {
                 Button("Next".localized) { stepIndex = min(stepIndex + 1, max(steps.count - 1, 0)) }
                     .buttonStyle(.borderedProminent)
                     .disabled(!canProceedFrom(step: current))
+                    .accessibilityIdentifier("flowNextButton")
             }
         }
     }
     
     private func canProceedFrom(step: Step) -> Bool {
         switch step {
-        case .coffee: return !coffeeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case .shotType: return true
         case .grinderSetting: return true
         case .dose: return doseGrams > 0
@@ -878,18 +825,6 @@ struct BrewEntryFlowView: View {
         case .weather: return true
         case .review: return true
         }
-    }
-    
-    private func clampValuesToRanges() {
-        doseGrams = min(max(doseGrams, doseRange.lowerBound), doseRange.upperBound)
-        yieldGrams = min(max(yieldGrams, yieldRange.lowerBound), yieldRange.upperBound)
-        grinderTimerSeconds = min(max(grinderTimerSeconds, grinderTimerRange.lowerBound), grinderTimerRange.upperBound)
-        bloomWaterGrams = min(max(bloomWaterGrams, bloomWaterRange.lowerBound), bloomWaterRange.upperBound)
-        bloomTimeSeconds = min(max(bloomTimeSeconds, 0), 120)
-        totalWaterGrams = min(max(totalWaterGrams, totalWaterRange.lowerBound), totalWaterRange.upperBound)
-        waterTemperatureCelsius = min(max(waterTemperatureCelsius, waterTempRange.lowerBound), waterTempRange.upperBound)
-        preInfusionTimeSeconds = min(max(preInfusionTimeSeconds, preInfusionTimeRange.lowerBound), preInfusionTimeRange.upperBound)
-        brewPressureBar = min(max(brewPressureBar, brewPressureRange.lowerBound), brewPressureRange.upperBound)
     }
     
     // MARK: - Timer
@@ -912,8 +847,7 @@ struct BrewEntryFlowView: View {
         .padding(.vertical, 16)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(LinearGradient(colors: [AppTheme.accentSecondary.opacity(0.18), AppTheme.cardBackground],
-                                     startPoint: .topLeading, endPoint: .bottomTrailing))
+                .fill(Color(.secondarySystemFill))
         )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(flow == .espresso ? "Shot time".localized : "Brew duration".localized)
@@ -941,7 +875,7 @@ struct BrewEntryFlowView: View {
     // MARK: - Save
     private func save() {
         let entry = BrewEntry(
-            coffeeName: coffeeName,
+            coffeeName: generatedCoffeeName,
             grinderSetting: grinderSetting,
             shotType: flow == .espresso ? shotType : .double,
             doseGrams: doseGrams,
@@ -973,7 +907,6 @@ struct BrewEntryFlowView: View {
     }
     
     private enum Step {
-        case coffee
         case shotType
         case grinderSetting
         case grinderTimer

@@ -407,12 +407,11 @@ extension OnboardingView {
                 } label: {
                     Text("Get Started".localized)
                         .font(.headline)
-                        .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(AppTheme.accent)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
             case .bean:
                 if beans.isEmpty {
                     VStack(spacing: 12) {

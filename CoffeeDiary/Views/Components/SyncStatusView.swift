@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SyncStatusBanner: View {
     @Bindable private var syncService = CloudSyncService.shared
+    var embeddedInList: Bool = false
 
     var body: some View {
         if !syncService.isSyncAvailable {
@@ -29,7 +30,7 @@ struct SyncStatusBanner: View {
                     .fill(AppTheme.cardBackground)
                     .shadow(color: AppTheme.cardShadow.opacity(0.2), radius: 6, x: 0, y: 2)
             )
-            .padding(.horizontal, 20)
+            .padding(.horizontal, embeddedInList ? 0 : 20)
             .task {
                 await syncService.refreshAccountStatus()
             }

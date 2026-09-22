@@ -429,3 +429,27 @@ struct ActiveStationTests {
     }
 }
 
+struct GeneratedCoffeeNameTests {
+    @Test func usesTrimmedBeanName() {
+        let bean = Bean(name: "  Ethiopia Yirgacheffe  ")
+        let name = BrewEntry.generatedCoffeeName(bean: bean, style: .espresso)
+        #expect(name == "Ethiopia Yirgacheffe")
+    }
+
+    @Test func fallsBackToEspressoStyleWithoutBean() {
+        let name = BrewEntry.generatedCoffeeName(bean: nil, style: .espresso)
+        #expect(name == "Espresso".localized)
+    }
+
+    @Test func fallsBackToFilterStyleWithoutBean() {
+        let name = BrewEntry.generatedCoffeeName(bean: nil, style: .filter)
+        #expect(name == "Filter".localized)
+    }
+
+    @Test func treatsBlankBeanNameAsMissing() {
+        let bean = Bean(name: "   ")
+        let name = BrewEntry.generatedCoffeeName(bean: bean, style: .filter)
+        #expect(name == "Filter".localized)
+    }
+}
+

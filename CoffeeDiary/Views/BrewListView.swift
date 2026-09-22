@@ -88,6 +88,34 @@ struct BrewListView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
+                    Menu {
+                        Picker("Brew Style".localized, selection: brewStyleFilterBinding) {
+                            Text("All".localized).tag(brewStyleFilterAllTag)
+                            Text("Espresso".localized).tag(brewStyleEspressoTag)
+                            Text("Filter".localized).tag(brewStyleFilterTag)
+                        }
+                        Picker("Shot Filter".localized, selection: shotFilterBinding) {
+                            Text("All".localized).tag(shotFilterAllTag)
+                            ForEach(ShotType.allCases) { type in
+                                Text(type.displayName).tag(type.rawValue)
+                            }
+                        }
+                        Button("More Filters".localized, systemImage: "slider.horizontal.3") {
+                            showingFilters = true
+                        }
+                        if hasActiveFilters {
+                            Button("Clear All".localized, systemImage: "xmark.circle", role: .destructive) {
+                                clearAllFilters()
+                            }
+                        }
+                    } label: {
+                        Image(systemName: hasActiveFilters
+                              ? "line.3.horizontal.decrease.circle.fill"
+                              : "line.3.horizontal.decrease.circle")
+                    }
+                    .accessibilityLabel("Filters".localized)
+                    .accessibilityValue(hasActiveFilters ? "Filters active".localized : "No filters".localized)
+
                     Button {
                         showingFlowPicker = true
                     } label: {
@@ -249,7 +277,7 @@ struct BrewListView: View {
     private func duplicate(_ entry: BrewEntry) {
         Task { @MainActor in
             _ = BrewStore.shared.duplicate(entry, in: modelContext)
-            await BrewStore.shared.saveAsync(modelContext, errorMessage: "Failed to duplicate brew entry. Please try again.".localized)
+            _ = await BrewStore.shared.saveAsync(modelContext, errorMessage: "Failed to duplicate brew entry. Please try again.".localized)
         }
     }
     
@@ -326,69 +354,87 @@ struct BrewListView: View {
     }
     
     private var populatedListView: some View {
-        VStack(spacing: 12) {
-            SyncStatusBanner()
-            CoffeeStationCard(
-                onLogEspresso: { showingEspressoFlow = true },
-                onLogFilter: { showingFilterFlow = true }
-            )
-            if let suggestion = dialInSuggestion {
-                DialInBanner(suggestion: suggestion)
-            }
-            filterControls
-            if brews.isEmpty == false && listViewModel.cachedFilteredBrews.isEmpty {
-                filteredEmptyStateView
-            } else {
-                brewListContent
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(AppTheme.subtleBackground)
-    }
-
-    private var brewListContent: some View {
         List {
-            ForEach(listViewModel.cachedFilteredBrews, id: \.id) { entry in
-                Group {
-                    if horizontalSizeClass == .regular {
-                        Button {
-                            selectedBrewId = entry.id
-                        } label: {
-                            BrewRow(entry: entry)
+            Section {
+                SyncStatusBanner(embeddedInList: true)
+                CoffeeStationCard(
+                    onLogEspresso: { showingEspressoFlow = true },
+                    onLogFilter: { showingFilterFlow = true },
+                    embeddedInList: true
+                )
+                if let suggestion = dialInSuggestion {
+                    DialInBanner(suggestion: suggestion, embeddedInList: true)
+                }
+            }
+            .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+
+            if hasActiveFilters {
+                Section {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            filterChips
                         }
-                        .buttonStyle(.plain)
-                    } else {
-                        NavigationLink(value: entry.id) {
-                            BrewRow(entry: entry)
-                        }
+                        .padding(.vertical, 4)
                     }
                 }
-                .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                    Button {
-                        toggleFavorite(entry)
-                    } label: {
-                        Label(entry.isFavorite ? "Unfavorite".localized : "Favorite".localized, systemImage: entry.isFavorite ? "star.slash" : "star")
-                    }
-                    .tint(.yellow)
-                }
-                .swipeActions {
-                    Button {
-                        duplicate(entry)
-                    } label: {
-                        Label("Duplicate".localized, systemImage: "doc.on.doc")
-                    }
-                    .tint(.blue)
-                    Button(role: .destructive) {
-                        deleteEntries([entry])
-                    } label: {
-                        Label("Delete".localized, systemImage: "trash")
-                    }
+                .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 4, trailing: 20))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
+
+            if brews.isEmpty == false && listViewModel.cachedFilteredBrews.isEmpty {
+                Section {
+                    filteredEmptyStateView
                 }
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+            } else {
+                Section {
+                    ForEach(listViewModel.cachedFilteredBrews, id: \.id) { entry in
+                        Group {
+                            if horizontalSizeClass == .regular {
+                                Button {
+                                    selectedBrewId = entry.id
+                                } label: {
+                                    BrewRow(entry: entry)
+                                }
+                                .buttonStyle(.plain)
+                            } else {
+                                NavigationLink(value: entry.id) {
+                                    BrewRow(entry: entry)
+                                }
+                            }
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button {
+                                toggleFavorite(entry)
+                            } label: {
+                                Label(entry.isFavorite ? "Unfavorite".localized : "Favorite".localized, systemImage: entry.isFavorite ? "star.slash" : "star")
+                            }
+                            .tint(.yellow)
+                        }
+                        .swipeActions {
+                            Button {
+                                duplicate(entry)
+                            } label: {
+                                Label("Duplicate".localized, systemImage: "doc.on.doc")
+                            }
+                            .tint(.blue)
+                            Button(role: .destructive) {
+                                deleteEntries([entry])
+                            } label: {
+                                Label("Delete".localized, systemImage: "trash")
+                            }
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+                    }
+                    .onDelete(perform: delete)
+                }
             }
-            .onDelete(perform: delete)
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
@@ -410,53 +456,6 @@ struct BrewListView: View {
             .tint(AppTheme.accent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var filterControls: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Picker("Brew Style".localized, selection: brewStyleFilterBinding) {
-                Text("All".localized).tag(brewStyleFilterAllTag)
-                Text("Espresso".localized).tag(brewStyleEspressoTag)
-                Text("Filter".localized).tag(brewStyleFilterTag)
-            }
-            .pickerStyle(.segmented)
-            Picker("Shot Filter".localized, selection: shotFilterBinding) {
-                Text("All".localized).tag(shotFilterAllTag)
-                ForEach(ShotType.allCases) { type in
-                    Text(type.displayName).tag(type.rawValue)
-                }
-            }
-            .pickerStyle(.segmented)
-
-            HStack(spacing: 8) {
-                Button {
-                    showingFilters = true
-                } label: {
-                    Label("More Filters".localized, systemImage: "line.3.horizontal.decrease.circle")
-                }
-                .buttonStyle(.bordered)
-
-                if hasActiveFilters {
-                    Button("Clear All".localized) {
-                        clearAllFilters()
-                    }
-                    .buttonStyle(.bordered)
-                }
-
-                Spacer()
-            }
-
-            if hasActiveFilters {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        filterChips
-                    }
-                    .padding(.vertical, 4)
-                }
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 4)
     }
 
     private var shotFilterBinding: Binding<Int> {

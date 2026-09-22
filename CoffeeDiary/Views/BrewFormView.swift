@@ -9,7 +9,6 @@ struct BrewFormView: View {
     @Query private var machines: [Machine]
     @Query private var brewers: [Brewer]
     
-    @State private var coffeeName: String = ""
     @State private var grinderSetting: Double = 2.0
     @State private var shotType: ShotType = .double
     @State private var doseGrams: Double = 18.0
@@ -59,7 +58,6 @@ struct BrewFormView: View {
     init(editingEntry: BrewEntry? = nil) {
         self.editingEntry = editingEntry
         if let entry = editingEntry {
-            _coffeeName = State(initialValue: entry.coffeeName)
             _grinderSetting = State(initialValue: entry.grinderSetting)
             _shotType = State(initialValue: entry.shotType)
             _doseGrams = State(initialValue: entry.doseGrams)
@@ -103,9 +101,6 @@ struct BrewFormView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Coffee".localized) {
-                    TextField("Name".localized, text: $coffeeName)
-                }
                 Section("Style".localized) {
                     Picker("Brew Style".localized, selection: $brewStyle) {
                         Text("Espresso".localized).tag(BrewFlowType.espresso)
@@ -320,7 +315,7 @@ struct BrewFormView: View {
                             Label(isTiming ? "Stop".localized : "Start".localized, systemImage: isTiming ? "stop.fill" : "play.fill")
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(isTiming ? .red : AppTheme.accent)
+                        .tint(isTiming ? .red : Color.accentColor)
                         Button("Reset".localized) {
                             resetTimer()
                         }
@@ -357,7 +352,7 @@ struct BrewFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save".localized) { save() }
-                        .disabled(coffeeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || doseGrams <= 0)
+                        .disabled(doseGrams <= 0)
                 }
             }
             .onAppear {
@@ -465,8 +460,7 @@ struct BrewFormView: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(
-                    LinearGradient(colors: [AppTheme.accentSecondary.opacity(0.18), AppTheme.cardBackground],
-                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                    Color(.secondarySystemFill)
                 )
         )
     }
@@ -502,7 +496,7 @@ struct BrewFormView: View {
     
     private func save() {
         if let entry = editingEntry {
-            entry.coffeeName = coffeeName
+            entry.coffeeName = BrewEntry.generatedCoffeeName(bean: selectedBean, style: brewStyle)
             entry.grinderSetting = grinderSetting
             entry.shotType = shotType
             entry.doseGrams = doseGrams
@@ -528,7 +522,7 @@ struct BrewFormView: View {
             entry.weatherCaptureDate = weatherSnapshot?.timestamp
         } else {
             let newEntry = BrewEntry(
-                coffeeName: coffeeName,
+                coffeeName: BrewEntry.generatedCoffeeName(bean: selectedBean, style: brewStyle),
                 grinderSetting: grinderSetting,
                 shotType: shotType,
                 doseGrams: doseGrams,

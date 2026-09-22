@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DialInBanner: View {
     let suggestion: DialInSuggestion
+    var embeddedInList: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -15,6 +16,6 @@ struct DialInBanner: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle(cornerRadius: 14)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, embeddedInList ? 0 : 20)
     }
 }

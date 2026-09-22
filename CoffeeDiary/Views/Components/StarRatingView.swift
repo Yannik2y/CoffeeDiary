@@ -17,7 +17,7 @@ struct StarRatingView: View {
             ForEach(1...5, id: \.self) { index in
                 Image(systemName: index <= rating ? "star.fill" : "star")
                     .font(.system(size: size))
-                    .foregroundStyle(index <= rating ? AppTheme.accentSecondary : AppTheme.textSecondary.opacity(0.3))
+                    .foregroundStyle(index <= rating ? Color.yellow : Color.secondary.opacity(0.45))
                     .frame(width: size + 8, height: size + 8)
                     .contentShape(Rectangle())
                     .onTapGesture {
@@ -65,7 +65,7 @@ struct StarRatingDisplayView: View {
             ForEach(1...5, id: \.self) { index in
                 Image(systemName: index <= rating ? "star.fill" : "star")
                     .font(.system(size: size))
-                    .foregroundStyle(index <= rating ? AppTheme.accentSecondary : AppTheme.textSecondary.opacity(0.2))
+                    .foregroundStyle(index <= rating ? Color.yellow : Color.secondary.opacity(0.45))
             }
         }
         .accessibilityElement(children: .ignore)
