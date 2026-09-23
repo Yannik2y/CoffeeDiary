@@ -204,8 +204,8 @@ struct DialInAssistantTests {
 struct ChartAnalyticsTests {
     @Test func averageRatingExcludesUnratedBrews() {
         let brews = [
-            BrewEntry(coffeeName: "A", grinderSetting: 2, shotType: .double, doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, rating: 4),
-            BrewEntry(coffeeName: "B", grinderSetting: 2, shotType: .double, doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, rating: 0)
+            ChartBrewRecord(coffeeName: "A", doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, rating: 4),
+            ChartBrewRecord(coffeeName: "B", doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, rating: 0)
         ]
         #expect(ChartAnalyticsService.averageRating(brews) == 4)
     }
@@ -223,20 +223,16 @@ struct ChartAnalyticsTests {
 
     @Test func filterByTimeRangeExcludesOlderBrews() {
         let now = Date()
-        let old = BrewEntry(
+        let old = ChartBrewRecord(
             createdAt: Calendar.current.date(byAdding: .day, value: -40, to: now)!,
             coffeeName: "Old",
-            grinderSetting: 2,
-            shotType: .double,
             doseGrams: 18,
             yieldGrams: 36,
             brewTimeSeconds: 25
         )
-        let recent = BrewEntry(
+        let recent = ChartBrewRecord(
             createdAt: Calendar.current.date(byAdding: .day, value: -2, to: now)!,
             coffeeName: "Recent",
-            grinderSetting: 2,
-            shotType: .double,
             doseGrams: 18,
             yieldGrams: 36,
             brewTimeSeconds: 25
@@ -249,9 +245,9 @@ struct ChartAnalyticsTests {
 
     @Test func topRatedGroupsRespectMinimumCount() {
         let brews = [
-            BrewEntry(coffeeName: "Ethiopia", grinderSetting: 2, shotType: .double, doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, rating: 5),
-            BrewEntry(coffeeName: "Ethiopia", grinderSetting: 2, shotType: .double, doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, rating: 4),
-            BrewEntry(coffeeName: "Kenya", grinderSetting: 2, shotType: .double, doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, rating: 5)
+            ChartBrewRecord(coffeeName: "Ethiopia", doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, rating: 5),
+            ChartBrewRecord(coffeeName: "Ethiopia", doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, rating: 4),
+            ChartBrewRecord(coffeeName: "Kenya", doseGrams: 18, yieldGrams: 36, brewTimeSeconds: 25, rating: 5)
         ]
         let groups = ChartAnalyticsService.topRatedGroups(brews, minCount: 2)
         #expect(groups.count == 1)

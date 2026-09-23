@@ -7,6 +7,8 @@
 
 // MARK: - App & Navigation
 "Coffee Diary" = "Coffee Diary";
+"Diary" = "Tagebuch";
+"Settings" = "Einstellungen";
 "Coffee Station" = "Kaffeestation";
 "New Entry" = "Neuer Eintrag";
 "More actions" = "Weitere Aktionen";
@@ -434,8 +436,8 @@
 "Switch Machine" = "Maschine wechseln";
 "Switch Grinder" = "Mühle wechseln";
 "Tap to set up" = "Antippen zum Einrichten";
-"Log Espresso" = "Espresso loggen";
-"Log Filter" = "Filter loggen";
+"Log Espresso" = "Espresso";
+"Log Filter" = "Filter";
 "Show Brews With This Machine" = "Bezüge mit dieser Maschine zeigen";
 "Remove Machine Filter" = "Maschinenfilter entfernen";
 "Show Brews With This Grinder" = "Bezüge mit dieser Mühle zeigen";

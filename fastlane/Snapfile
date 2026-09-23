@@ -1,0 +1,32 @@
+# frozen_string_literal: true
+
+# App Store screenshot devices (native sizes Apple accepts for 6.9" iPhone + 13" iPad)
+devices([
+  "iPhone 16 Pro Max",
+  "iPad Pro 13-inch (M4)"
+])
+
+# Prefer a stable runtime when multiple simulators share the same name.
+# snapshot resolves names via simctl; if ambiguous, set an explicit OS via:
+#   xcrun simctl list devices available
+
+languages([
+  "de-DE"
+])
+
+scheme("CoffeeDiary")
+
+output_directory("./fastlane/screenshots")
+
+clear_previous_screenshots(true)
+
+override_status_bar(true)
+
+# App launch args for demo store + light UI. SnapshotHelper also injects FASTLANE_SNAPSHOT.
+launch_arguments([
+  "--snapshot -AppleInterfaceStyle Light"
+])
+
+concurrent_simulators(false)
+
+stop_after_first_error(true)

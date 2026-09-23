@@ -17,6 +17,7 @@ struct MachineFormView: View {
     @State private var silhouetteId: String?
     @State private var isActive: Bool
     @State private var attachmentError: String?
+    @State private var isSaving = false
     
     init(machine: Machine? = nil, onSave: @escaping (Machine) -> Void) {
         self.machine = machine
@@ -70,19 +71,25 @@ struct MachineFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isEditing ? "Save".localized : "Add".localized) {
-                        save()
-                        dismiss()
+                        Task { await save() }
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
                 }
             }
         }
     }
     
-    private func save() {
+    private func save() async {
+        isSaving = true
+        defer { isSaving = false }
         let trimmedBrand = brand.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedModel = modelName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let compressedPhoto = photoData.flatMap { PhotoStorage.compressedJPEG(from: $0) }
+        let compressedPhoto: Data?
+        if let photoData {
+            compressedPhoto = await PhotoStorage.compressedJPEGAsync(from: photoData)
+        } else {
+            compressedPhoto = nil
+        }
 
         if let machine {
             machine.name = name
@@ -111,5 +118,6 @@ struct MachineFormView: View {
             )
             onSave(newMachine)
         }
+        dismiss()
     }
 }

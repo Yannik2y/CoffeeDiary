@@ -281,9 +281,14 @@ private struct StationActionButton: View {
     }
 
     private var label: some View {
-        Label(title, systemImage: symbol)
-            .font(.subheadline.weight(.semibold))
-            .frame(maxWidth: .infinity)
+        HStack(spacing: 8) {
+            Image(systemName: symbol)
+                .symbolRenderingMode(.monochrome)
+                .imageScale(.medium)
+            Text(title)
+        }
+        .font(.subheadline.weight(.semibold))
+        .frame(maxWidth: .infinity)
     }
 }
 

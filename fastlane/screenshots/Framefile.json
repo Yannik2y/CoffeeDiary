@@ -1,0 +1,31 @@
+{
+  "device_frame_version": "latest",
+  "default": {
+    "title": {
+      "font": "Avenir Next Bold",
+      "color": "#2C1810",
+      "font_size": 58
+    },
+    "padding": 50,
+    "background": {
+      "color": "#F5EDE4"
+    },
+    "show_complete_frame": true,
+    "frame": "WHITE",
+    "title_below_image": false
+  },
+  "data": [
+    {
+      "filter": "01Diary"
+    },
+    {
+      "filter": "02Detail"
+    },
+    {
+      "filter": "03Stats"
+    },
+    {
+      "filter": "04Gear"
+    }
+  ]
+}

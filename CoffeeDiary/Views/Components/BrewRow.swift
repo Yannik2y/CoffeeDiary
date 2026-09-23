@@ -73,11 +73,12 @@ struct BrewRow: View {
                 }
             }
         }
-        .padding(.horizontal, 18)
+        .padding(.horizontal, 14)
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("brewRow_\(entry.id.uuidString)")
         .accessibilityLabel(accessibilityDescription)
     }
 

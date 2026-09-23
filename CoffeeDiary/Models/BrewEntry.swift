@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-enum ShotType: Int, Codable, CaseIterable, Identifiable {
+enum ShotType: Int, Codable, CaseIterable, Identifiable, Sendable {
     case single = 1
     case double = 2
     case triple = 3

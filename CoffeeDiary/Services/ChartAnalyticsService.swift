@@ -7,11 +7,11 @@ enum ChartAnalyticsService {
     // MARK: - Filtering
 
     static func filter(
-        _ brews: [BrewEntry],
+        _ brews: [ChartBrewRecord],
         options: ChartFilterOptions,
         now: Date = .now,
         calendar: Calendar = .current
-    ) -> [BrewEntry] {
+    ) -> [ChartBrewRecord] {
         var result = brews
 
         if let days = options.timeRange.dayCount,
@@ -24,7 +24,7 @@ enum ChartAnalyticsService {
         }
 
         if let beanId = options.beanId {
-            result = result.filter { $0.bean?.id == beanId }
+            result = result.filter { $0.beanId == beanId }
         }
 
         if let coffeeName = options.coffeeNameFilter, !coffeeName.isEmpty {
@@ -35,11 +35,11 @@ enum ChartAnalyticsService {
     }
 
     static func previousPeriodBrews(
-        _ brews: [BrewEntry],
+        _ brews: [ChartBrewRecord],
         options: ChartFilterOptions,
         now: Date = .now,
         calendar: Calendar = .current
-    ) -> [BrewEntry] {
+    ) -> [ChartBrewRecord] {
         guard let days = options.timeRange.dayCount,
               let currentStart = calendar.date(byAdding: .day, value: -days, to: now),
               let previousStart = calendar.date(byAdding: .day, value: -days * 2, to: now) else {
@@ -53,13 +53,13 @@ enum ChartAnalyticsService {
             .filter { $0.createdAt >= previousStart && $0.createdAt < currentStart }
     }
 
-    static func beansWithBrews(in brews: [BrewEntry]) -> [(id: UUID, name: String)] {
+    static func beansWithBrews(in brews: [ChartBrewRecord]) -> [(id: UUID, name: String)] {
         var seen = Set<UUID>()
         var result: [(UUID, String)] = []
-        for brew in brews.sorted(by: { ($0.bean?.name ?? "") < ($1.bean?.name ?? "") }) {
-            guard let bean = brew.bean, !seen.contains(bean.id) else { continue }
-            seen.insert(bean.id)
-            result.append((bean.id, bean.name))
+        for brew in brews.sorted(by: { ($0.beanName ?? "") < ($1.beanName ?? "") }) {
+            guard let beanId = brew.beanId, let beanName = brew.beanName, !seen.contains(beanId) else { continue }
+            seen.insert(beanId)
+            result.append((beanId, beanName))
         }
         return result
     }
@@ -67,8 +67,8 @@ enum ChartAnalyticsService {
     // MARK: - KPIs
 
     static func buildKPIs(
-        current: [BrewEntry],
-        previous: [BrewEntry],
+        current: [ChartBrewRecord],
+        previous: [ChartBrewRecord],
         styleFilter: BrewFlowType?
     ) -> [KPIStat] {
         [
@@ -114,19 +114,19 @@ enum ChartAnalyticsService {
         ]
     }
 
-    static func averageRating(_ brews: [BrewEntry]) -> Double? {
+    static func averageRating(_ brews: [ChartBrewRecord]) -> Double? {
         let rated = brews.filter { $0.rating > 0 }
         guard !rated.isEmpty else { return nil }
         return Double(rated.map(\.rating).reduce(0, +)) / Double(rated.count)
     }
 
-    static func averageRatio(_ brews: [BrewEntry]) -> Double? {
+    static func averageRatio(_ brews: [ChartBrewRecord]) -> Double? {
         let valid = brews.filter { $0.doseGrams > 0 }
         guard !valid.isEmpty else { return nil }
         return valid.map(\.brewRatio).reduce(0, +) / Double(valid.count)
     }
 
-    static func averageBrewTime(_ brews: [BrewEntry]) -> Double? {
+    static func averageBrewTime(_ brews: [ChartBrewRecord]) -> Double? {
         let timed = brews.filter { $0.brewTimeSeconds > 0 }
         guard !timed.isEmpty else { return nil }
         return Double(timed.map(\.brewTimeSeconds).reduce(0, +)) / Double(timed.count)
@@ -190,17 +190,17 @@ enum ChartAnalyticsService {
 
     // MARK: - Group breakdowns
 
-    static func topRatedGroups(_ brews: [BrewEntry], minCount: Int = 3, limit: Int = 5) -> [DimensionBreakdown] {
+    static func topRatedGroups(_ brews: [ChartBrewRecord], minCount: Int = 3, limit: Int = 5) -> [DimensionBreakdown] {
         var groups: [String: (name: String, beanId: UUID?, ratings: [Int], coffeeName: String?)] = [:]
 
         for brew in brews where brew.rating > 0 {
             let key: String
             let displayName: String
             let beanId: UUID?
-            if let bean = brew.bean {
-                key = bean.id.uuidString
-                displayName = bean.name
-                beanId = bean.id
+            if let id = brew.beanId, let name = brew.beanName {
+                key = id.uuidString
+                displayName = name
+                beanId = id
             } else {
                 key = "coffee:\(brew.coffeeName)"
                 displayName = brew.coffeeName
@@ -234,7 +234,7 @@ enum ChartAnalyticsService {
             .map { $0 }
     }
 
-    static func shotTimeBuckets(_ brews: [BrewEntry], bucketSize: Int = 5) -> [ShotTimeBucket] {
+    static func shotTimeBuckets(_ brews: [ChartBrewRecord], bucketSize: Int = 5) -> [ShotTimeBucket] {
         var counts: [String: Int] = [:]
         for brew in brews where brew.brewTimeSeconds > 0 {
             let bucket = (brew.brewTimeSeconds / bucketSize) * bucketSize
@@ -258,7 +258,7 @@ enum ChartAnalyticsService {
         .sorted { $0.bucketStart < $1.bucketStart }
     }
 
-    static func weeklyRatingBuckets(_ brews: [BrewEntry], calendar: Calendar = .current) -> [WeeklyRatingBucket] {
+    static func weeklyRatingBuckets(_ brews: [ChartBrewRecord], calendar: Calendar = .current) -> [WeeklyRatingBucket] {
         var groups: [Date: [Int]] = [:]
         for brew in brews where brew.rating > 0 {
             let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: brew.createdAt)
@@ -278,7 +278,7 @@ enum ChartAnalyticsService {
         .sorted { $0.weekStart < $1.weekStart }
     }
 
-    static func topBrews(_ brews: [BrewEntry], limit: Int = 5) -> [TopBrewRow] {
+    static func topBrews(_ brews: [ChartBrewRecord], limit: Int = 5) -> [TopBrewRow] {
         brews
             .filter { $0.rating > 0 }
             .sorted { lhs, rhs in
@@ -302,7 +302,7 @@ enum ChartAnalyticsService {
     // MARK: - Dashboard
 
     static func buildDashboard(
-        from allBrews: [BrewEntry],
+        from allBrews: [ChartBrewRecord],
         options: ChartFilterOptions,
         now: Date = .now,
         calendar: Calendar = .current
@@ -312,7 +312,7 @@ enum ChartAnalyticsService {
         let espresso = filtered.filter { $0.brewStyle == .espresso }
         let filterStyle = filtered.filter { $0.brewStyle == .filter }
 
-        let styleBrews: [BrewEntry]
+        let styleBrews: [ChartBrewRecord]
         if let style = options.brewStyle {
             styleBrews = filtered.filter { $0.brewStyle == style }
         } else {
@@ -402,9 +402,7 @@ enum ChartAnalyticsService {
 
         return ChartsDashboardSnapshot(
             kpis: buildKPIs(current: filtered, previous: previous, styleFilter: options.brewStyle),
-            filteredBrews: filtered,
-            espressoBrews: espresso,
-            filterBrews: filterStyle,
+            espressoTimedBrewCount: espresso.filter { $0.brewTimeSeconds > 0 }.count,
             ratioOverTime: ChartSeries(
                 id: "ratioOverTime",
                 title: "Ratio stability over time".localized,
@@ -466,7 +464,7 @@ enum ChartAnalyticsService {
 
     // MARK: - Insight helpers
 
-    private static func ratioInsight(_ brews: [BrewEntry]) -> String {
+    private static func ratioInsight(_ brews: [ChartBrewRecord]) -> String {
         guard let avg = averageRatio(brews) else {
             return "Log doses and yields to track ratio stability.".localized
         }
@@ -474,14 +472,14 @@ enum ChartAnalyticsService {
         return "Avg ratio %@ in this period.".localized(with: label)
     }
 
-    private static func grindInsight(_ brews: [BrewEntry]) -> String {
+    private static func grindInsight(_ brews: [ChartBrewRecord]) -> String {
         guard brews.count >= 3 else {
             return "Need at least 3 espresso brews.".localized
         }
         return "See how grind changes affect your ratio.".localized
     }
 
-    private static func waterTempInsight(_ brews: [BrewEntry]) -> String {
+    private static func waterTempInsight(_ brews: [ChartBrewRecord]) -> String {
         let valid = brews.filter { $0.waterTemperatureCelsius > 0 && $0.rating > 0 }
         guard valid.count >= 3 else {
             return "Need at least 3 rated filter brews with water temp.".localized
@@ -489,7 +487,7 @@ enum ChartAnalyticsService {
         return "Explore whether temperature correlates with taste.".localized
     }
 
-    private static func extractionInsight(_ brews: [BrewEntry]) -> String {
+    private static func extractionInsight(_ brews: [ChartBrewRecord]) -> String {
         guard let avg = averageBrewTime(brews) else {
             return "Record brew time to spot consistency trends.".localized
         }
@@ -503,7 +501,7 @@ enum ChartAnalyticsService {
         return "n = %d brews".localized(with: count)
     }
 
-    private static func shotTimeInsight(_ brews: [BrewEntry], buckets: [ShotTimeBucket]) -> String {
+    private static func shotTimeInsight(_ brews: [ChartBrewRecord], buckets: [ShotTimeBucket]) -> String {
         guard !buckets.isEmpty else {
             return "Record shot times to see consistency.".localized
         }
@@ -521,7 +519,7 @@ enum ChartAnalyticsService {
         return "Latest week avg: %.1f stars (%d brews).".localized(with: latest.averageRating, latest.count)
     }
 
-    private static func averageRatioLabel(_ brews: [BrewEntry]) -> String {
+    private static func averageRatioLabel(_ brews: [ChartBrewRecord]) -> String {
         guard let avg = averageRatio(brews) else { return "—" }
         return Formatters.ratioString(dose: 1, yield: avg)
     }

@@ -8,6 +8,8 @@ struct CoffeeDiaryApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @Environment(\.scenePhase) private var scenePhase
 
+    private let isSnapshotLaunch = SnapshotLaunch.isEnabled
+
     init() {
         if CommandLine.arguments.contains("--ui-testing") {
             if let bundleId = Bundle.main.bundleIdentifier {
@@ -15,24 +17,28 @@ struct CoffeeDiaryApp: App {
             }
             UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         }
+        if SnapshotLaunch.isEnabled {
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        }
     }
 
     var body: some Scene {
         WindowGroup {
             Group {
-            if hasCompletedOnboarding {
-                MainTabView()
-            } else {
+                if hasCompletedOnboarding || isSnapshotLaunch {
+                    MainTabView()
+                } else {
                     OnboardingView()
                 }
             }
             .tint(Color.accentColor)
             .task {
+                guard !isSnapshotLaunch else { return }
                 await CloudSyncService.shared.refreshAccountStatus()
                 PhotoMigrationService.migrateIfNeeded(container: sharedModelContainer)
             }
             .onChange(of: scenePhase) { _, phase in
-                guard phase == .active else { return }
+                guard phase == .active, !isSnapshotLaunch else { return }
                 Task {
                     await CloudSyncService.shared.refreshAccountStatus()
                 }
@@ -50,6 +56,10 @@ enum ModelContainerFactory {
     static let storeName = "CoffeeDiary"
 
     static func makeContainer() -> ModelContainer {
+        if SnapshotLaunch.isEnabled {
+            return makeSnapshotContainer()
+        }
+
         let schema = Schema(versionedSchema: CoffeeDiarySchemaV1.self)
 
         do {
@@ -109,6 +119,30 @@ enum ModelContainerFactory {
                     fatalError("Could not create ModelContainer (including in-memory): \(error)")
                 }
             }
+        }
+    }
+
+    private static func makeSnapshotContainer() -> ModelContainer {
+        let schema = Schema(versionedSchema: CoffeeDiarySchemaV1.self)
+        let config = ModelConfiguration(
+            "Snapshot",
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        do {
+            let container = try ModelContainer(
+                for: schema,
+                migrationPlan: CoffeeDiaryMigrationPlan.self,
+                configurations: [config]
+            )
+            SnapshotDemoData.seedIfNeeded(context: container.mainContext)
+            Task { @MainActor in
+                CloudSyncService.shared.setStorageMode(.memory)
+            }
+            return container
+        } catch {
+            fatalError("Could not create snapshot ModelContainer: \(error)")
         }
     }
 }

@@ -52,19 +52,6 @@ enum PhotoStorage {
         return try? Data(contentsOf: url)
     }
 
-    nonisolated static func loadThumbnail(path: String?) -> UIImage? {
-        guard let path else { return nil }
-        let thumbPath = path.replacingOccurrences(of: ".jpg", with: "_thumb.jpg")
-        let url = photosDirectory.appendingPathComponent(thumbPath)
-        if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
-            return image
-        }
-        if let data = loadPhoto(path: path), let image = UIImage(data: data) {
-            return resized(image, maxDimension: thumbnailMaxDimension)
-        }
-        return nil
-    }
-
     /// Returns a thumbnail-sized UIImage from inline photo data (for list rows).
     nonisolated static func thumbnailImage(from data: Data?, maxDimension: CGFloat = 200) -> UIImage? {
         guard let data else { return nil }

@@ -5,7 +5,7 @@ struct SyncStatusBanner: View {
     var embeddedInList: Bool = false
 
     var body: some View {
-        if !syncService.isSyncAvailable {
+        if !SnapshotLaunch.isEnabled, !syncService.isSyncAvailable {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: syncService.statusSymbolName)
                     .font(.title3)

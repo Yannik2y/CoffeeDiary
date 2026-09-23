@@ -37,7 +37,7 @@ struct ChartsView: View {
                 BrewDetailDestination(brewId: id, allBrews: brews)
             }
             .onAppear { refresh() }
-            .onChange(of: BrewListViewModel.contentFingerprint(for: brews)) { _, _ in refresh() }
+            .onChange(of: brews.count) { _, _ in refresh() }
             .onChange(of: selectedRatioDate) { _, newValue in
                 selectBrew(from: dashboard.ratioOverTime.points, date: newValue)
             }
@@ -182,7 +182,7 @@ struct ChartsView: View {
             title: "Shot time distribution".localized,
             insight: dashboard.shotTimeInsight,
             minimumSamples: 2,
-            sampleCount: dashboard.espressoBrews.filter { $0.brewTimeSeconds > 0 }.count
+            sampleCount: dashboard.espressoTimedBrewCount
         ) {
             Chart(dashboard.shotTimeBuckets) { bucket in
                 BarMark(

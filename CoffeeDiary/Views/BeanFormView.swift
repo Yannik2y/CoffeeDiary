@@ -18,6 +18,7 @@ struct BeanFormView: View {
     @State private var photoData: Data?
     @State private var attachmentError: String?
     @State private var arabicaPercentage: Double
+    @State private var isSaving = false
     
     init(bean: Bean? = nil, onSave: @escaping (Bean) -> Void) {
         self.bean = bean
@@ -80,10 +81,9 @@ struct BeanFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isEditing ? "Save" : "Add") {
-                        save()
-                        dismiss()
+                        Task { await save() }
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
                 }
             }
         }
@@ -93,7 +93,16 @@ struct BeanFormView: View {
         max(0, 100 - arabicaPercentage)
     }
     
-    private func save() {
+    private func save() async {
+        isSaving = true
+        defer { isSaving = false }
+        let compressedPhoto: Data?
+        if let photoData {
+            compressedPhoto = await PhotoStorage.compressedJPEGAsync(from: photoData)
+        } else {
+            compressedPhoto = nil
+        }
+
         if let bean {
             bean.name = name
             bean.roaster = roaster.isEmpty ? nil : roaster
@@ -103,13 +112,12 @@ struct BeanFormView: View {
             bean.notes = notes.isEmpty ? nil : notes
             bean.isFavorite = isFavorite
             bean.isArchived = isArchived
-            bean.photoData = photoData.flatMap { PhotoStorage.compressedJPEG(from: $0) }
+            bean.photoData = compressedPhoto
             bean.photoPath = nil
             bean.arabicaPercentage = arabicaPercentage
             bean.robustaPercentage = robustaPercentage
             onSave(bean)
         } else {
-            let compressedPhoto = photoData.flatMap { PhotoStorage.compressedJPEG(from: $0) }
             let newBean = Bean(
                 name: name,
                 roaster: roaster.isEmpty ? nil : roaster,
@@ -126,6 +134,7 @@ struct BeanFormView: View {
             )
             onSave(newBean)
         }
+        dismiss()
     }
 }
 

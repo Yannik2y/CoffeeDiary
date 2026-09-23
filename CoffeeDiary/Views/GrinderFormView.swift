@@ -19,6 +19,7 @@ struct GrinderFormView: View {
     @State private var silhouetteId: String?
     @State private var isActive: Bool
     @State private var attachmentError: String?
+    @State private var isSaving = false
     
     init(grinder: Grinder? = nil, onSave: @escaping (Grinder) -> Void) {
         self.grinder = grinder
@@ -84,20 +85,26 @@ struct GrinderFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isEditing ? "Save".localized : "Add".localized) {
-                        save()
-                        dismiss()
+                        Task { await save() }
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
                 }
             }
         }
     }
     
-    private func save() {
+    private func save() async {
+        isSaving = true
+        defer { isSaving = false }
         let trimmedBrand = brand.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedModel = modelName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedBurr = burrType.trimmingCharacters(in: .whitespacesAndNewlines)
-        let compressedPhoto = photoData.flatMap { PhotoStorage.compressedJPEG(from: $0) }
+        let compressedPhoto: Data?
+        if let photoData {
+            compressedPhoto = await PhotoStorage.compressedJPEGAsync(from: photoData)
+        } else {
+            compressedPhoto = nil
+        }
 
         if let grinder {
             grinder.name = name
@@ -130,5 +137,6 @@ struct GrinderFormView: View {
             )
             onSave(newGrinder)
         }
+        dismiss()
     }
 }

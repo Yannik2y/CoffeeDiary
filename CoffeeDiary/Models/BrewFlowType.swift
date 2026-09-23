@@ -1,6 +1,6 @@
 import Foundation
 
-enum BrewFlowType: String, CaseIterable, Identifiable, Codable {
+enum BrewFlowType: String, CaseIterable, Identifiable, Codable, Sendable {
     case espresso
     case filter
 

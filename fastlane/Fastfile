@@ -4,6 +4,8 @@ ENV["LANG"] ||= "en_US.UTF-8"
 ENV["LC_ALL"] ||= "en_US.UTF-8"
 
 require "dotenv"
+require "fileutils"
+require "shellwords"
 Dotenv.load(".env") if File.exist?(".env")
 
 default_platform(:ios)
@@ -66,11 +68,123 @@ platform :ios do
     )
   end
 
+  desc "Capture, frame, and size App Store screenshots (de-DE)"
+  lane :screenshots do
+    ensure_imagemagick!
+
+    # Prefer Xcode.app so simulators are available when CLT is the default.
+    ENV["DEVELOPER_DIR"] ||= "/Applications/Xcode.app/Contents/Developer"
+
+    snapshot(
+      scheme: "CoffeeDiary",
+      languages: ["de-DE"],
+      devices: [
+        "iPhone 16 Pro Max",
+        "iPad Pro 13-inch (M4)"
+      ],
+      output_directory: "fastlane/screenshots",
+      clear_previous_screenshots: true,
+      override_status_bar: true,
+      stop_after_first_error: true,
+      concurrent_simulators: false,
+      launch_arguments: ["--snapshot -AppleInterfaceStyle Light"]
+    )
+
+    frameit(path: "./fastlane/screenshots")
+
+    promote_framed_screenshots
+    fit_screenshots_to_app_store_sizes
+
+    UI.success("Screenshots ready under fastlane/screenshots/. Upload with: bundle exec fastlane screenshots_upload")
+  end
+
+  desc "Replace App Store Connect screenshots for the current version (de-DE only)"
+  lane :screenshots_upload do
+    ensure_asc_env!
+
+    pngs = Dir["fastlane/screenshots/**/*.png"]
+    UI.user_error!("No screenshots found. Run: bundle exec fastlane screenshots") if pngs.empty?
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: File.expand_path(ENV.fetch("ASC_KEY_PATH")),
+      duration: 1200,
+      in_house: false
+    )
+
+    deliver(
+      api_key: api_key,
+      submit_for_review: false,
+      automatic_release: false,
+      force: true,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      screenshots_path: "./fastlane/screenshots",
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false
+    )
+  end
+
   private_lane :ensure_asc_env! do
     missing = %w[ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_PATH].select { |k| ENV[k].to_s.strip.empty? }
     UI.user_error!("Missing ENV: #{missing.join(', ')}. Copy .env.example to .env and fill in values.") unless missing.empty?
 
     path = File.expand_path(ENV.fetch("ASC_KEY_PATH"))
     UI.user_error!("ASC key file not found: #{path}") unless File.exist?(path)
+  end
+
+  private_lane :ensure_imagemagick! do
+    magick = `which magick`.strip
+    convert = `which convert`.strip
+    UI.user_error!("ImageMagick required for frameit. Install with: brew install imagemagick") if magick.empty? && convert.empty?
+  end
+
+  # frameit writes *_framed.png beside originals — keep framed as the deliverables.
+  private_lane :promote_framed_screenshots do
+    Dir.glob(File.join("fastlane/screenshots", "**", "*_framed.png")).each do |framed|
+      original = framed.sub(/_framed\.png\z/, ".png")
+      FileUtils.rm_f(original)
+      FileUtils.mv(framed, original)
+      UI.message("Using framed screenshot: #{original}")
+    end
+  end
+
+  # Apple requires exact pixel sizes; framed images are letterboxed into accepted canvases.
+  private_lane :fit_screenshots_to_app_store_sizes do
+    iphone_size = [1320, 2868]
+    ipad_size = [2064, 2752]
+    background = "#F5EDE4"
+
+    Dir.glob(File.join("fastlane/screenshots", "**", "*.png")).each do |path|
+      next if File.basename(path).start_with?(".")
+
+      target =
+        if path.match?(/iPad/i)
+          ipad_size
+        elsif path.match?(/iPhone/i)
+          iphone_size
+        else
+          UI.important("Skipping size fit (unknown device): #{path}")
+          next
+        end
+
+      width, height = target
+      tool = `which magick`.strip
+      tool = `which convert`.strip if tool.empty?
+      cmd = [
+        tool,
+        path.shellescape,
+        "-resize", "#{width}x#{height}",
+        "-background", background.shellescape,
+        "-gravity", "center",
+        "-extent", "#{width}x#{height}",
+        path.shellescape
+      ].join(" ")
+      sh(cmd)
+      UI.message("Fitted #{File.basename(path)} → #{width}x#{height}")
+    end
   end
 end

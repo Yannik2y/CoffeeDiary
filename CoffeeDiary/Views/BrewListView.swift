@@ -26,12 +26,9 @@ struct BrewListView: View {
     @State private var filterMinRating: Int? = nil
     @State private var filterMachineId: UUID? = nil
     @State private var filterGrinderId: UUID? = nil
-    @State private var showingCharts: Bool = false
     @State private var showingFlowPicker: Bool = false
     @State private var showingEspressoFlow: Bool = false
     @State private var showingFilterFlow: Bool = false
-    @State private var showingEquipment: Bool = false
-    @State private var showingAbout: Bool = false
     @State private var showingEspressoConfig: Bool = false
     @State private var showingFilterConfig: Bool = false
     @State private var showingOverflowMenu: Bool = false
@@ -196,20 +193,11 @@ struct BrewListView: View {
             .sheet(isPresented: $showingAdd) { BrewFormView() }
             .sheet(isPresented: $showingEspressoFlow) { BrewEntryFlowView(flow: .espresso) }
             .sheet(isPresented: $showingFilterFlow) { BrewEntryFlowView(flow: .filter) }
-            .sheet(isPresented: $showingCharts) {
-                ChartsView()
-            }
-            .sheet(isPresented: $showingEquipment) {
-                EquipmentManagementView()
-            }
             .sheet(isPresented: $showingEspressoConfig) {
                 FlowConfigurationView(flowType: .espresso)
             }
             .sheet(isPresented: $showingFilterConfig) {
                 FlowConfigurationView(flowType: .filter)
-            }
-            .sheet(isPresented: $showingAbout) {
-                AboutView()
             }
             .sheet(isPresented: $showingFilters) {
                 BrewFilterSheet(
@@ -224,38 +212,20 @@ struct BrewListView: View {
             .onAppear {
                 updateCachedFilteredBrews()
             }
-            .onChange(of: debouncedSearchText) { _, _ in
+            .onChange(of: filterCriteria) { _, _ in
                 updateCachedFilteredBrews()
             }
-            .onChange(of: filterShot) { _, _ in
+            .onChange(of: brews.count) { _, _ in
                 updateCachedFilteredBrews()
             }
-            .onChange(of: filterBrewStyle) { _, _ in
-                updateCachedFilteredBrews()
+            .onChange(of: showingAdd) { _, isShowing in
+                if !isShowing { updateCachedFilteredBrews() }
             }
-            .onChange(of: filterStartDate) { _, _ in
-                updateCachedFilteredBrews()
+            .onChange(of: showingEspressoFlow) { _, isShowing in
+                if !isShowing { updateCachedFilteredBrews() }
             }
-            .onChange(of: filterEndDate) { _, _ in
-                updateCachedFilteredBrews()
-            }
-            .onChange(of: filterMinRatio) { _, _ in
-                updateCachedFilteredBrews()
-            }
-            .onChange(of: filterMaxRatio) { _, _ in
-                updateCachedFilteredBrews()
-            }
-            .onChange(of: filterMinRating) { _, _ in
-                updateCachedFilteredBrews()
-            }
-            .onChange(of: filterMachineId) { _, _ in
-                updateCachedFilteredBrews()
-            }
-            .onChange(of: filterGrinderId) { _, _ in
-                updateCachedFilteredBrews()
-            }
-            .onChange(of: BrewListViewModel.contentFingerprint(for: brews)) { _, _ in
-                updateCachedFilteredBrews()
+            .onChange(of: showingFilterFlow) { _, isShowing in
+                if !isShowing { updateCachedFilteredBrews() }
             }
             .errorAlert()
     }
@@ -397,7 +367,7 @@ struct BrewListView: View {
                     DialInBanner(suggestion: suggestion, embeddedInList: true)
                 }
             }
-            .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+            .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
 
@@ -410,7 +380,7 @@ struct BrewListView: View {
                         .padding(.vertical, 4)
                     }
                 }
-                .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 4, trailing: 20))
+                .listRowInsets(EdgeInsets(top: 0, leading: 12, bottom: 4, trailing: 12))
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
             }
@@ -461,7 +431,7 @@ struct BrewListView: View {
                         }
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+                        .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
                     }
                     .onDelete(perform: delete)
                 }

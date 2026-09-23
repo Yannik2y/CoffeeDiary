@@ -7,9 +7,7 @@ final class ChartsViewModel {
     var filterOptions = ChartFilterOptions()
     private(set) var dashboard = ChartsDashboardSnapshot(
         kpis: [],
-        filteredBrews: [],
-        espressoBrews: [],
-        filterBrews: [],
+        espressoTimedBrewCount: 0,
         ratioOverTime: .empty(id: "ratioOverTime", title: "Ratio stability over time".localized),
         grindVsRatio: .empty(id: "grindVsRatio", title: "Grind setting vs ratio".localized),
         shotTimeBuckets: [],
@@ -29,15 +27,22 @@ final class ChartsViewModel {
         updateTask?.cancel()
         let options = filterOptions
         // Snapshot value-type metrics off the model objects before leaving MainActor.
-        let snapshot = ChartAnalyticsService.buildDashboard(from: brews, options: options)
-        let beans = ChartAnalyticsService.beansWithBrews(
-            in: ChartAnalyticsService.filter(
-                brews,
-                options: ChartFilterOptions(timeRange: options.timeRange, brewStyle: options.brewStyle)
-            )
-        )
-        dashboard = snapshot
-        cachedBeansWithBrews = beans
+        let records = brews.map(ChartBrewRecord.init)
+        updateTask = Task {
+            let (snapshot, beans) = await Task.detached(priority: .userInitiated) {
+                let snapshot = ChartAnalyticsService.buildDashboard(from: records, options: options)
+                let beans = ChartAnalyticsService.beansWithBrews(
+                    in: ChartAnalyticsService.filter(
+                        records,
+                        options: ChartFilterOptions(timeRange: options.timeRange, brewStyle: options.brewStyle)
+                    )
+                )
+                return (snapshot, beans)
+            }.value
+            guard !Task.isCancelled else { return }
+            dashboard = snapshot
+            cachedBeansWithBrews = beans
+        }
     }
 
     func setTimeRange(_ range: ChartTimeRange) {
@@ -64,8 +69,9 @@ final class ChartsViewModel {
         if !cachedBeansWithBrews.isEmpty {
             return cachedBeansWithBrews
         }
+        let records = allBrews.map(ChartBrewRecord.init)
         let filtered = ChartAnalyticsService.filter(
-            allBrews,
+            records,
             options: ChartFilterOptions(timeRange: filterOptions.timeRange, brewStyle: filterOptions.brewStyle)
         )
         return ChartAnalyticsService.beansWithBrews(in: filtered)
