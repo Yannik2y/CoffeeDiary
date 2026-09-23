@@ -39,6 +39,22 @@ Upload metadata, attach latest processed build, submit for App Review
 
 Dry-run: push metadata only (no submit for review)
 
+### ios screenshots
+
+```sh
+[bundle exec] fastlane ios screenshots
+```
+
+Capture, frame, and size App Store screenshots (de-DE)
+
+### ios screenshots_upload
+
+```sh
+[bundle exec] fastlane ios screenshots_upload
+```
+
+Replace App Store Connect screenshots for the current version (de-DE only)
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
