@@ -190,7 +190,7 @@
 "Tracks extraction or brew time over the selected period, with a rolling average." = "Verfolgt Extraktions- bzw. Brühzeit im gewählten Zeitraum, mit gleitendem Durchschnitt.";
 "Average star rating per calendar week for rated brews in this period." = "Durchschnittliche Sternebewertung pro Kalenderwoche für bewertete Bezüge in diesem Zeitraum.";
 "Beans or coffee names with enough rated brews, ranked by average stars. Tap a bar to filter." = "Bohnen oder Kaffee-Namen mit genug bewerteten Bezügen, sortiert nach Ø-Sternen. Tippe auf einen Balken zum Filtern.";
-"Outdoor air temperature from the optional weather step versus your star rating. Not brew water temperature." = "Außentemperatur aus dem optionalen Wetter-Schritt versus deine Sternebewertung. Nicht die Brühwassertemperatur.";
+"Outdoor air temperature from the optional weather step versus your star rating." = "Außentemperatur aus dem optionalen Wetter-Schritt versus deine Sternebewertung.";
 "Your highest-rated individual brews in the selected period. Tap a row to open details." = "Deine höchstbewerteten einzelnen Bezüge im gewählten Zeitraum. Tippe auf eine Zeile für Details.";
 "Record shot times to see consistency." = "Erfasse Shot-Zeiten, um Konsistenz zu sehen.";
 "Most shots land around %ds." = "Die meisten Shots liegen bei ca. %d s.";

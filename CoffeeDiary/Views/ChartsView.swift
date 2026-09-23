@@ -328,7 +328,7 @@ struct ChartsView: View {
             insight: dashboard.weatherVsRating.insight,
             minimumSamples: dashboard.weatherVsRating.minimumSamples,
             sampleCount: dashboard.weatherVsRating.points.count,
-            explanation: "Outdoor air temperature from the optional weather step versus your star rating. Not brew water temperature.".localized
+            explanation: "Outdoor air temperature from the optional weather step versus your star rating.".localized
         ) {
             scatterChart(
                 points: dashboard.weatherVsRating.points,
