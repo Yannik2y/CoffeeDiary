@@ -182,6 +182,7 @@
 "n = %d brews" = "n = %d Bezüge";
 "Outdoor air temp vs rating · %d brews" = "Außentemperatur vs. Bewertung · %d Bezüge";
 "Chart explanation" = "Chart-Erklärung";
+"Shows what this chart means." = "Zeigt, was dieses Diagramm bedeutet.";
 "Shows brew ratio (yield ÷ dose) over time. Espresso includes a dashed ~1:2 reference line." = "Zeigt das Brühverhältnis (Ertrag ÷ Dosis) über die Zeit. Bei Espresso gibt es eine gestrichelte ~1:2-Referenzlinie.";
 "Plots grind setting against brew ratio for espresso shots, with an optional trend line." = "Stellt den Mahlgrad dem Brühverhältnis bei Espresso-Shots gegenüber, optional mit Trendlinie.";
 "Shows how often espresso shot times fall into each band, grouped by shot type." = "Zeigt, wie oft Espresso-Shot-Zeiten in die einzelnen Bänder fallen, gruppiert nach Shot-Typ.";

@@ -63,6 +63,8 @@
 "n = %d brews" = "n = %d brews";
 "Outdoor air temp vs rating · %d brews" = "Outdoor air temp vs rating · %d brews";
 "Chart explanation" = "Chart explanation";
+"Shows what this chart means." = "Shows what this chart means.";
+"Done" = "Done";
 "Shows brew ratio (yield ÷ dose) over time. Espresso includes a dashed ~1:2 reference line." = "Shows brew ratio (yield ÷ dose) over time. Espresso includes a dashed ~1:2 reference line.";
 "Plots grind setting against brew ratio for espresso shots, with an optional trend line." = "Plots grind setting against brew ratio for espresso shots, with an optional trend line.";
 "Shows how often espresso shot times fall into each band, grouped by shot type." = "Shows how often espresso shot times fall into each band, grouped by shot type.";
