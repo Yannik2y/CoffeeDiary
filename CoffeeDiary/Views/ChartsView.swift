@@ -126,7 +126,8 @@ struct ChartsView: View {
             title: dashboard.ratioOverTime.title,
             insight: dashboard.ratioOverTime.insight,
             minimumSamples: dashboard.ratioOverTime.minimumSamples,
-            sampleCount: dashboard.ratioOverTime.points.count
+            sampleCount: dashboard.ratioOverTime.points.count,
+            explanation: "Shows brew ratio (yield ÷ dose) over time. Espresso includes a dashed ~1:2 reference line.".localized
         ) {
             Chart {
                 ForEach(dashboard.ratioOverTime.points) { point in
@@ -165,7 +166,8 @@ struct ChartsView: View {
             title: dashboard.grindVsRatio.title,
             insight: dashboard.grindVsRatio.insight,
             minimumSamples: dashboard.grindVsRatio.minimumSamples,
-            sampleCount: dashboard.grindVsRatio.points.count
+            sampleCount: dashboard.grindVsRatio.points.count,
+            explanation: "Plots grind setting against brew ratio for espresso shots, with an optional trend line.".localized
         ) {
             scatterChart(
                 points: dashboard.grindVsRatio.points,
@@ -182,7 +184,8 @@ struct ChartsView: View {
             title: "Shot time distribution".localized,
             insight: dashboard.shotTimeInsight,
             minimumSamples: 2,
-            sampleCount: dashboard.espressoTimedBrewCount
+            sampleCount: dashboard.espressoTimedBrewCount,
+            explanation: "Shows how often espresso shot times fall into each band, grouped by shot type.".localized
         ) {
             Chart(dashboard.shotTimeBuckets) { bucket in
                 BarMark(
@@ -205,7 +208,8 @@ struct ChartsView: View {
             title: dashboard.waterTempVsRating.title,
             insight: dashboard.waterTempVsRating.insight,
             minimumSamples: dashboard.waterTempVsRating.minimumSamples,
-            sampleCount: dashboard.waterTempVsRating.points.count
+            sampleCount: dashboard.waterTempVsRating.points.count,
+            explanation: "Compares brew water temperature (°C) with your star rating for filter brews.".localized
         ) {
             scatterChart(
                 points: dashboard.waterTempVsRating.points,
@@ -222,7 +226,8 @@ struct ChartsView: View {
             title: dashboard.extractionTimeOverTime.title,
             insight: dashboard.extractionTimeOverTime.insight,
             minimumSamples: dashboard.extractionTimeOverTime.minimumSamples,
-            sampleCount: dashboard.extractionTimeOverTime.points.count
+            sampleCount: dashboard.extractionTimeOverTime.points.count,
+            explanation: "Tracks extraction or brew time over the selected period, with a rolling average.".localized
         ) {
             Chart {
                 ForEach(dashboard.extractionTimeOverTime.points) { point in
@@ -253,7 +258,8 @@ struct ChartsView: View {
             title: "Weekly avg rating".localized,
             insight: dashboard.weeklyRatingInsight,
             minimumSamples: 1,
-            sampleCount: dashboard.weeklyRatings.count
+            sampleCount: dashboard.weeklyRatings.count,
+            explanation: "Average star rating per calendar week for rated brews in this period.".localized
         ) {
             Chart(dashboard.weeklyRatings) { bucket in
                 BarMark(
@@ -279,7 +285,8 @@ struct ChartsView: View {
             title: "Top coffees by rating".localized,
             insight: "Tap a bar to filter the dashboard.".localized,
             minimumSamples: 1,
-            sampleCount: dashboard.topCoffees.count
+            sampleCount: dashboard.topCoffees.count,
+            explanation: "Beans or coffee names with enough rated brews, ranked by average stars. Tap a bar to filter.".localized
         ) {
             Chart(dashboard.topCoffees) { item in
                 BarMark(
@@ -320,7 +327,8 @@ struct ChartsView: View {
             title: dashboard.weatherVsRating.title,
             insight: dashboard.weatherVsRating.insight,
             minimumSamples: dashboard.weatherVsRating.minimumSamples,
-            sampleCount: dashboard.weatherVsRating.points.count
+            sampleCount: dashboard.weatherVsRating.points.count,
+            explanation: "Outdoor air temperature from the optional weather step versus your star rating. Not brew water temperature.".localized
         ) {
             scatterChart(
                 points: dashboard.weatherVsRating.points,
@@ -337,7 +345,8 @@ struct ChartsView: View {
             title: "Top brews".localized,
             insight: "Highest rated brews in this period.".localized,
             minimumSamples: 1,
-            sampleCount: dashboard.topBrews.count
+            sampleCount: dashboard.topBrews.count,
+            explanation: "Your highest-rated individual brews in the selected period. Tap a row to open details.".localized
         ) {
             VStack(spacing: 10) {
                 ForEach(dashboard.topBrews) { brew in

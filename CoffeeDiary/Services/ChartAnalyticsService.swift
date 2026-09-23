@@ -498,7 +498,7 @@ enum ChartAnalyticsService {
         if count < 5 {
             return "Need at least 5 weather-tagged rated brews.".localized
         }
-        return "n = %d brews".localized(with: count)
+        return "Outdoor air temp vs rating · %d brews".localized(with: count)
     }
 
     private static func shotTimeInsight(_ brews: [ChartBrewRecord], buckets: [ShotTimeBucket]) -> String {
