@@ -1,6 +1,6 @@
-• Der Kaffeenamen kommt automatisch von der gewählten Bohne
-• Bezüge zeigen Datum und Uhrzeit, Filter sitzen in der Leiste und scrollen mit
-• Kontrast in Hell und Dunkel angepasst
-• Werte im Workflow über Zahlfeld und Stepper statt Slider
-• Ausrüstung ist fester Schritt: Bohne, Mühle, Maschine oder Brühgerät direkt anlegen
-• Kaffeestation übersichtlicher, mit aktiver Maschine und Mühle
+• Statistik-Charts mit kurzen Erklärungen (Info-Button)
+• Diagramme und Listen laufen flüssiger
+• Wetter-Chart klarer benannt: Außentemperatur vs. Bewertung
+• Espresso- und Filter-Schnellaktionen kompakter
+• Tagebuch nutzt den Bildschirm besser
+• Stabilität und kleinere Fixes rund um Fotos und Ausrüstung
