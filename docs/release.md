@@ -137,6 +137,7 @@ Fastlane lädt **kein** Binary hoch (`skip_binary_upload: true`) — der Build k
 | `bundle exec fastlane screenshots` | iPhone + iPad Screenshots, frameit, Store-Größen |
 | `bundle exec fastlane screenshots_iphone` | Nur iPhone-Screenshots |
 | `bundle exec fastlane screenshots_ipad` | Nur iPad-Screenshots |
+| `bundle exec fastlane screenshots_frame` | Vorhandene PNGs rahmen + auf Store-Größe bringen |
 | `bundle exec fastlane screenshots_upload` | Screenshots in ASC ersetzen (ohne Review) |
 
 ### Screenshots (de-DE)

@@ -63,6 +63,14 @@ Capture iPad App Store screenshots only (de-DE)
 
 Capture iPhone then iPad screenshots, frame, and size for App Store (de-DE)
 
+### ios screenshots_frame
+
+```sh
+[bundle exec] fastlane ios screenshots_frame
+```
+
+Frame existing screenshots and fit to App Store pixel sizes (no capture)
+
 ### ios screenshots_upload
 
 ```sh

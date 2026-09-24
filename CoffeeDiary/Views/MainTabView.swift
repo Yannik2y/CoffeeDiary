@@ -28,5 +28,17 @@ struct MainTabView: View {
                 }
                 .accessibilityIdentifier("tabSettings")
         }
+        .modifier(BottomTabBarPreferredStyle())
+    }
+}
+
+/// Prefer classic bottom tabs on iPad (iOS 18+), so snapshot tests and UI stay consistent.
+private struct BottomTabBarPreferredStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.tabViewStyle(.tabBarOnly)
+        } else {
+            content
+        }
     }
 }

@@ -8,6 +8,11 @@ require "fileutils"
 require "shellwords"
 Dotenv.load(".env") if File.exist?(".env")
 
+# Fastlane may run with cwd = project root OR ./fastlane. Anchor all screenshot paths
+# to this Fastfile so globs never miss PNGs.
+SCREENSHOTS_ROOT = File.expand_path("screenshots", __dir__)
+SCREENSHOTS_LOCALE = File.join(SCREENSHOTS_ROOT, "de-DE")
+
 default_platform(:ios)
 
 platform :ios do
@@ -117,23 +122,40 @@ platform :ios do
       ensure_device_pngs!(device_matcher: /iPad/i)
 
       UI.header("Framing & App Store sizes")
-      frameit(path: "./fastlane/screenshots")
-      promote_framed_screenshots
-      fit_screenshots_to_app_store_sizes
+      frame_and_fit_screenshots!
 
-      count = Dir["fastlane/screenshots/**/*.png"].size
-      UI.success("#{count} screenshots ready under fastlane/screenshots/. Upload with: bundle exec fastlane screenshots_upload")
+      count = locale_screenshot_pngs.size
+      UI.success("#{count} screenshots ready under #{SCREENSHOTS_ROOT}. Upload with: bundle exec fastlane screenshots_upload")
     ensure
       cleanup_snapshot_force_marker!
     end
+  end
+
+  desc "Frame existing screenshots and fit to App Store pixel sizes (no capture)"
+  lane :screenshots_frame do
+    ensure_imagemagick!
+    pngs = locale_screenshot_pngs
+    if pngs.empty?
+      UI.user_error!(
+        "No screenshots in #{SCREENSHOTS_LOCALE}/. Capture first " \
+        "(pwd=#{Dir.pwd})."
+      )
+    end
+
+    UI.header("Framing & App Store sizes")
+    UI.message("Framing #{pngs.size} PNGs from #{SCREENSHOTS_LOCALE}")
+    frame_and_fit_screenshots!
+
+    count = locale_screenshot_pngs.size
+    UI.success("#{count} marketing screenshots ready. Preview in Finder, then: bundle exec fastlane screenshots_upload")
   end
 
   desc "Replace App Store Connect screenshots for the current version (de-DE only)"
   lane :screenshots_upload do
     ensure_asc_env!
 
-    pngs = Dir["fastlane/screenshots/**/*.png"]
-    UI.user_error!("No screenshots found. Run: bundle exec fastlane screenshots") if pngs.empty?
+    pngs = locale_screenshot_pngs
+    UI.user_error!("No screenshots found in #{SCREENSHOTS_LOCALE}. Run screenshots / screenshots_frame first.") if pngs.empty?
 
     api_key = app_store_connect_api_key(
       key_id: ENV.fetch("ASC_KEY_ID"),
@@ -152,10 +174,39 @@ platform :ios do
       skip_metadata: true,
       skip_screenshots: false,
       overwrite_screenshots: true,
-      screenshots_path: "./fastlane/screenshots",
+      screenshots_path: SCREENSHOTS_ROOT,
       precheck_include_in_app_purchases: false,
       run_precheck_before_submit: false
     )
+  end
+
+  private_lane :frame_and_fit_screenshots! do
+    ensure_frameit_assets!
+
+    frames_dir = File.expand_path("~/.fastlane/frameit/latest")
+    unless File.directory?(frames_dir) && Dir.glob(File.join(frames_dir, "Apple iPhone 16 Pro Max*.png")).any?
+      UI.important("Downloading device frames for frameit (one-time)…")
+      sh("bundle exec fastlane frameit download_frames")
+    end
+
+    frameit(path: SCREENSHOTS_ROOT)
+    promote_framed_screenshots
+    fit_screenshots_to_app_store_sizes
+  end
+
+  private_lane :ensure_frameit_assets! do
+    bg = File.join(SCREENSHOTS_ROOT, "background.png")
+    unless File.exist?(bg)
+      tool = `which magick`.strip
+      tool = `which convert`.strip if tool.empty?
+      sh("#{tool} -size 2000x4000 xc:'#F5EDE4' #{bg.shellescape}")
+    end
+
+    fonts = File.join(SCREENSHOTS_ROOT, "fonts")
+    FileUtils.mkdir_p(fonts)
+    dest = File.join(fonts, "Arial-Bold.ttf")
+    src = "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
+    FileUtils.cp(src, dest) if File.exist?(src) && !File.exist?(dest)
   end
 
   private_lane :prepare_snapshot_environment! do
@@ -192,7 +243,7 @@ platform :ios do
       scheme: "CoffeeDiary",
       languages: ["de-DE"],
       devices: [device],
-      output_directory: "fastlane/screenshots",
+      output_directory: SCREENSHOTS_ROOT,
       clear_previous_screenshots: clear_previous,
       override_status_bar: true,
       stop_after_first_error: true,
@@ -207,15 +258,27 @@ platform :ios do
 
   private_lane :ensure_device_pngs! do |options|
     matcher = options.fetch(:device_matcher)
-    pngs = Dir["fastlane/screenshots/de-DE/*.png"].select { |p| File.basename(p).match?(matcher) }
+    pngs = locale_screenshot_pngs.select { |p| File.basename(p).match?(matcher) }
+    expected = options.fetch(:expected_count, 4)
     if pngs.empty?
       UI.user_error!(
-        "No screenshots matched #{matcher}. SnapshotTests was likely skipped or the Simulator timed out. " \
-        "Open Simulator.app, boot the device once, then retry. " \
-        "You can also run: SNAPSHOT_FORCE=YES bundle exec fastlane screenshots_iphone"
+        "No screenshots matched #{matcher} in #{SCREENSHOTS_LOCALE}. " \
+        "SnapshotTests was likely skipped or the Simulator timed out. " \
+        "Open Simulator.app, boot the device once, then retry."
+      )
+    end
+    if pngs.size < expected
+      UI.user_error!(
+        "Expected at least #{expected} screenshots for #{matcher.inspect}, found #{pngs.size}: " \
+        "#{pngs.map { |p| File.basename(p) }.join(', ')}. " \
+        "Fix SnapshotTests navigation (often iPad tabs after detail) and re-run."
       )
     end
     UI.message("Found #{pngs.size} screenshots for #{matcher.inspect}")
+  end
+
+  def locale_screenshot_pngs
+    Dir[File.join(SCREENSHOTS_LOCALE, "*.png")]
   end
 
   private_lane :ensure_asc_env! do
@@ -234,7 +297,7 @@ platform :ios do
 
   # frameit writes *_framed.png beside originals — keep framed as the deliverables.
   private_lane :promote_framed_screenshots do
-    Dir.glob(File.join("fastlane/screenshots", "**", "*_framed.png")).each do |framed|
+    Dir.glob(File.join(SCREENSHOTS_ROOT, "**", "*_framed.png")).each do |framed|
       original = framed.sub(/_framed\.png\z/, ".png")
       FileUtils.rm_f(original)
       FileUtils.mv(framed, original)
@@ -248,7 +311,7 @@ platform :ios do
     ipad_size = [2064, 2752]
     background = "#F5EDE4"
 
-    Dir.glob(File.join("fastlane/screenshots", "**", "*.png")).each do |path|
+    Dir.glob(File.join(SCREENSHOTS_ROOT, "**", "*.png")).each do |path|
       next if File.basename(path).start_with?(".")
 
       target =

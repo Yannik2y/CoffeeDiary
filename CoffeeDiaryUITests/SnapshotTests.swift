@@ -65,15 +65,15 @@ final class SnapshotTests: XCTestCase {
         )
         snapshot("02Detail")
 
-        if app.tabBars.firstMatch.exists == false {
-            app.navigationBars.buttons.firstMatch.tap()
-            _ = app.tabBars.firstMatch.waitForExistence(timeout: 10)
-        }
+        // iPhone: push detail hides the tab bar — pop first.
+        // iPad: NavigationSplitView keeps tabs; still try a soft dismiss if needed.
+        ensureTabsReachable(app)
 
         tapTab(app, identifier: "tabStats", labels: ["Statistik", "Stats"])
         XCTAssertTrue(
             app.navigationBars["Statistik"].waitForExistence(timeout: 20)
-                || app.navigationBars["Stats"].waitForExistence(timeout: 10)
+                || app.navigationBars["Stats"].waitForExistence(timeout: 10),
+            "Stats tab should open"
         )
         // Prefer Espresso so KPIs/charts stay on ~1:2 / ~28s (marketing-ready).
         selectSegment(app, labels: ["Espresso"])
@@ -84,26 +84,66 @@ final class SnapshotTests: XCTestCase {
         XCTAssertTrue(
             app.navigationBars["Ausrüstung"].waitForExistence(timeout: 20)
                 || app.navigationBars["Equipment"].waitForExistence(timeout: 10)
-                || app.navigationBars["Gear"].waitForExistence(timeout: 10)
+                || app.navigationBars["Gear"].waitForExistence(timeout: 10),
+            "Gear tab should open"
         )
         snapshot("04Gear")
     }
 
     @MainActor
-    private func tapTab(_ app: XCUIApplication, identifier: String, labels: [String]) {
-        let byID = app.tabBars.buttons[identifier]
-        if byID.waitForExistence(timeout: 5) {
-            byID.tap()
+    private func ensureTabsReachable(_ app: XCUIApplication) {
+        if tabControl(app, identifier: "tabStats", labels: ["Statistik", "Stats"]).waitForExistence(timeout: 2) {
             return
         }
-        for label in labels {
-            let button = app.tabBars.buttons[label]
-            if button.waitForExistence(timeout: 2) {
-                button.tap()
-                return
-            }
+
+        // Pop pushed detail (iPhone) or try common dismiss controls.
+        let back = app.navigationBars.buttons.firstMatch
+        if back.exists, back.isHittable {
+            back.tap()
         }
-        XCTFail("Tab not found for \(identifier) / \(labels)")
+        if tabControl(app, identifier: "tabStats", labels: ["Statistik", "Stats"]).waitForExistence(timeout: 3) {
+            return
+        }
+
+        // Last resort: activate Diary tab via coordinate-less label search anywhere.
+        let diary = tabControl(app, identifier: "tabDiary", labels: ["Tagebuch", "Diary"])
+        if diary.exists {
+            diary.tap()
+        }
+        _ = tabControl(app, identifier: "tabStats", labels: ["Statistik", "Stats"]).waitForExistence(timeout: 5)
+    }
+
+    @MainActor
+    private func tapTab(_ app: XCUIApplication, identifier: String, labels: [String]) {
+        let control = tabControl(app, identifier: identifier, labels: labels)
+        XCTAssertTrue(control.waitForExistence(timeout: 8), "Tab not found for \(identifier) / \(labels)")
+        control.tap()
+    }
+
+    /// iPad TabView / split layouts don't always expose tabs as `tabBars.buttons`.
+    @MainActor
+    private func tabControl(
+        _ app: XCUIApplication,
+        identifier: String,
+        labels: [String]
+    ) -> XCUIElement {
+        let byIDInTabs = app.tabBars.buttons[identifier]
+        if byIDInTabs.exists { return byIDInTabs }
+
+        let byIDAnywhere = app.buttons[identifier]
+        if byIDAnywhere.exists { return byIDAnywhere.firstMatch }
+
+        let byIDDescendant = app.descendants(matching: .any)[identifier]
+        if byIDDescendant.exists { return byIDDescendant.firstMatch }
+
+        for label in labels {
+            let inTabs = app.tabBars.buttons[label]
+            if inTabs.exists { return inTabs }
+            let asButton = app.buttons[label]
+            if asButton.exists { return asButton.firstMatch }
+        }
+
+        return app.tabBars.buttons[identifier]
     }
 
     @MainActor
@@ -112,6 +152,12 @@ final class SnapshotTests: XCTestCase {
             let button = app.segmentedControls.buttons[label]
             if button.waitForExistence(timeout: 3), button.isHittable {
                 button.tap()
+                return
+            }
+            // iPad may surface the segment outside a segmented control query.
+            let loose = app.buttons[label].firstMatch
+            if loose.exists, loose.isHittable {
+                loose.tap()
                 return
             }
         }

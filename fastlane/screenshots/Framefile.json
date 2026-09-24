@@ -2,16 +2,14 @@
   "device_frame_version": "latest",
   "default": {
     "title": {
-      "font": "Avenir Next Bold",
+      "font": "./fonts/Arial-Bold.ttf",
       "color": "#2C1810",
       "font_size": 58
     },
     "padding": 50,
-    "background": {
-      "color": "#F5EDE4"
-    },
+    "background": "./background.png",
     "show_complete_frame": true,
-    "frame": "WHITE",
+    "frame": "NATURAL_TITANIUM",
     "title_below_image": false
   },
   "data": [
