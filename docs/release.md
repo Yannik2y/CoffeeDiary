@@ -134,7 +134,9 @@ Fastlane lädt **kein** Binary hoch (`skip_binary_upload: true`) — der Build k
 | `bundle exec fastlane beta` | Kurzer Hinweis zum Ablauf |
 | `bundle exec fastlane metadata` | Nur Store-Texte hochladen |
 | `bundle exec fastlane release` | Texte + Build an Version + Submit for Review |
-| `bundle exec fastlane screenshots` | Simulator-Screenshots aufnehmen, rahmen, auf Store-Größe bringen |
+| `bundle exec fastlane screenshots` | iPhone + iPad Screenshots, frameit, Store-Größen |
+| `bundle exec fastlane screenshots_iphone` | Nur iPhone-Screenshots |
+| `bundle exec fastlane screenshots_ipad` | Nur iPad-Screenshots |
 | `bundle exec fastlane screenshots_upload` | Screenshots in ASC ersetzen (ohne Review) |
 
 ### Screenshots (de-DE)
@@ -146,10 +148,21 @@ brew install imagemagick   # falls noch nicht vorhanden
 bundle exec fastlane frameit download_frames
 ```
 
-Erzeugen (iPhone 16 Pro Max + iPad Pro 13" M4, gerahmt mit deutschen Titeln):
+Simulator vorher öffnen hilft auf langsamen Macs. Dann nacheinander:
 
 ```bash
+cd /Users/yannik/Documents/Privat/Coding/CoffeeDiary
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+export PATH="/usr/local/Homebrew/Library/Homebrew/vendor/portable-ruby/current/bin:$DEVELOPER_DIR/usr/bin:$PATH"
+export SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT=120
 bundle exec fastlane screenshots
+```
+
+Nur ein Gerät (zum Debuggen):
+
+```bash
+bundle exec fastlane screenshots_iphone
+bundle exec fastlane screenshots_ipad
 ```
 
 In App Store Connect ersetzen (aktuelle Version, nur Screenshots):
@@ -171,8 +184,10 @@ bundle exec fastlane screenshots_upload
 | No build available | Xcode-Cloud-Build abwarten; Version in ASC muss zur Marketing-Version passen |
 | PLA / membership | Developer-Agreement akzeptieren |
 | Screenshots fehlen / veraltet | `bundle exec fastlane screenshots` dann `screenshots_upload` |
+| SnapshotTests skipped | Lane setzt `SNAPSHOT_FORCE` + Cache-Marker; Simulator.app öffnen und Retry |
+| Accessibility / AX Timeout | Simulator booten, nur `screenshots_iphone`, `SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT=120` |
 | ImageMagick / frameit | `brew install imagemagick` und `fastlane frameit download_frames` |
-| Simulator nicht gefunden | Xcode.app als Developer Dir; Geräte in `Snapfile` an `xcrun simctl list` anpassen |
+| Simulator nicht gefunden | Xcode.app als Developer Dir; Geräte in `Snapfile` / Fastfile an `xcrun simctl list` anpassen |
 
 ---
 

@@ -71,7 +71,12 @@ enum ChartAnalyticsService {
         previous: [ChartBrewRecord],
         styleFilter: BrewFlowType?
     ) -> [KPIStat] {
-        [
+        // Ratio and time are style-scaled (~1:2 / ~25s espresso vs ~1:16 / ~3min filter).
+        // When "All" is selected, keep those KPIs on espresso so averages stay meaningful.
+        let ratioCurrent = brewsForRatioAndTime(current, styleFilter: styleFilter)
+        let ratioPrevious = brewsForRatioAndTime(previous, styleFilter: styleFilter)
+
+        return [
             KPIStat(
                 id: "count",
                 title: "Brew count".localized,
@@ -92,10 +97,10 @@ enum ChartAnalyticsService {
             KPIStat(
                 id: "ratio",
                 title: "Avg ratio".localized,
-                value: averageRatioLabel(current),
+                value: averageRatioLabel(ratioCurrent),
                 delta: deltaOptional(
-                    current: averageRatio(current),
-                    previous: averageRatio(previous),
+                    current: averageRatio(ratioCurrent),
+                    previous: averageRatio(ratioPrevious),
                     suffix: "",
                     decimals: 1
                 )
@@ -103,15 +108,28 @@ enum ChartAnalyticsService {
             KPIStat(
                 id: "time",
                 title: styleFilter == .filter ? "Avg brew time".localized : "Avg shot time".localized,
-                value: formatOptional(averageBrewTime(current), decimals: 0).map { "\($0)s" } ?? "—",
+                value: formatOptional(averageBrewTime(ratioCurrent), decimals: 0).map { "\($0)s" } ?? "—",
                 delta: deltaOptional(
-                    current: averageBrewTime(current),
-                    previous: averageBrewTime(previous),
+                    current: averageBrewTime(ratioCurrent),
+                    previous: averageBrewTime(ratioPrevious),
                     suffix: "s",
                     decimals: 0
                 )
             )
         ]
+    }
+
+    /// Brews used for ratio / extraction-time style metrics.
+    static func brewsForRatioAndTime(
+        _ brews: [ChartBrewRecord],
+        styleFilter: BrewFlowType?
+    ) -> [ChartBrewRecord] {
+        switch styleFilter {
+        case .filter:
+            return brews.filter { $0.brewStyle == .filter }
+        case .espresso, .none:
+            return brews.filter { $0.brewStyle == .espresso }
+        }
     }
 
     static func averageRating(_ brews: [ChartBrewRecord]) -> Double? {
@@ -312,14 +330,12 @@ enum ChartAnalyticsService {
         let espresso = filtered.filter { $0.brewStyle == .espresso }
         let filterStyle = filtered.filter { $0.brewStyle == .filter }
 
-        let styleBrews: [ChartBrewRecord]
-        if let style = options.brewStyle {
-            styleBrews = filtered.filter { $0.brewStyle == style }
-        } else {
-            styleBrews = filtered
-        }
+        // Ratio stability mixes poorly across styles (espresso ~1:2 vs filter ~1:16).
+        // When filter is "All", plot espresso only — same scale as the 1:2 reference line.
+        let ratioBrews = brewsForRatioAndTime(filtered, styleFilter: options.brewStyle)
+        let extractionBrews = brewsForRatioAndTime(filtered, styleFilter: options.brewStyle)
 
-        let ratioPoints = styleBrews
+        let ratioPoints = ratioBrews
             .filter { $0.doseGrams > 0 }
             .map { brew in
                 ChartPoint(
@@ -351,7 +367,7 @@ enum ChartAnalyticsService {
                 )
             }
 
-        let extractionPoints = styleBrews
+        let extractionPoints = extractionBrews
             .filter { $0.brewTimeSeconds > 0 }
             .map { brew in
                 ChartPoint(
@@ -406,7 +422,7 @@ enum ChartAnalyticsService {
             ratioOverTime: ChartSeries(
                 id: "ratioOverTime",
                 title: "Ratio stability over time".localized,
-                insight: ratioInsight(styleBrews),
+                insight: ratioInsight(ratioBrews),
                 points: ratioPoints,
                 rollingAverage: ratioRolling,
                 trendLine: nil,
@@ -438,7 +454,7 @@ enum ChartAnalyticsService {
             extractionTimeOverTime: ChartSeries(
                 id: "extractionTime",
                 title: "Extraction time over time".localized,
-                insight: extractionInsight(styleBrews),
+                insight: extractionInsight(extractionBrews),
                 points: extractionPoints,
                 rollingAverage: extractionRolling,
                 trendLine: nil,

@@ -157,7 +157,9 @@ struct ChartsView: View {
             }
             .chartXSelection(value: $selectedRatioDate)
             .chartYScale(domain: ratioYDomain)
+            .chartPlotStyle { $0.clipped() }
             .frame(height: 220)
+            .clipped()
         }
     }
 
@@ -249,7 +251,10 @@ struct ChartsView: View {
                 }
             }
             .chartXSelection(value: $selectedExtractionDate)
+            .chartYScale(domain: extractionYDomain)
+            .chartPlotStyle { $0.clipped() }
             .frame(height: 200)
+            .clipped()
         }
     }
 
@@ -448,12 +453,41 @@ struct ChartsView: View {
         )
     }
 
+    /// Includes scatter + rolling average (+ optional reference) so LineMarks stay inside the scale.
+    /// Previously an artificial 4.0 cap left filter-scale points outside the domain; Swift Charts
+    /// still drew those LineMarks and they escaped the plot into the KPI cards above.
     private var ratioYDomain: ClosedRange<Double> {
-        let values = dashboard.ratioOverTime.points.map(\.y)
-        guard let minY = values.min(), let maxY = values.max() else {
-            return 1.5...3.0
+        var values = dashboard.ratioOverTime.points.map(\.y)
+        values += dashboard.ratioOverTime.rollingAverage.map(\.y)
+        if let reference = dashboard.ratioOverTime.referenceY {
+            values.append(reference)
         }
-        return max(1.0, minY - 0.2)...min(4.0, maxY + 0.2)
+        return paddedYDomain(values, fallback: 1.5...3.0, minimumSpan: 0.6)
+    }
+
+    private var extractionYDomain: ClosedRange<Double> {
+        let values = dashboard.extractionTimeOverTime.points.map(\.y)
+            + dashboard.extractionTimeOverTime.rollingAverage.map(\.y)
+        return paddedYDomain(values, fallback: 0...40, minimumSpan: 10)
+    }
+
+    private func paddedYDomain(
+        _ values: [Double],
+        fallback: ClosedRange<Double>,
+        minimumSpan: Double
+    ) -> ClosedRange<Double> {
+        guard let minY = values.min(), let maxY = values.max() else {
+            return fallback
+        }
+        let pad = max(minimumSpan * 0.2, (maxY - minY) * 0.15)
+        var lower = minY - pad
+        var upper = maxY + pad
+        if upper - lower < minimumSpan {
+            let mid = (lower + upper) / 2
+            lower = mid - minimumSpan / 2
+            upper = mid + minimumSpan / 2
+        }
+        return lower...upper
     }
 
     private func refresh() {

@@ -1,16 +1,28 @@
 import XCTest
 
-/// App Store screenshots via Fastlane `snapshot`. Skipped in normal CI runs.
+/// App Store screenshots via Fastlane `snapshot`. Skipped in normal CI / Xcode test runs.
 final class SnapshotTests: XCTestCase {
     override class var runsForEachTargetApplicationUIConfiguration: Bool { false }
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+        try XCTSkipUnless(
+            Self.isSnapshotRun,
+            "Snapshot tests run only under Fastlane snapshot (or SNAPSHOT_FORCE=YES)"
+        )
+    }
 
-        let env = ProcessInfo.processInfo.environment["FASTLANE_SNAPSHOT"]
-        let args = ProcessInfo.processInfo.arguments
-        let isSnapshotRun = env == "YES" || args.contains("FASTLANE_SNAPSHOT")
-        try XCTSkipUnless(isSnapshotRun, "Snapshot tests run only under Fastlane snapshot")
+    /// Fastlane normally sets FASTLANE_SNAPSHOT=YES on the test process. Some local setups
+    /// drop that env; fall back to SNAPSHOT_FORCE (env or cache marker written by the lane).
+    private static var isSnapshotRun: Bool {
+        let env = ProcessInfo.processInfo.environment
+        if env["FASTLANE_SNAPSHOT"] == "YES" { return true }
+        if env["SNAPSHOT_FORCE"] == "YES" { return true }
+
+        let hostHome = env["SIMULATOR_HOST_HOME"] ?? NSHomeDirectory()
+        let marker = (hostHome as NSString)
+            .appendingPathComponent("Library/Caches/tools.fastlane/SNAPSHOT_FORCE")
+        return FileManager.default.fileExists(atPath: marker)
     }
 
     @MainActor
@@ -21,15 +33,16 @@ final class SnapshotTests: XCTestCase {
         app.launchArguments += ["-AppleInterfaceStyle", "Light"]
         app.launch()
 
-        let diaryReady = app.navigationBars.firstMatch.waitForExistence(timeout: 45)
+        // Slow Intel Macs / cold Simulator boots need generous timeouts.
+        let diaryReady = app.navigationBars.firstMatch.waitForExistence(timeout: 90)
         XCTAssertTrue(diaryReady, "Diary should appear after snapshot seed")
 
-        // Wait for seeded list content (Coffee Station or a brew row).
         let featuredID = "A1111111-1111-1111-1111-111111111111"
-        let brewRow = app.descendants(matching: .any)["brewRow_\(featuredID)"]
-        let station = app.descendants(matching: .any)["stationMachineTile"]
+        // Prefer buttons + firstMatch: the row ID can appear on nested AX nodes.
+        let brewRow = app.buttons["brewRow_\(featuredID)"].firstMatch
+        let station = app.descendants(matching: .any)["stationMachineTile"].firstMatch
         XCTAssertTrue(
-            brewRow.waitForExistence(timeout: 20) || station.waitForExistence(timeout: 5),
+            brewRow.waitForExistence(timeout: 40) || station.waitForExistence(timeout: 15),
             "Seeded diary content should be visible"
         )
 
@@ -38,7 +51,6 @@ final class SnapshotTests: XCTestCase {
         if brewRow.exists {
             brewRow.tap()
         } else {
-            // Fallback: first brew-looking cell in the list
             let cells = app.cells
             if cells.count > 0 {
                 cells.element(boundBy: min(1, cells.count - 1)).tap()
@@ -48,29 +60,31 @@ final class SnapshotTests: XCTestCase {
         let detailNav = app.navigationBars["Bezug"]
         let detailFallback = app.navigationBars["Brew"]
         XCTAssertTrue(
-            detailNav.waitForExistence(timeout: 10) || detailFallback.waitForExistence(timeout: 5),
+            detailNav.waitForExistence(timeout: 20) || detailFallback.waitForExistence(timeout: 10),
             "Brew detail should open"
         )
         snapshot("02Detail")
 
-        // Back to tab root on compact; on iPad split view tabs stay visible.
         if app.tabBars.firstMatch.exists == false {
             app.navigationBars.buttons.firstMatch.tap()
-            _ = app.tabBars.firstMatch.waitForExistence(timeout: 5)
+            _ = app.tabBars.firstMatch.waitForExistence(timeout: 10)
         }
 
         tapTab(app, identifier: "tabStats", labels: ["Statistik", "Stats"])
-        XCTAssertTrue(app.navigationBars["Statistik"].waitForExistence(timeout: 10)
-            || app.navigationBars["Stats"].waitForExistence(timeout: 5))
-        // Allow charts to lay out
-        RunLoop.current.run(until: Date().addingTimeInterval(1.2))
+        XCTAssertTrue(
+            app.navigationBars["Statistik"].waitForExistence(timeout: 20)
+                || app.navigationBars["Stats"].waitForExistence(timeout: 10)
+        )
+        // Prefer Espresso so KPIs/charts stay on ~1:2 / ~28s (marketing-ready).
+        selectSegment(app, labels: ["Espresso"])
+        RunLoop.current.run(until: Date().addingTimeInterval(1.5))
         snapshot("03Stats")
 
         tapTab(app, identifier: "tabGear", labels: ["Ausrüstung", "Gear", "Equipment"])
         XCTAssertTrue(
-            app.navigationBars["Ausrüstung"].waitForExistence(timeout: 10)
-                || app.navigationBars["Equipment"].waitForExistence(timeout: 5)
-                || app.navigationBars["Gear"].waitForExistence(timeout: 5)
+            app.navigationBars["Ausrüstung"].waitForExistence(timeout: 20)
+                || app.navigationBars["Equipment"].waitForExistence(timeout: 10)
+                || app.navigationBars["Gear"].waitForExistence(timeout: 10)
         )
         snapshot("04Gear")
     }
@@ -78,17 +92,28 @@ final class SnapshotTests: XCTestCase {
     @MainActor
     private func tapTab(_ app: XCUIApplication, identifier: String, labels: [String]) {
         let byID = app.tabBars.buttons[identifier]
-        if byID.waitForExistence(timeout: 2) {
+        if byID.waitForExistence(timeout: 5) {
             byID.tap()
             return
         }
         for label in labels {
             let button = app.tabBars.buttons[label]
-            if button.exists {
+            if button.waitForExistence(timeout: 2) {
                 button.tap()
                 return
             }
         }
         XCTFail("Tab not found for \(identifier) / \(labels)")
+    }
+
+    @MainActor
+    private func selectSegment(_ app: XCUIApplication, labels: [String]) {
+        for label in labels {
+            let button = app.segmentedControls.buttons[label]
+            if button.waitForExistence(timeout: 3), button.isHittable {
+                button.tap()
+                return
+            }
+        }
     }
 }

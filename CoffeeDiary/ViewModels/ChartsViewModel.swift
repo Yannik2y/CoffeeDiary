@@ -4,7 +4,7 @@ import Observation
 @Observable
 @MainActor
 final class ChartsViewModel {
-    var filterOptions = ChartFilterOptions()
+    var filterOptions: ChartFilterOptions
     private(set) var dashboard = ChartsDashboardSnapshot(
         kpis: [],
         espressoTimedBrewCount: 0,
@@ -22,6 +22,15 @@ final class ChartsViewModel {
     )
     private(set) var cachedBeansWithBrews: [(id: UUID, name: String)] = []
     private var updateTask: Task<Void, Never>?
+
+    init(filterOptions: ChartFilterOptions = ChartFilterOptions()) {
+        var options = filterOptions
+        // App Store screenshots: espresso metrics/charts look polished; "All" mixed poorly before.
+        if SnapshotLaunch.isEnabled, options.brewStyle == nil {
+            options.brewStyle = .espresso
+        }
+        self.filterOptions = options
+    }
 
     func update(brews: [BrewEntry]) {
         updateTask?.cancel()

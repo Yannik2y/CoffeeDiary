@@ -1,14 +1,9 @@
 # frozen_string_literal: true
 
-# App Store screenshot devices (native sizes Apple accepts for 6.9" iPhone + 13" iPad)
+# Defaults; Fastfile lanes override devices and run iPhone / iPad separately.
 devices([
-  "iPhone 16 Pro Max",
-  "iPad Pro 13-inch (M4)"
+  "iPhone 16 Pro Max"
 ])
-
-# Prefer a stable runtime when multiple simulators share the same name.
-# snapshot resolves names via simctl; if ambiguous, set an explicit OS via:
-#   xcrun simctl list devices available
 
 languages([
   "de-DE"
@@ -24,9 +19,17 @@ override_status_bar(true)
 
 # App launch args for demo store + light UI. SnapshotHelper also injects FASTLANE_SNAPSHOT.
 launch_arguments([
-  "--snapshot -AppleInterfaceStyle Light"
+  "--snapshot",
+  "-AppleInterfaceStyle",
+  "Light"
 ])
 
 concurrent_simulators(false)
 
 stop_after_first_error(true)
+
+erase_simulator(false)
+
+headless(false)
+
+number_of_retries(2)

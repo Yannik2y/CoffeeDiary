@@ -68,58 +68,64 @@ platform :ios do
     )
   end
 
-  desc "Capture, frame, and size App Store screenshots (de-DE)"
+  desc "Capture iPhone App Store screenshots only (de-DE)"
+  lane :screenshots_iphone do
+    prepare_snapshot_environment!
+    begin
+      capture_device_screenshots!(
+        device: "iPhone 16 Pro Max",
+        clear_previous: true
+      )
+      ensure_device_pngs!(device_matcher: /iPhone/i)
+      UI.success("iPhone screenshots captured. Run screenshots_ipad or full screenshots to finish.")
+    ensure
+      cleanup_snapshot_force_marker!
+    end
+  end
+
+  desc "Capture iPad App Store screenshots only (de-DE)"
+  lane :screenshots_ipad do
+    prepare_snapshot_environment!
+    begin
+      capture_device_screenshots!(
+        device: "iPad Pro 13-inch (M4)",
+        clear_previous: false
+      )
+      ensure_device_pngs!(device_matcher: /iPad/i)
+      UI.success("iPad screenshots captured.")
+    ensure
+      cleanup_snapshot_force_marker!
+    end
+  end
+
+  desc "Capture iPhone then iPad screenshots, frame, and size for App Store (de-DE)"
   lane :screenshots do
-    ensure_imagemagick!
+    prepare_snapshot_environment!
+    begin
+      UI.header("1/2 iPhone 16 Pro Max")
+      capture_device_screenshots!(
+        device: "iPhone 16 Pro Max",
+        clear_previous: true
+      )
+      ensure_device_pngs!(device_matcher: /iPhone/i)
 
-    # Prefer Xcode.app so simulators / simctl are available when CLT is the default.
-    ENV["DEVELOPER_DIR"] = "/Applications/Xcode.app/Contents/Developer"
-    ENV["PATH"] = "#{ENV['DEVELOPER_DIR']}/usr/bin:#{ENV['PATH']}"
-    ENV["SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT"] ||= "60"
+      UI.header("2/2 iPad Pro 13-inch (M4)")
+      capture_device_screenshots!(
+        device: "iPad Pro 13-inch (M4)",
+        clear_previous: false
+      )
+      ensure_device_pngs!(device_matcher: /iPad/i)
 
-    snapshot(
-      scheme: "CoffeeDiary",
-      languages: ["de-DE"],
-      devices: [
-        "iPhone 16 Pro Max"
-      ],
-      output_directory: "fastlane/screenshots",
-      clear_previous_screenshots: true,
-      override_status_bar: true,
-      stop_after_first_error: true,
-      concurrent_simulators: false,
-      erase_simulator: false,
-      headless: false,
-      number_of_retries: 2,
-      launch_arguments: ["--snapshot -AppleInterfaceStyle Light"],
-      only_testing: ["CoffeeDiaryUITests/SnapshotTests"]
-    )
+      UI.header("Framing & App Store sizes")
+      frameit(path: "./fastlane/screenshots")
+      promote_framed_screenshots
+      fit_screenshots_to_app_store_sizes
 
-    # Second pass: iPad (separate to keep Simulator state simpler)
-    snapshot(
-      scheme: "CoffeeDiary",
-      languages: ["de-DE"],
-      devices: [
-        "iPad Pro 13-inch (M4)"
-      ],
-      output_directory: "fastlane/screenshots",
-      clear_previous_screenshots: false,
-      override_status_bar: true,
-      stop_after_first_error: true,
-      concurrent_simulators: false,
-      erase_simulator: false,
-      headless: false,
-      number_of_retries: 2,
-      launch_arguments: ["--snapshot -AppleInterfaceStyle Light"],
-      only_testing: ["CoffeeDiaryUITests/SnapshotTests"]
-    )
-
-    frameit(path: "./fastlane/screenshots")
-
-    promote_framed_screenshots
-    fit_screenshots_to_app_store_sizes
-
-    UI.success("Screenshots ready under fastlane/screenshots/. Upload with: bundle exec fastlane screenshots_upload")
+      count = Dir["fastlane/screenshots/**/*.png"].size
+      UI.success("#{count} screenshots ready under fastlane/screenshots/. Upload with: bundle exec fastlane screenshots_upload")
+    ensure
+      cleanup_snapshot_force_marker!
+    end
   end
 
   desc "Replace App Store Connect screenshots for the current version (de-DE only)"
@@ -150,6 +156,66 @@ platform :ios do
       precheck_include_in_app_purchases: false,
       run_precheck_before_submit: false
     )
+  end
+
+  private_lane :prepare_snapshot_environment! do
+    ensure_imagemagick!
+
+    ENV["DEVELOPER_DIR"] = "/Applications/Xcode.app/Contents/Developer"
+    ENV["PATH"] = "#{ENV['DEVELOPER_DIR']}/usr/bin:#{ENV['PATH']}"
+    ENV["FASTLANE_SNAPSHOT"] = "YES"
+    ENV["SNAPSHOT_FORCE"] = "YES"
+    # Slow Macs: wait longer before status-bar override / tests.
+    ENV["SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT"] ||= "120"
+
+    cache = File.expand_path("~/Library/Caches/tools.fastlane")
+    FileUtils.mkdir_p(cache)
+    File.write(File.join(cache, "language.txt"), "de-DE\n")
+    File.write(File.join(cache, "locale.txt"), "de_DE\n")
+    File.write(File.join(cache, "SNAPSHOT_FORCE"), "YES\n")
+
+    # Bring Simulator.app up so Accessibility / AX can initialize more reliably.
+    sh("open -a Simulator || true")
+    sleep(3)
+  end
+
+  private_lane :cleanup_snapshot_force_marker! do
+    marker = File.expand_path("~/Library/Caches/tools.fastlane/SNAPSHOT_FORCE")
+    FileUtils.rm_f(marker)
+  end
+
+  private_lane :capture_device_screenshots! do |options|
+    device = options.fetch(:device)
+    clear_previous = options.fetch(:clear_previous)
+
+    snapshot(
+      scheme: "CoffeeDiary",
+      languages: ["de-DE"],
+      devices: [device],
+      output_directory: "fastlane/screenshots",
+      clear_previous_screenshots: clear_previous,
+      override_status_bar: true,
+      stop_after_first_error: true,
+      concurrent_simulators: false,
+      erase_simulator: false,
+      headless: false,
+      number_of_retries: 2,
+      launch_arguments: ["--snapshot", "-AppleInterfaceStyle", "Light"],
+      only_testing: ["CoffeeDiaryUITests/SnapshotTests/testAppStoreScreenshots"]
+    )
+  end
+
+  private_lane :ensure_device_pngs! do |options|
+    matcher = options.fetch(:device_matcher)
+    pngs = Dir["fastlane/screenshots/de-DE/*.png"].select { |p| File.basename(p).match?(matcher) }
+    if pngs.empty?
+      UI.user_error!(
+        "No screenshots matched #{matcher}. SnapshotTests was likely skipped or the Simulator timed out. " \
+        "Open Simulator.app, boot the device once, then retry. " \
+        "You can also run: SNAPSHOT_FORCE=YES bundle exec fastlane screenshots_iphone"
+      )
+    end
+    UI.message("Found #{pngs.size} screenshots for #{matcher.inspect}")
   end
 
   private_lane :ensure_asc_env! do

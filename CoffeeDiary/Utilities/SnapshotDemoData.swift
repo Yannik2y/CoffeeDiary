@@ -106,6 +106,7 @@ enum SnapshotDemoData {
         }
 
         let specs: [BrewSpec] = [
+            // Dial-in arc toward a stable ~1:2 espresso (newest first in UI, oldest last here).
             BrewSpec(
                 id: featuredBrewID, daysAgo: 0, hours: -2, bean: ethiopian, style: .espresso, shot: .double,
                 dose: 18.0, yield: 36.0, time: 28, grind: 18.5, rating: 5, favorite: true,
@@ -115,28 +116,28 @@ enum SnapshotDemoData {
             ),
             BrewSpec(
                 id: nil, daysAgo: 1, hours: -9, bean: ethiopian, style: .espresso, shot: .double,
-                dose: 18.0, yield: 37.0, time: 26, grind: 18.5, rating: 4, favorite: false,
+                dose: 18.0, yield: 37.0, time: 27, grind: 18.5, rating: 4, favorite: false,
                 notes: "Etwas dünn am Ende.", pressure: 9.0, preInfusion: 4,
                 bloomWater: 0, bloomTime: 0, totalWater: 0, waterTemp: 0,
                 weatherTemp: 19.5, weatherHumidity: 55.0
             ),
             BrewSpec(
                 id: nil, daysAgo: 2, hours: -10, bean: ethiopian, style: .espresso, shot: .double,
-                dose: 18.0, yield: 35.0, time: 30, grind: 18.0, rating: 4, favorite: false,
+                dose: 18.0, yield: 35.0, time: 29, grind: 18.0, rating: 4, favorite: false,
                 notes: nil, pressure: 9.0, preInfusion: 5,
                 bloomWater: 0, bloomTime: 0, totalWater: 0, waterTemp: 0,
                 weatherTemp: nil, weatherHumidity: nil
             ),
             BrewSpec(
                 id: nil, daysAgo: 3, hours: -8, bean: ethiopian, style: .espresso, shot: .double,
-                dose: 18.0, yield: 36.0, time: 29, grind: 18.5, rating: 5, favorite: false,
+                dose: 18.0, yield: 36.5, time: 28, grind: 18.5, rating: 5, favorite: false,
                 notes: "Referenz-Shot.", pressure: 9.0, preInfusion: 4,
                 bloomWater: 0, bloomTime: 0, totalWater: 0, waterTemp: 0,
                 weatherTemp: 22.0, weatherHumidity: 42.0
             ),
             BrewSpec(
                 id: nil, daysAgo: 4, hours: -11, bean: brazilian, style: .espresso, shot: .double,
-                dose: 18.5, yield: 38.0, time: 27, grind: 19.0, rating: 3, favorite: false,
+                dose: 18.5, yield: 38.0, time: 26, grind: 19.0, rating: 3, favorite: false,
                 notes: "Zu bitter — feiner mahlen.", pressure: 9.0, preInfusion: 3,
                 bloomWater: 0, bloomTime: 0, totalWater: 0, waterTemp: 0,
                 weatherTemp: nil, weatherHumidity: nil
@@ -149,6 +150,13 @@ enum SnapshotDemoData {
                 weatherTemp: 18.0, weatherHumidity: 60.0
             ),
             BrewSpec(
+                id: nil, daysAgo: 6, hours: -10, bean: ethiopian, style: .espresso, shot: .double,
+                dose: 18.0, yield: 34.0, time: 31, grind: 17.5, rating: 4, favorite: false,
+                notes: "Kanalisierung — Dosis prüfen.", pressure: 9.0, preInfusion: 4,
+                bloomWater: 0, bloomTime: 0, totalWater: 0, waterTemp: 0,
+                weatherTemp: 20.0, weatherHumidity: 52.0
+            ),
+            BrewSpec(
                 id: nil, daysAgo: 7, hours: -10, bean: brazilian, style: .filter, shot: .double,
                 dose: 16.0, yield: 260.0, time: 210, grind: 44.0, rating: 4, favorite: false,
                 notes: nil, pressure: 0, preInfusion: 0,
@@ -157,14 +165,14 @@ enum SnapshotDemoData {
             ),
             BrewSpec(
                 id: nil, daysAgo: 9, hours: -8, bean: ethiopian, style: .espresso, shot: .single,
-                dose: 9.0, yield: 20.0, time: 24, grind: 16.5, rating: 4, favorite: false,
+                dose: 9.0, yield: 18.5, time: 25, grind: 16.5, rating: 4, favorite: false,
                 notes: nil, pressure: 9.0, preInfusion: 3,
                 bloomWater: 0, bloomTime: 0, totalWater: 0, waterTemp: 0,
                 weatherTemp: 20.0, weatherHumidity: 50.0
             ),
             BrewSpec(
                 id: nil, daysAgo: 12, hours: -12, bean: brazilian, style: .espresso, shot: .double,
-                dose: 18.0, yield: 36.0, time: 28, grind: 18.0, rating: 4, favorite: false,
+                dose: 18.0, yield: 37.5, time: 27, grind: 18.0, rating: 4, favorite: false,
                 notes: "Schokolade kommt durch.", pressure: 9.0, preInfusion: 4,
                 bloomWater: 0, bloomTime: 0, totalWater: 0, waterTemp: 0,
                 weatherTemp: nil, weatherHumidity: nil

@@ -39,13 +39,29 @@ Upload metadata, attach latest processed build, submit for App Review
 
 Dry-run: push metadata only (no submit for review)
 
+### ios screenshots_iphone
+
+```sh
+[bundle exec] fastlane ios screenshots_iphone
+```
+
+Capture iPhone App Store screenshots only (de-DE)
+
+### ios screenshots_ipad
+
+```sh
+[bundle exec] fastlane ios screenshots_ipad
+```
+
+Capture iPad App Store screenshots only (de-DE)
+
 ### ios screenshots
 
 ```sh
 [bundle exec] fastlane ios screenshots
 ```
 
-Capture, frame, and size App Store screenshots (de-DE)
+Capture iPhone then iPad screenshots, frame, and size for App Store (de-DE)
 
 ### ios screenshots_upload
 

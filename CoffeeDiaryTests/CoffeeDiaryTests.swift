@@ -258,7 +258,65 @@ struct ChartAnalyticsTests {
         let points = (1...5).map { (x: Double($0), y: Double($0 * 2)) }
         let trend = ChartAnalyticsService.linearTrend(points)
         #expect(trend != nil)
-        #expect(abs((trend?.r2 ?? 0) - 1.0) < 0.001)
+        #expect(abs((trend?.r2 ?? 0) - 1) < 0.001)
+    }
+
+    @Test func allStyleUsesEspressoForRatioSeries() {
+        let brews = [
+            ChartBrewRecord(
+                coffeeName: "Espresso",
+                brewStyle: .espresso,
+                doseGrams: 18,
+                yieldGrams: 36,
+                brewTimeSeconds: 28,
+                rating: 5
+            ),
+            ChartBrewRecord(
+                coffeeName: "Filter",
+                brewStyle: .filter,
+                doseGrams: 15,
+                yieldGrams: 250,
+                brewTimeSeconds: 200,
+                rating: 4
+            )
+        ]
+        let dashboard = ChartAnalyticsService.buildDashboard(
+            from: brews,
+            options: ChartFilterOptions(timeRange: .all, brewStyle: nil)
+        )
+        #expect(dashboard.ratioOverTime.points.count == 1)
+        #expect(abs(dashboard.ratioOverTime.points[0].y - 2.0) < 0.01)
+        #expect(dashboard.kpis.first(where: { $0.id == "ratio" })?.value.contains("2") == true)
+        #expect(dashboard.kpis.first(where: { $0.id == "time" })?.value == "28s")
+        #expect(dashboard.kpis.first(where: { $0.id == "count" })?.value == "2")
+    }
+
+    @Test func filterStyleKeepsFilterRatioScale() {
+        let brews = [
+            ChartBrewRecord(
+                coffeeName: "Filter A",
+                brewStyle: .filter,
+                doseGrams: 15,
+                yieldGrams: 250,
+                brewTimeSeconds: 200,
+                rating: 4
+            ),
+            ChartBrewRecord(
+                coffeeName: "Filter B",
+                brewStyle: .filter,
+                doseGrams: 15,
+                yieldGrams: 240,
+                brewTimeSeconds: 190,
+                rating: 5
+            )
+        ]
+        let dashboard = ChartAnalyticsService.buildDashboard(
+            from: brews,
+            options: ChartFilterOptions(timeRange: .all, brewStyle: .filter)
+        )
+        #expect(dashboard.ratioOverTime.points.count == 2)
+        #expect(dashboard.ratioOverTime.referenceY == nil)
+        #expect(dashboard.kpis.first(where: { $0.id == "time" })?.value == "195s")
     }
 }
 
