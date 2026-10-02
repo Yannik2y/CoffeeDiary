@@ -118,6 +118,28 @@ struct CloudSyncServiceTests {
         #expect(service.isSyncAvailable == false)
         #expect(service.statusTitle == "Sign In to iCloud".localized)
     }
+
+    @Test func detailedCloudKitErrorFlattensPartialFailure() {
+        let nested = NSError(
+            domain: CKError.errorDomain,
+            code: CKError.Code.invalidArguments.rawValue,
+            userInfo: [
+                NSLocalizedDescriptionKey: "Cannot create or modify field 'CD_shotType' in production schema",
+                "ServerErrorDescription": "Cannot create or modify field 'CD_shotType' in production schema"
+            ]
+        )
+        let partial = NSError(
+            domain: CKError.errorDomain,
+            code: CKError.Code.partialFailure.rawValue,
+            userInfo: [
+                NSLocalizedDescriptionKey: "Failed to modify some records",
+                CKPartialErrorsByItemIDKey: ["record-1": nested]
+            ]
+        )
+        let detail = CloudSyncService.detailedCloudKitErrorDescription(partial)
+        #expect(detail.contains("partialFailure") || detail.contains("[CKErrorDomain:2]"))
+        #expect(detail.contains("production schema") || detail.contains("CD_shotType"))
+    }
 }
 
 struct BrewEntryDuplicateTests {

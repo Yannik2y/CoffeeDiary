@@ -159,6 +159,7 @@
 "iCloud Sync Issue" = "iCloud Sync Issue";
 "Connecting to iCloud…" = "Connecting to iCloud…";
 "Waiting for the first sync with iCloud. Keep the app open briefly with an internet connection." = "Waiting for the first sync with iCloud. Keep the app open briefly with an internet connection.";
+"iCloud could not finish exporting data. If this persists on TestFlight, the Production CloudKit schema may need to be deployed from the CloudKit Dashboard." = "iCloud could not finish exporting data. If this persists on TestFlight, the Production CloudKit schema may need to be deployed from the CloudKit Dashboard.";
 "iCloud container check failed: %@" = "iCloud container check failed: %@";
 "iCloud could not be initialized (%@). Data stays on this device only. Quit and reopen the app to retry." = "iCloud could not be initialized (%@). Data stays on this device only. Quit and reopen the app to retry.";
 "iCloud could not be initialized. Data stays on this device only. Quit and reopen the app to retry." = "iCloud could not be initialized. Data stays on this device only. Quit and reopen the app to retry.";

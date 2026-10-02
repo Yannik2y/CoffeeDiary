@@ -84,8 +84,14 @@ final class CloudSyncService {
         case .cloud:
             switch accountStatus {
             case .available:
-                if lastSyncEventFailed, let lastSyncEventSummary {
-                    return lastSyncEventSummary
+                if lastSyncEventFailed {
+                    if let lastErrorMessage, lastErrorMessage.contains("partialFailure")
+                        || lastErrorMessage.contains("[CKErrorDomain:2]") {
+                        return "iCloud could not finish exporting data. If this persists on TestFlight, the Production CloudKit schema may need to be deployed from the CloudKit Dashboard.".localized
+                    }
+                    if let lastSyncEventSummary {
+                        return lastSyncEventSummary
+                    }
                 }
                 if let lastSyncEventSummary {
                     return lastSyncEventSummary
@@ -256,8 +262,9 @@ final class CloudSyncService {
 
         if let error = event.error {
             lastSyncEventFailed = true
-            lastErrorMessage = error.localizedDescription
-            lastSyncEventSummary = "Last %@ failed: %@".localized(with: typeLabel, error.localizedDescription)
+            let detail = Self.detailedCloudKitErrorDescription(error)
+            lastErrorMessage = detail
+            lastSyncEventSummary = "Last %@ failed: %@".localized(with: typeLabel, detail)
         } else if event.endDate != nil {
             lastSyncEventFailed = false
             hasCompletedCloudKitEvent = true
@@ -265,6 +272,52 @@ final class CloudSyncService {
             formatter.unitsStyle = .short
             let when = formatter.localizedString(for: event.endDate ?? Date(), relativeTo: Date())
             lastSyncEventSummary = "Last %@: %@".localized(with: typeLabel.lowercased(), when)
+        }
+    }
+
+    /// Flattens `CKError.partialFailure` and Cocoa wrappers so Formspree/diagnostics show the real cause
+    /// (e.g. “Cannot create or modify field … in production schema”).
+    static func detailedCloudKitErrorDescription(_ error: Error) -> String {
+        var parts: [String] = []
+        appendCloudKitErrorDetails(error, into: &parts, depth: 0)
+        return parts.isEmpty ? error.localizedDescription : parts.joined(separator: " | ")
+    }
+
+    private static func appendCloudKitErrorDetails(_ error: Error, into parts: inout [String], depth: Int) {
+        guard depth < 4 else { return }
+        let ns = error as NSError
+        let headline = ns.localizedDescription
+        if parts.isEmpty || parts.last != headline {
+            parts.append(headline)
+        }
+        parts.append("[\(ns.domain):\(ns.code)]")
+
+        if let server = ns.userInfo["ServerErrorDescription"] as? String
+            ?? ns.userInfo["CKServerDescriptionErrorKey"] as? String
+            ?? ns.userInfo[NSLocalizedFailureReasonErrorKey] as? String {
+            parts.append("server=\(server)")
+        }
+
+        if let ckError = error as? CKError {
+            if ckError.code == .partialFailure {
+                parts.append("partialFailure")
+            }
+            if let partial = ckError.partialErrorsByItemID {
+                for (_, nested) in partial {
+                    appendCloudKitErrorDetails(nested, into: &parts, depth: depth + 1)
+                }
+            }
+        } else if ns.domain == CKError.errorDomain, ns.code == CKError.Code.partialFailure.rawValue {
+            parts.append("partialFailure")
+            if let partial = ns.userInfo[CKPartialErrorsByItemIDKey] as? [AnyHashable: Error] {
+                for (_, nested) in partial {
+                    appendCloudKitErrorDetails(nested, into: &parts, depth: depth + 1)
+                }
+            }
+        }
+
+        if let underlying = ns.userInfo[NSUnderlyingErrorKey] as? Error {
+            appendCloudKitErrorDetails(underlying, into: &parts, depth: depth + 1)
         }
     }
 }

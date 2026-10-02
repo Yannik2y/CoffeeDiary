@@ -25,6 +25,8 @@ Alternativ: öffentlicher Issue-Tracker:
    - Status **Verbindung mit iCloud…** ohne Wechsel zu **aktiv**: kurz warten mit Internet; wenn es hängt, Feedback senden (enthält Sync-Diagnose).
    - Beim ersten Sync nach einem Update können Fotos etwas länger brauchen, da sie als iCloud-Assets hochgeladen werden.
    - **Hinweis für Releases:** TestFlight/App Store nutzen CloudKit **Production**. Schema im [CloudKit Dashboard](https://icloud.developer.apple.com/) für Container `iCloud.YC.CoffeeDiary` von Development nach **Production** deployen, sonst syncen TestFlight-Builds nicht.
+   - Typisches Symptom: Sync-Status zeigt Export fehlgeschlagen mit **CKErrorDomain-Fehler 2** (`partialFailure`). Oft steckt dahinter „Cannot create or modify field … in **production** schema“.
+   - Deploy-Schritte: CloudKit Console → Container `iCloud.YC.CoffeeDiary` → **Schema** → Environment **Development** prüfen (Record Types für BrewEntry, Bean, …) → **Deploy Schema Changes…** → **Production**. Danach App auf beiden Geräten neu starten.
 2. **Wie exportiere ich Einträge?**
    - Öffne **Einstellungen → Daten** und wähle JSON oder CSV.
 3. **App stürzt ab oder synchronisiert nicht?**
