@@ -1,0 +1,79 @@
+{
+  "identifier" : "CoffeeDiaryTips",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "coffeeTipSmall",
+      "localizations" : [
+        {
+          "description" : "A small tip — thank you!",
+          "displayName" : "Espresso",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "Ein kleiner Tip — danke!",
+          "displayName" : "Espresso",
+          "locale" : "de_DE"
+        }
+      ],
+      "productID" : "coffee.tip.small",
+      "referenceName" : "Tip Small",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : false,
+      "internalID" : "coffeeTipMedium",
+      "localizations" : [
+        {
+          "description" : "A medium tip — thank you!",
+          "displayName" : "Cappuccino",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "Ein mittlerer Tip — danke!",
+          "displayName" : "Cappuccino",
+          "locale" : "de_DE"
+        }
+      ],
+      "productID" : "coffee.tip.medium",
+      "referenceName" : "Tip Medium",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "coffeeTipLarge",
+      "localizations" : [
+        {
+          "description" : "A generous tip — thank you!",
+          "displayName" : "Coffee & cake",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "Ein großzügiger Tip — danke!",
+          "displayName" : "Kaffee und Kuchen",
+          "locale" : "de_DE"
+        }
+      ],
+      "productID" : "coffee.tip.large",
+      "referenceName" : "Tip Large",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6755603958",
+    "_developerTeamID" : "7PAQG44S9V"
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

@@ -11,11 +11,12 @@ languages([
 
 scheme("CoffeeDiary")
 
-output_directory("./fastlane/screenshots")
+output_directory("./fastlane/screenshots/raw")
 
 clear_previous_screenshots(true)
 
-override_status_bar(true)
+# Status-bar override can contribute to AX load timeouts on some Simulator hosts.
+override_status_bar(false)
 
 # App launch args for demo store + light UI. SnapshotHelper also injects FASTLANE_SNAPSHOT.
 launch_arguments([

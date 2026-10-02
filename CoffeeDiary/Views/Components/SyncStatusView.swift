@@ -5,7 +5,7 @@ struct SyncStatusBanner: View {
     var embeddedInList: Bool = false
 
     var body: some View {
-        if !SnapshotLaunch.isEnabled, !syncService.isSyncAvailable {
+        if !SnapshotLaunch.isEnabled, !syncService.isSyncAvailable || syncService.lastSyncEventFailed {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: syncService.statusSymbolName)
                     .font(.title3)
@@ -40,13 +40,18 @@ struct SyncStatusBanner: View {
 
 struct SyncStatusSection: View {
     @Bindable private var syncService = CloudSyncService.shared
+    @State private var showingRetryHelp = false
 
     var body: some View {
         Section("iCloud Sync".localized) {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: syncService.statusSymbolName)
                     .font(.title2)
-                    .foregroundStyle(syncService.isSyncAvailable ? .green : AppTheme.accent)
+                    .foregroundStyle(
+                        syncService.isSyncAvailable && !syncService.lastSyncEventFailed
+                            ? .green
+                            : AppTheme.accent
+                    )
                     .frame(width: 28)
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -59,10 +64,23 @@ struct SyncStatusSection: View {
             }
             .padding(.vertical, 4)
 
-            if syncService.isSyncAvailable {
+            if syncService.isSyncAvailable, !syncService.lastSyncEventFailed {
                 Label("Syncs between iPhone and iPad".localized, systemImage: "ipad.and.iphone")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+            }
+
+            if let warning = syncService.pushRegistrationWarning {
+                Label(warning, systemImage: "bell.slash")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            if let error = syncService.containerInitErrorMessage, syncService.storageMode == .local {
+                Text(error)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
             }
 
             Button("Refresh Status".localized) {
@@ -70,9 +88,20 @@ struct SyncStatusSection: View {
                     await syncService.refreshAccountStatus()
                 }
             }
+
+            if syncService.storageMode == .local || syncService.storageMode == .memory {
+                Button("Retry iCloud Sync".localized) {
+                    showingRetryHelp = true
+                }
+            }
         }
         .task {
             await syncService.refreshAccountStatus()
+        }
+        .alert("Retry iCloud Sync".localized, isPresented: $showingRetryHelp) {
+            Button("OK".localized, role: .cancel) {}
+        } message: {
+            Text("Quit Coffee Diary completely and open it again to reconnect to iCloud. Keep the same Apple ID on iPhone and iPad.".localized)
         }
     }
 }

@@ -137,8 +137,8 @@ Fastlane lädt **kein** Binary hoch (`skip_binary_upload: true`) — der Build k
 | `bundle exec fastlane screenshots` | iPhone + iPad Screenshots, frameit, Store-Größen |
 | `bundle exec fastlane screenshots_iphone` | Nur iPhone-Screenshots |
 | `bundle exec fastlane screenshots_ipad` | Nur iPad-Screenshots |
-| `bundle exec fastlane screenshots_frame` | Vorhandene PNGs rahmen + auf Store-Größe bringen |
-| `bundle exec fastlane screenshots_upload` | Screenshots in ASC ersetzen (ohne Review) |
+| `bundle exec fastlane screenshots_frame` | Roh-PNGs aus `raw/` einmal rahmen → `store/` |
+| `bundle exec fastlane screenshots_upload` | Screenshots aus `store/` in ASC ersetzen (ohne Review) |
 
 ### Screenshots (de-DE)
 
@@ -148,6 +148,8 @@ Voraussetzungen einmalig:
 brew install imagemagick   # falls noch nicht vorhanden
 bundle exec fastlane frameit download_frames
 ```
+
+Pipeline: Capture schreibt nach `fastlane/screenshots/raw/de-DE/`. Framing schreibt **nur** nach `fastlane/screenshots/store/de-DE/` und überschreibt die Raws nie — so entstehen keine Doppel-Rahmen.
 
 Simulator vorher öffnen hilft auf langsamen Macs. Dann nacheinander:
 
@@ -159,21 +161,22 @@ export SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT=120
 bundle exec fastlane screenshots
 ```
 
-Nur ein Gerät (zum Debuggen):
+Oder getrennt:
 
 ```bash
 bundle exec fastlane screenshots_iphone
 bundle exec fastlane screenshots_ipad
-```
-
-In App Store Connect ersetzen (aktuelle Version, nur Screenshots):
-
-```bash
+bundle exec fastlane screenshots_frame
 bundle exec fastlane screenshots_upload
 ```
 
 `release` und `metadata` laden Screenshots bewusst nicht hoch (`skip_screenshots`), damit ein normaler Submit bestehende Store-Bilder nicht überschreibt.
 
+### Feedback (Formspree) & Tip Jar
+
+- In `CoffeeDiary/Info.plist` den Key `FeedbackFormEndpoint` auf deine Formspree-URL setzen (`https://formspree.io/f/…`). Die Empfänger-E-Mail nur im Formspree-Dashboard hinterlegen — nie in der App.
+- Tip-Produkte in App Store Connect anlegen: `coffee.tip.small` / `coffee.tip.medium` / `coffee.tip.large` (Consumable). Lokale Tests: `CoffeeDiary/Configuration/CoffeeDiaryTips.storekit` in Xcode als StoreKit Configuration wählen.
+- Paid Apps Agreement + Banking in ASC müssen aktiv sein, damit Tips ausgezahlt werden.
 ---
 
 ## Typische Probleme
@@ -186,6 +189,7 @@ bundle exec fastlane screenshots_upload
 | PLA / membership | Developer-Agreement akzeptieren |
 | Screenshots fehlen / veraltet | `bundle exec fastlane screenshots` dann `screenshots_upload` |
 | SnapshotTests skipped | Lane setzt `SNAPSHOT_FORCE` + Cache-Marker; Simulator.app öffnen und Retry |
+| Doppelte iPhone-Rahmen | Nie `store/` erneut framieren; Capture → `raw/`, Frame → `store/` |
 | Accessibility / AX Timeout | Simulator booten, nur `screenshots_iphone`, `SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT=120` |
 | ImageMagick / frameit | `brew install imagemagick` und `fastlane frameit download_frames` |
 | Simulator nicht gefunden | Xcode.app als Developer Dir; Geräte in `Snapfile` / Fastfile an `xcrun simctl list` anpassen |

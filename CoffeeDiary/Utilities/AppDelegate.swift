@@ -24,5 +24,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     ) {
         // Push is optional; periodic sync still works when the app is opened.
         print("Remote notification registration failed: \(error.localizedDescription)")
+        Task { @MainActor in
+            CloudSyncService.shared.recordPushRegistrationFailure(error)
+        }
     }
 }

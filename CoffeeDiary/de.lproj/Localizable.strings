@@ -353,8 +353,20 @@
 "Unable to determine iCloud status." = "iCloud-Status konnte nicht ermittelt werden.";
 "Data is stored in memory only and will not persist or sync." = "Daten werden nur im Arbeitsspeicher gehalten und nicht gespeichert oder synchronisiert.";
 "iCloud could not be initialized. Data stays on this device only." = "iCloud konnte nicht initialisiert werden. Daten bleiben nur auf diesem Gerät.";
+"iCloud could not be initialized (%@). Data stays on this device only. Quit and reopen the app to retry." = "iCloud konnte nicht initialisiert werden (%@). Daten bleiben nur auf diesem Gerät. App beenden und erneut öffnen, um es nochmal zu versuchen.";
+"iCloud could not be initialized. Data stays on this device only. Quit and reopen the app to retry." = "iCloud konnte nicht initialisiert werden. Daten bleiben nur auf diesem Gerät. App beenden und erneut öffnen, um es nochmal zu versuchen.";
 "Syncs between iPhone and iPad" = "Synchronisiert zwischen iPhone und iPad";
 "Refresh Status" = "Status aktualisieren";
+"Retry iCloud Sync" = "iCloud-Sync erneut versuchen";
+"Quit Coffee Diary completely and open it again to reconnect to iCloud. Keep the same Apple ID on iPhone and iPad." = "Beende Coffee Diary vollständig und öffne die App erneut, um iCloud neu zu verbinden. Verwende dieselbe Apple-ID auf iPhone und iPad.";
+"iCloud Sync Issue" = "iCloud-Sync-Problem";
+"Live sync may be delayed until the next app open." = "Live-Sync kann verzögert sein, bis die App das nächste Mal geöffnet wird.";
+"Setup" = "Setup";
+"Import" = "Import";
+"Export" = "Export";
+"Sync" = "Sync";
+"Last %@ failed: %@" = "Letzter %@: fehlgeschlagen — %@";
+"Last %@: %@" = "Letzter %@: %@";
 "No brews match your filters" = "Keine Bezüge entsprechen deinen Filtern";
 "Try adjusting or clearing your filters." = "Passe deine Filter an oder setze sie zurück.";
 
@@ -460,3 +472,28 @@
 "Grinder: %@" = "Mühle: %@";
 "Filters active" = "Filter aktiv";
 "No filters" = "Keine Filter";
+
+// MARK: - Support / Feedback / Tips
+"Support" = "Support";
+"Send Feedback" = "Feedback senden";
+"Buy me a coffee" = "Kaffee spendieren";
+"Subject" = "Betreff";
+"Message" = "Nachricht";
+"Send" = "Senden";
+"Cancel" = "Abbrechen";
+"Thanks!" = "Danke!";
+"Your feedback was sent." = "Dein Feedback wurde gesendet.";
+"Feedback is not configured yet." = "Feedback ist noch nicht eingerichtet.";
+"Could not send feedback. Please try again later." = "Feedback konnte nicht gesendet werden. Bitte später erneut versuchen.";
+"Device and app version are included automatically. Your email address is never shown in the app." = "Geräte- und App-Version werden automatisch mitgeschickt. Deine E-Mail-Adresse wird in der App nie angezeigt.";
+"Support Coffee Diary" = "Coffee Diary unterstützen";
+"If Coffee Diary helps your daily shots, you can leave a small tip. Thank you!" = "Wenn Coffee Diary dir bei deinen Shots hilft, kannst du einen kleinen Tip dalassen. Danke!";
+"Choose a tip" = "Tip wählen";
+"Loading…" = "Laden…";
+"Tips are not available right now." = "Tips sind gerade nicht verfügbar.";
+"Thank you!" = "Vielen Dank!";
+"Your tip means a lot." = "Dein Tip bedeutet mir viel.";
+"Purchase could not be verified." = "Kauf konnte nicht verifiziert werden.";
+"Coffee & cake" = "Kaffee und Kuchen";
+"Cappuccino" = "Cappuccino";
+"Help & FAQ" = "Hilfe & FAQ";

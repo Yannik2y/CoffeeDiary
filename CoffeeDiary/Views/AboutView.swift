@@ -2,6 +2,8 @@ import SwiftUI
 
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var showingFeedback = false
+    @State private var showingTipJar = false
     
     private let websiteURL = URL(string: "https://yannik2y.github.io/CoffeeDiary/")!
     private let supportURL = URL(string: "https://yannik2y.github.io/CoffeeDiary/support")!
@@ -31,13 +33,26 @@ struct AboutView: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
+
+                Section("Support".localized) {
+                    Button {
+                        showingFeedback = true
+                    } label: {
+                        Label("Send Feedback".localized, systemImage: "envelope")
+                    }
+                    Button {
+                        showingTipJar = true
+                    } label: {
+                        Label("Buy me a coffee".localized, systemImage: "cup.and.saucer.fill")
+                    }
+                }
                 
                 Section("Resources".localized) {
                     Link(destination: websiteURL) {
                         Label("Website".localized, systemImage: "globe")
                     }
                     Link(destination: supportURL) {
-                        Label("Support".localized, systemImage: "questionmark.circle")
+                        Label("Help & FAQ".localized, systemImage: "questionmark.circle")
                     }
                     Link(destination: privacyURL) {
                         Label("Privacy Policy".localized, systemImage: "lock.shield")
@@ -58,6 +73,12 @@ struct AboutView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done".localized) { dismiss() }
                 }
+            }
+            .sheet(isPresented: $showingFeedback) {
+                FeedbackFormView()
+            }
+            .sheet(isPresented: $showingTipJar) {
+                TipJarView()
             }
         }
     }

@@ -154,3 +154,41 @@
 "Remove Grinder Filter" = "Remove Grinder Filter";
 "Machine: %@" = "Machine: %@";
 "Grinder: %@" = "Grinder: %@";
+
+// MARK: - iCloud Sync extras
+"iCloud Sync Issue" = "iCloud Sync Issue";
+"iCloud could not be initialized (%@). Data stays on this device only. Quit and reopen the app to retry." = "iCloud could not be initialized (%@). Data stays on this device only. Quit and reopen the app to retry.";
+"iCloud could not be initialized. Data stays on this device only. Quit and reopen the app to retry." = "iCloud could not be initialized. Data stays on this device only. Quit and reopen the app to retry.";
+"Retry iCloud Sync" = "Retry iCloud Sync";
+"Quit Coffee Diary completely and open it again to reconnect to iCloud. Keep the same Apple ID on iPhone and iPad." = "Quit Coffee Diary completely and open it again to reconnect to iCloud. Keep the same Apple ID on iPhone and iPad.";
+"Live sync may be delayed until the next app open." = "Live sync may be delayed until the next app open.";
+"Setup" = "Setup";
+"Import" = "Import";
+"Export" = "Export";
+"Sync" = "Sync";
+"Last %@ failed: %@" = "Last %@ failed: %@";
+"Last %@: %@" = "Last %@: %@";
+
+// MARK: - Support / Feedback / Tips
+"Support" = "Support";
+"Send Feedback" = "Send Feedback";
+"Buy me a coffee" = "Buy me a coffee";
+"Subject" = "Subject";
+"Message" = "Message";
+"Send" = "Send";
+"Thanks!" = "Thanks!";
+"Your feedback was sent." = "Your feedback was sent.";
+"Feedback is not configured yet." = "Feedback is not configured yet.";
+"Could not send feedback. Please try again later." = "Could not send feedback. Please try again later.";
+"Device and app version are included automatically. Your email address is never shown in the app." = "Device and app version are included automatically. Your email address is never shown in the app.";
+"Support Coffee Diary" = "Support Coffee Diary";
+"If Coffee Diary helps your daily shots, you can leave a small tip. Thank you!" = "If Coffee Diary helps your daily shots, you can leave a small tip. Thank you!";
+"Choose a tip" = "Choose a tip";
+"Loading…" = "Loading…";
+"Tips are not available right now." = "Tips are not available right now.";
+"Thank you!" = "Thank you!";
+"Your tip means a lot." = "Your tip means a lot.";
+"Purchase could not be verified." = "Purchase could not be verified.";
+"Coffee & cake" = "Coffee & cake";
+"Cappuccino" = "Cappuccino";
+"Help & FAQ" = "Help & FAQ";

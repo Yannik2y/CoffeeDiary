@@ -8,10 +8,14 @@ require "fileutils"
 require "shellwords"
 Dotenv.load(".env") if File.exist?(".env")
 
-# Fastlane may run with cwd = project root OR ./fastlane. Anchor all screenshot paths
-# to this Fastfile so globs never miss PNGs.
+# Fastlane may run with cwd = project root OR ./fastlane. Anchor paths to this Fastfile.
 SCREENSHOTS_ROOT = File.expand_path("screenshots", __dir__)
-SCREENSHOTS_LOCALE = File.join(SCREENSHOTS_ROOT, "de-DE")
+# Raw captures (never overwrite with framed images — prevents double bezels).
+SCREENSHOTS_RAW = File.join(SCREENSHOTS_ROOT, "raw")
+SCREENSHOTS_RAW_LOCALE = File.join(SCREENSHOTS_RAW, "de-DE")
+# Framed + sized App Store deliverables for deliver/upload.
+SCREENSHOTS_STORE = File.join(SCREENSHOTS_ROOT, "store")
+SCREENSHOTS_STORE_LOCALE = File.join(SCREENSHOTS_STORE, "de-DE")
 
 default_platform(:ios)
 
@@ -82,7 +86,7 @@ platform :ios do
         clear_previous: true
       )
       ensure_device_pngs!(device_matcher: /iPhone/i)
-      UI.success("iPhone screenshots captured. Run screenshots_ipad or full screenshots to finish.")
+      UI.success("iPhone raw screenshots in #{SCREENSHOTS_RAW_LOCALE}. Run screenshots_ipad or screenshots_frame next.")
     ensure
       cleanup_snapshot_force_marker!
     end
@@ -97,7 +101,7 @@ platform :ios do
         clear_previous: false
       )
       ensure_device_pngs!(device_matcher: /iPad/i)
-      UI.success("iPad screenshots captured.")
+      UI.success("iPad raw screenshots in #{SCREENSHOTS_RAW_LOCALE}.")
     ensure
       cleanup_snapshot_force_marker!
     end
@@ -124,38 +128,37 @@ platform :ios do
       UI.header("Framing & App Store sizes")
       frame_and_fit_screenshots!
 
-      count = locale_screenshot_pngs.size
-      UI.success("#{count} screenshots ready under #{SCREENSHOTS_ROOT}. Upload with: bundle exec fastlane screenshots_upload")
+      count = store_screenshot_pngs.size
+      UI.success("#{count} screenshots ready under #{SCREENSHOTS_STORE}. Upload with: bundle exec fastlane screenshots_upload")
     ensure
       cleanup_snapshot_force_marker!
     end
   end
 
-  desc "Frame existing screenshots and fit to App Store pixel sizes (no capture)"
+  desc "Frame raw screenshots into store/ (never re-frames store deliverables)"
   lane :screenshots_frame do
     ensure_imagemagick!
-    pngs = locale_screenshot_pngs
+    pngs = raw_screenshot_pngs
     if pngs.empty?
       UI.user_error!(
-        "No screenshots in #{SCREENSHOTS_LOCALE}/. Capture first " \
-        "(pwd=#{Dir.pwd})."
+        "No raw screenshots in #{SCREENSHOTS_RAW_LOCALE}/. Capture first with screenshots_iphone / screenshots_ipad."
       )
     end
 
     UI.header("Framing & App Store sizes")
-    UI.message("Framing #{pngs.size} PNGs from #{SCREENSHOTS_LOCALE}")
+    UI.message("Framing #{pngs.size} raw PNGs → #{SCREENSHOTS_STORE_LOCALE}")
     frame_and_fit_screenshots!
 
-    count = locale_screenshot_pngs.size
-    UI.success("#{count} marketing screenshots ready. Preview in Finder, then: bundle exec fastlane screenshots_upload")
+    count = store_screenshot_pngs.size
+    UI.success("#{count} marketing screenshots ready. Preview #{SCREENSHOTS_STORE_LOCALE}, then: bundle exec fastlane screenshots_upload")
   end
 
   desc "Replace App Store Connect screenshots for the current version (de-DE only)"
   lane :screenshots_upload do
     ensure_asc_env!
 
-    pngs = locale_screenshot_pngs
-    UI.user_error!("No screenshots found in #{SCREENSHOTS_LOCALE}. Run screenshots / screenshots_frame first.") if pngs.empty?
+    pngs = store_screenshot_pngs
+    UI.user_error!("No store screenshots in #{SCREENSHOTS_STORE_LOCALE}. Run screenshots_frame first.") if pngs.empty?
 
     api_key = app_store_connect_api_key(
       key_id: ENV.fetch("ASC_KEY_ID"),
@@ -174,7 +177,7 @@ platform :ios do
       skip_metadata: true,
       skip_screenshots: false,
       overwrite_screenshots: true,
-      screenshots_path: SCREENSHOTS_ROOT,
+      screenshots_path: SCREENSHOTS_STORE,
       precheck_include_in_app_purchases: false,
       run_precheck_before_submit: false
     )
@@ -182,6 +185,7 @@ platform :ios do
 
   private_lane :frame_and_fit_screenshots! do
     ensure_frameit_assets!
+    ensure_raw_title_strings!
 
     frames_dir = File.expand_path("~/.fastlane/frameit/latest")
     unless File.directory?(frames_dir) && Dir.glob(File.join(frames_dir, "Apple iPhone 16 Pro Max*.png")).any?
@@ -189,8 +193,10 @@ platform :ios do
       sh("bundle exec fastlane frameit download_frames")
     end
 
-    frameit(path: SCREENSHOTS_ROOT)
-    promote_framed_screenshots
+    # Only frame raw captures — never the store/ folder (avoids nested bezels).
+    FileUtils.rm_f(Dir[File.join(SCREENSHOTS_RAW_LOCALE, "*_framed.png")])
+    frameit(path: SCREENSHOTS_RAW)
+    copy_framed_and_raw_to_store!
     fit_screenshots_to_app_store_sizes
   end
 
@@ -209,14 +215,32 @@ platform :ios do
     FileUtils.cp(src, dest) if File.exist?(src) && !File.exist?(dest)
   end
 
+  private_lane :ensure_raw_title_strings! do
+    FileUtils.mkdir_p(SCREENSHOTS_RAW_LOCALE)
+    dest = File.join(SCREENSHOTS_RAW_LOCALE, "title.strings")
+    next if File.exist?(dest)
+
+    legacy = File.join(SCREENSHOTS_ROOT, "de-DE", "title.strings")
+    if File.exist?(legacy)
+      FileUtils.cp(legacy, dest)
+    else
+      File.write(dest, <<~STRINGS)
+        "01Diary" = "Jeder Bezug, festgehalten";
+        "02Detail" = "Dosis, Zeit, Verhältnis";
+        "03Stats" = "Trends auf einen Blick";
+        "04Gear" = "Deine Ausrüstung";
+      STRINGS
+    end
+  end
+
   private_lane :prepare_snapshot_environment! do
     ensure_imagemagick!
+    FileUtils.mkdir_p(SCREENSHOTS_RAW_LOCALE)
 
     ENV["DEVELOPER_DIR"] = "/Applications/Xcode.app/Contents/Developer"
     ENV["PATH"] = "#{ENV['DEVELOPER_DIR']}/usr/bin:#{ENV['PATH']}"
     ENV["FASTLANE_SNAPSHOT"] = "YES"
     ENV["SNAPSHOT_FORCE"] = "YES"
-    # Slow Macs: wait longer before status-bar override / tests.
     ENV["SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT"] ||= "120"
 
     cache = File.expand_path("~/Library/Caches/tools.fastlane")
@@ -225,7 +249,6 @@ platform :ios do
     File.write(File.join(cache, "locale.txt"), "de_DE\n")
     File.write(File.join(cache, "SNAPSHOT_FORCE"), "YES\n")
 
-    # Bring Simulator.app up so Accessibility / AX can initialize more reliably.
     sh("open -a Simulator || true")
     sleep(3)
   end
@@ -243,7 +266,7 @@ platform :ios do
       scheme: "CoffeeDiary",
       languages: ["de-DE"],
       devices: [device],
-      output_directory: SCREENSHOTS_ROOT,
+      output_directory: SCREENSHOTS_RAW,
       clear_previous_screenshots: clear_previous,
       override_status_bar: true,
       stop_after_first_error: true,
@@ -258,27 +281,29 @@ platform :ios do
 
   private_lane :ensure_device_pngs! do |options|
     matcher = options.fetch(:device_matcher)
-    pngs = locale_screenshot_pngs.select { |p| File.basename(p).match?(matcher) }
+    pngs = raw_screenshot_pngs.select { |p| File.basename(p).match?(matcher) }
     expected = options.fetch(:expected_count, 4)
     if pngs.empty?
       UI.user_error!(
-        "No screenshots matched #{matcher} in #{SCREENSHOTS_LOCALE}. " \
-        "SnapshotTests was likely skipped or the Simulator timed out. " \
-        "Open Simulator.app, boot the device once, then retry."
+        "No screenshots matched #{matcher} in #{SCREENSHOTS_RAW_LOCALE}. " \
+        "SnapshotTests was likely skipped or the Simulator timed out."
       )
     end
     if pngs.size < expected
       UI.user_error!(
         "Expected at least #{expected} screenshots for #{matcher.inspect}, found #{pngs.size}: " \
-        "#{pngs.map { |p| File.basename(p) }.join(', ')}. " \
-        "Fix SnapshotTests navigation (often iPad tabs after detail) and re-run."
+        "#{pngs.map { |p| File.basename(p) }.join(', ')}."
       )
     end
-    UI.message("Found #{pngs.size} screenshots for #{matcher.inspect}")
+    UI.message("Found #{pngs.size} raw screenshots for #{matcher.inspect}")
   end
 
-  def locale_screenshot_pngs
-    Dir[File.join(SCREENSHOTS_LOCALE, "*.png")]
+  def raw_screenshot_pngs
+    Dir[File.join(SCREENSHOTS_RAW_LOCALE, "*.png")].reject { |p| p.include?("_framed") }
+  end
+
+  def store_screenshot_pngs
+    Dir[File.join(SCREENSHOTS_STORE_LOCALE, "*.png")]
   end
 
   private_lane :ensure_asc_env! do
@@ -295,23 +320,34 @@ platform :ios do
     UI.user_error!("ImageMagick required for frameit. Install with: brew install imagemagick") if magick.empty? && convert.empty?
   end
 
-  # frameit writes *_framed.png beside originals — keep framed as the deliverables.
-  private_lane :promote_framed_screenshots do
-    Dir.glob(File.join(SCREENSHOTS_ROOT, "**", "*_framed.png")).each do |framed|
-      original = framed.sub(/_framed\.png\z/, ".png")
-      FileUtils.rm_f(original)
-      FileUtils.mv(framed, original)
-      UI.message("Using framed screenshot: #{original}")
+  # Copy framed (or raw if unframed) into store/ — leave raw captures untouched.
+  private_lane :copy_framed_and_raw_to_store! do
+    FileUtils.mkdir_p(SCREENSHOTS_STORE_LOCALE)
+    FileUtils.rm_f(Dir[File.join(SCREENSHOTS_STORE_LOCALE, "*.png")])
+
+    framed = Dir.glob(File.join(SCREENSHOTS_RAW_LOCALE, "*_framed.png"))
+    framed.each do |path|
+      dest = File.join(SCREENSHOTS_STORE_LOCALE, File.basename(path).sub(/_framed\.png\z/, ".png"))
+      FileUtils.cp(path, dest)
+      FileUtils.rm_f(path)
+      UI.message("Store framed: #{File.basename(dest)}")
+    end
+
+    raw_screenshot_pngs.each do |raw|
+      dest = File.join(SCREENSHOTS_STORE_LOCALE, File.basename(raw))
+      next if File.exist?(dest)
+
+      FileUtils.cp(raw, dest)
+      UI.message("Store unframed (no device frame): #{File.basename(dest)}")
     end
   end
 
-  # Apple requires exact pixel sizes; framed images are letterboxed into accepted canvases.
   private_lane :fit_screenshots_to_app_store_sizes do
     iphone_size = [1320, 2868]
     ipad_size = [2064, 2752]
     background = "#F5EDE4"
 
-    Dir.glob(File.join(SCREENSHOTS_ROOT, "**", "*.png")).each do |path|
+    Dir.glob(File.join(SCREENSHOTS_STORE_LOCALE, "*.png")).each do |path|
       next if File.basename(path).start_with?(".")
 
       target =

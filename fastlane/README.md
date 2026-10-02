@@ -69,7 +69,7 @@ Capture iPhone then iPad screenshots, frame, and size for App Store (de-DE)
 [bundle exec] fastlane ios screenshots_frame
 ```
 
-Frame existing screenshots and fit to App Store pixel sizes (no capture)
+Frame raw screenshots into store/ (never re-frames store deliverables)
 
 ### ios screenshots_upload
 

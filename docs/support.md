@@ -5,7 +5,11 @@ layout: default
 
 # Coffee Diary – Support & Kontakt
 
-Aktuell erreichst du uns am zuverlässigsten über den öffentlichen Issue-Tracker. Erstelle dort einfach ein Ticket mit einer kurzen Beschreibung deines Problems oder Funktionswunsches:
+## Feedback aus der App
+
+In **Einstellungen → Support → Feedback senden** kannst du eine Nachricht schicken. Die Nachricht geht über ein Formular (Formspree) an den Entwickler — eine E-Mail-Adresse wird in der App nicht angezeigt.
+
+Alternativ: öffentlicher Issue-Tracker:
 
 - **Issue Tracker:** https://github.com/Yannik2y/CoffeeDiary/issues
 
@@ -17,13 +21,16 @@ Aktuell erreichst du uns am zuverlässigsten über den öffentlichen Issue-Track
    - Starte Coffee Diary auf beiden Geräten mindestens einmal mit Internetverbindung.
    - Neue Bezüge, Ausrüstung und **Fotos** erscheinen in der Regel innerhalb weniger Sekunden; bei schlechter Verbindung kann es etwas länger dauern.
    - In der App unter **Einstellungen → iCloud Sync** (oder **Über → iCloud Sync**) siehst du, ob die Synchronisation aktiv ist.
+   - Bei **Nur lokale Speicherung**: App vollständig beenden und erneut öffnen („iCloud-Sync erneut versuchen“).
    - Beim ersten Sync nach einem Update können Fotos etwas länger brauchen, da sie als iCloud-Assets hochgeladen werden.
 2. **Wie exportiere ich Einträge?**
-   - Öffne **Einstellungen → Export** und wähle JSON oder CSV.
+   - Öffne **Einstellungen → Daten** und wähle JSON oder CSV.
 3. **App stürzt ab oder synchronisiert nicht?**
    - Starte dein Gerät neu und überprüfe die Internetverbindung.
-   - Prüfe in der App, ob **iCloud Sync Active** angezeigt wird. Bei **Local Storage Only** ist iCloud auf diesem Gerät nicht verfügbar.
-   - Sende uns danach ein kurzes Log per E-Mail oder erstelle ein Issue auf GitHub.
+   - Prüfe in der App, ob **iCloud-Sync aktiv** angezeigt wird. Bei **Nur lokale Speicherung** ist iCloud auf diesem Gerät nicht verfügbar.
+   - Nutze **Einstellungen → Support → Feedback senden** oder erstelle ein Issue auf GitHub.
+4. **Was ist „Kaffee spendieren“?**
+   - Eine freiwillige In-App-Spende über den App Store (kein externes Zahlungsmittel). Der Betrag geht nach Apples Anteil an den Entwickler.
 
 ---
 

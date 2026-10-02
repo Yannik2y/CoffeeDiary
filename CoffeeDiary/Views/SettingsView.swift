@@ -10,6 +10,8 @@ struct SettingsView: View {
     @State private var showingEspressoConfig = false
     @State private var showingFilterConfig = false
     @State private var showingAbout = false
+    @State private var showingFeedback = false
+    @State private var showingTipJar = false
     @State private var exportURL: URL?
     @State private var showingExporter = false
     @State private var exportErrorMessage: String?
@@ -18,6 +20,19 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 SyncStatusSection()
+
+                Section("Support".localized) {
+                    Button {
+                        showingFeedback = true
+                    } label: {
+                        Label("Send Feedback".localized, systemImage: "envelope")
+                    }
+                    Button {
+                        showingTipJar = true
+                    } label: {
+                        Label("Buy me a coffee".localized, systemImage: "cup.and.saucer.fill")
+                    }
+                }
 
                 Section("Flows".localized) {
                     Button {
@@ -65,6 +80,12 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showingAbout) {
                 AboutView()
+            }
+            .sheet(isPresented: $showingFeedback) {
+                FeedbackFormView()
+            }
+            .sheet(isPresented: $showingTipJar) {
+                TipJarView()
             }
             .sheet(isPresented: $showingExporter, onDismiss: {
                 if let exportURL {

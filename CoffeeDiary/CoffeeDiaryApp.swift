@@ -76,10 +76,14 @@ enum ModelContainerFactory {
             )
             Task { @MainActor in
                 CloudSyncService.shared.setStorageMode(.cloud)
+                CloudSyncService.shared.clearContainerInitFailure()
             }
             return container
         } catch {
             print("SwiftData Cloud container init failed: \(error)")
+            Task { @MainActor in
+                CloudSyncService.shared.recordContainerInitFailure(error)
+            }
             do {
                 // Same store name as cloud — do not create a separate "Local" store
                 // that would orphan data when CloudKit becomes available again.
@@ -100,6 +104,9 @@ enum ModelContainerFactory {
                 return container
             } catch {
                 print("SwiftData Local container init failed: \(error)")
+                Task { @MainActor in
+                    CloudSyncService.shared.recordContainerInitFailure(error)
+                }
                 do {
                     let memoryConfig = ModelConfiguration(
                         "Memory",
