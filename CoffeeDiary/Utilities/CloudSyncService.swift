@@ -24,6 +24,8 @@ final class CloudSyncService {
     private(set) var lastSyncEventAt: Date?
     private(set) var lastSyncEventSummary: String?
     private(set) var lastSyncEventFailed = false
+    /// True after at least one CloudKit setup/import/export completed without error.
+    private(set) var hasCompletedCloudKitEvent = false
     private(set) var pushRegistrationWarning: String?
 
     private var cloudKitEventObserver: NSObjectProtocol?
@@ -32,6 +34,11 @@ final class CloudSyncService {
 
     var isSyncAvailable: Bool {
         isCloudStorageActive && accountStatus == .available
+    }
+
+    /// Account + store look ready and CloudKit has completed at least one event successfully.
+    var isSyncHealthy: Bool {
+        isSyncAvailable && !lastSyncEventFailed && hasCompletedCloudKitEvent
     }
 
     var statusTitle: String {
@@ -45,6 +52,9 @@ final class CloudSyncService {
             case .available:
                 if lastSyncEventFailed {
                     return "iCloud Sync Issue".localized
+                }
+                if !hasCompletedCloudKitEvent {
+                    return "Connecting to iCloud…".localized
                 }
                 return "iCloud Sync Active".localized
             case .noAccount:
@@ -80,6 +90,9 @@ final class CloudSyncService {
                 if let lastSyncEventSummary {
                     return lastSyncEventSummary
                 }
+                if !hasCompletedCloudKitEvent {
+                    return "Waiting for the first sync with iCloud. Keep the app open briefly with an internet connection.".localized
+                }
                 return "Brews and equipment sync across your iPhone and iPad when signed into the same iCloud account.".localized
             case .noAccount:
                 return "Sign in to iCloud in Settings to sync between your devices.".localized
@@ -97,9 +110,44 @@ final class CloudSyncService {
 
     var statusSymbolName: String {
         if lastSyncEventFailed { return "exclamationmark.icloud" }
-        if isSyncAvailable { return "icloud.fill" }
+        if isSyncHealthy { return "icloud.fill" }
         if storageMode == .local || storageMode == .memory { return "icloud.slash" }
         return "icloud"
+    }
+
+    /// Compact snapshot for support feedback and debugging.
+    var diagnosticsSnapshot: String {
+        let account: String
+        switch accountStatus {
+        case .available: account = "available"
+        case .noAccount: account = "noAccount"
+        case .restricted: account = "restricted"
+        case .couldNotDetermine: account = "couldNotDetermine"
+        case .temporarilyUnavailable: account = "temporarilyUnavailable"
+        @unknown default: account = "unknown"
+        }
+
+        var lines = [
+            "mode=\(storageMode.rawValue)",
+            "account=\(account)",
+            "healthy=\(isSyncHealthy)",
+            "completedEvent=\(hasCompletedCloudKitEvent)",
+            "eventFailed=\(lastSyncEventFailed)",
+            "container=\(Self.iCloudContainerIdentifier)"
+        ]
+        if let lastSyncEventSummary {
+            lines.append("lastEvent=\(lastSyncEventSummary)")
+        }
+        if let containerInitErrorMessage {
+            lines.append("containerInit=\(containerInitErrorMessage)")
+        }
+        if let pushRegistrationWarning {
+            lines.append("push=\(pushRegistrationWarning)")
+        }
+        if let lastErrorMessage {
+            lines.append("lastError=\(lastErrorMessage)")
+        }
+        return lines.joined(separator: "; ")
     }
 
     private init() {
@@ -121,6 +169,13 @@ final class CloudSyncService {
             Task { @MainActor in
                 self?.handleCloudKitEvent(notification)
             }
+        }
+    }
+
+    /// Must run on the main actor before `ModelContainer` CloudKit init so setup events are not missed.
+    static func prepareForContainerLaunch() {
+        MainActor.assumeIsolated {
+            _ = CloudSyncService.shared
         }
     }
 
@@ -146,14 +201,30 @@ final class CloudSyncService {
     func setAccountStatusForTesting(_ status: CKAccountStatus) {
         accountStatus = status
     }
+
+    func setHasCompletedCloudKitEventForTesting(_ value: Bool) {
+        hasCompletedCloudKitEvent = value
+    }
     #endif
 
     func refreshAccountStatus() async {
         let container = CKContainer(identifier: Self.iCloudContainerIdentifier)
         do {
             accountStatus = try await container.accountStatus()
-            if storageMode == .cloud {
+            // Keep CloudKit event / push errors visible after a successful account check.
+            if storageMode == .cloud, !lastSyncEventFailed, pushRegistrationWarning == nil {
                 lastErrorMessage = nil
+            }
+            // Probes Production/Development container access (surfaces schema / permission errors).
+            if accountStatus == .available {
+                do {
+                    _ = try await container.userRecordID()
+                } catch {
+                    lastErrorMessage = error.localizedDescription
+                    if !lastSyncEventFailed {
+                        lastSyncEventSummary = "iCloud container check failed: %@".localized(with: error.localizedDescription)
+                    }
+                }
             }
         } catch {
             lastErrorMessage = error.localizedDescription
@@ -189,6 +260,7 @@ final class CloudSyncService {
             lastSyncEventSummary = "Last %@ failed: %@".localized(with: typeLabel, error.localizedDescription)
         } else if event.endDate != nil {
             lastSyncEventFailed = false
+            hasCompletedCloudKitEvent = true
             let formatter = RelativeDateTimeFormatter()
             formatter.unitsStyle = .short
             let when = formatter.localizedString(for: event.endDate ?? Date(), relativeTo: Date())

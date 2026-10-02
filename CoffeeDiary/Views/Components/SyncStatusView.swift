@@ -5,7 +5,7 @@ struct SyncStatusBanner: View {
     var embeddedInList: Bool = false
 
     var body: some View {
-        if !SnapshotLaunch.isEnabled, !syncService.isSyncAvailable || syncService.lastSyncEventFailed {
+        if !SnapshotLaunch.isEnabled, !syncService.isSyncHealthy {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: syncService.statusSymbolName)
                     .font(.title3)
@@ -47,11 +47,7 @@ struct SyncStatusSection: View {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: syncService.statusSymbolName)
                     .font(.title2)
-                    .foregroundStyle(
-                        syncService.isSyncAvailable && !syncService.lastSyncEventFailed
-                            ? .green
-                            : AppTheme.accent
-                    )
+                    .foregroundStyle(syncService.isSyncHealthy ? .green : AppTheme.accent)
                     .frame(width: 28)
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -64,7 +60,7 @@ struct SyncStatusSection: View {
             }
             .padding(.vertical, 4)
 
-            if syncService.isSyncAvailable, !syncService.lastSyncEventFailed {
+            if syncService.isSyncHealthy {
                 Label("Syncs between iPhone and iPad".localized, systemImage: "ipad.and.iphone")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -77,6 +73,15 @@ struct SyncStatusSection: View {
             }
 
             if let error = syncService.containerInitErrorMessage, syncService.storageMode == .local {
+                Text(error)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
+
+            if let error = syncService.lastErrorMessage,
+               syncService.storageMode == .cloud,
+               syncService.lastSyncEventFailed || !syncService.hasCompletedCloudKitEvent {
                 Text(error)
                     .font(.caption2)
                     .foregroundStyle(.secondary)

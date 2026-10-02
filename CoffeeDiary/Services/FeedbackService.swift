@@ -18,17 +18,20 @@ enum FeedbackService {
 
     static var isConfigured: Bool { endpointURL != nil }
 
+    @MainActor
     static func diagnosticsFooter() -> String {
         let bundle = Bundle.main
         let version = bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "-"
         let build = bundle.infoDictionary?["CFBundleVersion"] as? String ?? "-"
         let system = "\(UIDevice.current.systemName) \(UIDevice.current.systemVersion)"
         let model = UIDevice.current.model
+        let sync = CloudSyncService.shared.diagnosticsSnapshot
         return """
         ---
         App: \(version) (\(build))
         Device: \(model)
         System: \(system)
+        Sync: \(sync)
         """
     }
 
@@ -42,10 +45,11 @@ enum FeedbackService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
+        let diagnostics = await MainActor.run { diagnosticsFooter() }
         let body: [String: String] = [
             "subject": subject,
             "message": message,
-            "diagnostics": diagnosticsFooter()
+            "diagnostics": diagnostics
         ]
         request.httpBody = try JSONEncoder().encode(body)
 

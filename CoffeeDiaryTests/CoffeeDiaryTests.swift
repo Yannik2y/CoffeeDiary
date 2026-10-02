@@ -87,8 +87,20 @@ struct CloudSyncServiceTests {
         let service = CloudSyncService.shared
         service.setStorageMode(.cloud)
         service.setAccountStatusForTesting(.available)
+        service.setHasCompletedCloudKitEventForTesting(true)
         #expect(service.isSyncAvailable == true)
+        #expect(service.isSyncHealthy == true)
         #expect(service.statusTitle == "iCloud Sync Active".localized)
+    }
+
+    @Test @MainActor func cloudStorageWithoutCompletedEventIsConnecting() {
+        let service = CloudSyncService.shared
+        service.setStorageMode(.cloud)
+        service.setAccountStatusForTesting(.available)
+        service.setHasCompletedCloudKitEventForTesting(false)
+        #expect(service.isSyncAvailable == true)
+        #expect(service.isSyncHealthy == false)
+        #expect(service.statusTitle == "Connecting to iCloud…".localized)
     }
 
     @Test @MainActor func localStorageIsNeverSyncReady() {

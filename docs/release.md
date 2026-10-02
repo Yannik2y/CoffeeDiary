@@ -69,7 +69,7 @@ Hinweise:
 
 - Bundle-ID: `YC.CoffeeDiary`
 - Team: `7PAQG44S9V`
-- CloudKit-Container `iCloud.YC.CoffeeDiary` muss in Production bereitstehen, bevor Nutzer syncen
+- CloudKit-Container `iCloud.YC.CoffeeDiary`: Schema im [CloudKit Dashboard](https://icloud.developer.apple.com/) von **Development → Production** deployen (TestFlight/Store nutzen Production; ohne Deploy schlägt Sync fehl)
 - PLA / Signing-Fehler in Xcode Cloud: zuerst [developer.apple.com/account](https://developer.apple.com/account) Vereinbarung akzeptieren
 
 ---

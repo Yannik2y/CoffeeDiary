@@ -157,6 +157,9 @@
 
 // MARK: - iCloud Sync extras
 "iCloud Sync Issue" = "iCloud Sync Issue";
+"Connecting to iCloud…" = "Connecting to iCloud…";
+"Waiting for the first sync with iCloud. Keep the app open briefly with an internet connection." = "Waiting for the first sync with iCloud. Keep the app open briefly with an internet connection.";
+"iCloud container check failed: %@" = "iCloud container check failed: %@";
 "iCloud could not be initialized (%@). Data stays on this device only. Quit and reopen the app to retry." = "iCloud could not be initialized (%@). Data stays on this device only. Quit and reopen the app to retry.";
 "iCloud could not be initialized. Data stays on this device only. Quit and reopen the app to retry." = "iCloud could not be initialized. Data stays on this device only. Quit and reopen the app to retry.";
 "Retry iCloud Sync" = "Retry iCloud Sync";

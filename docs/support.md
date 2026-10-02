@@ -22,7 +22,9 @@ Alternativ: öffentlicher Issue-Tracker:
    - Neue Bezüge, Ausrüstung und **Fotos** erscheinen in der Regel innerhalb weniger Sekunden; bei schlechter Verbindung kann es etwas länger dauern.
    - In der App unter **Einstellungen → iCloud Sync** (oder **Über → iCloud Sync**) siehst du, ob die Synchronisation aktiv ist.
    - Bei **Nur lokale Speicherung**: App vollständig beenden und erneut öffnen („iCloud-Sync erneut versuchen“).
+   - Status **Verbindung mit iCloud…** ohne Wechsel zu **aktiv**: kurz warten mit Internet; wenn es hängt, Feedback senden (enthält Sync-Diagnose).
    - Beim ersten Sync nach einem Update können Fotos etwas länger brauchen, da sie als iCloud-Assets hochgeladen werden.
+   - **Hinweis für Releases:** TestFlight/App Store nutzen CloudKit **Production**. Schema im [CloudKit Dashboard](https://icloud.developer.apple.com/) für Container `iCloud.YC.CoffeeDiary` von Development nach **Production** deployen, sonst syncen TestFlight-Builds nicht.
 2. **Wie exportiere ich Einträge?**
    - Öffne **Einstellungen → Daten** und wähle JSON oder CSV.
 3. **App stürzt ab oder synchronisiert nicht?**

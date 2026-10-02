@@ -60,6 +60,11 @@ enum ModelContainerFactory {
             return makeSnapshotContainer()
         }
 
+        // Observe CloudKit events before container init; setup can finish during `ModelContainer(...)`.
+        runOnMainActorSync {
+            CloudSyncService.prepareForContainerLaunch()
+        }
+
         let schema = Schema(versionedSchema: CoffeeDiarySchemaV1.self)
 
         do {
@@ -74,14 +79,14 @@ enum ModelContainerFactory {
                 migrationPlan: CoffeeDiaryMigrationPlan.self,
                 configurations: [cloudConfig]
             )
-            Task { @MainActor in
+            runOnMainActorSync {
                 CloudSyncService.shared.setStorageMode(.cloud)
                 CloudSyncService.shared.clearContainerInitFailure()
             }
             return container
         } catch {
             print("SwiftData Cloud container init failed: \(error)")
-            Task { @MainActor in
+            runOnMainActorSync {
                 CloudSyncService.shared.recordContainerInitFailure(error)
             }
             do {
@@ -98,13 +103,13 @@ enum ModelContainerFactory {
                     migrationPlan: CoffeeDiaryMigrationPlan.self,
                     configurations: [localConfig]
                 )
-                Task { @MainActor in
+                runOnMainActorSync {
                     CloudSyncService.shared.setStorageMode(.local)
                 }
                 return container
             } catch {
                 print("SwiftData Local container init failed: \(error)")
-                Task { @MainActor in
+                runOnMainActorSync {
                     CloudSyncService.shared.recordContainerInitFailure(error)
                 }
                 do {
@@ -118,13 +123,24 @@ enum ModelContainerFactory {
                         migrationPlan: CoffeeDiaryMigrationPlan.self,
                         configurations: [memoryConfig]
                     )
-                    Task { @MainActor in
+                    runOnMainActorSync {
                         CloudSyncService.shared.setStorageMode(.memory)
                     }
                     return container
                 } catch {
                     fatalError("Could not create ModelContainer (including in-memory): \(error)")
                 }
+            }
+        }
+    }
+
+    /// `sharedModelContainer` may initialize off the main actor; hop safely without deadlocking.
+    private static func runOnMainActorSync(_ body: @escaping @MainActor () -> Void) {
+        if Thread.isMainThread {
+            MainActor.assumeIsolated(body)
+        } else {
+            DispatchQueue.main.sync {
+                MainActor.assumeIsolated(body)
             }
         }
     }
