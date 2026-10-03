@@ -85,13 +85,7 @@ final class CloudSyncService {
             switch accountStatus {
             case .available:
                 if lastSyncEventFailed {
-                    if let lastErrorMessage, lastErrorMessage.contains("partialFailure")
-                        || lastErrorMessage.contains("[CKErrorDomain:2]") {
-                        return "iCloud could not finish exporting data. If this persists on TestFlight, the Production CloudKit schema may need to be deployed from the CloudKit Dashboard.".localized
-                    }
-                    if let lastSyncEventSummary {
-                        return lastSyncEventSummary
-                    }
+                    return "Sync couldn’t finish. Check your internet connection, keep the app open briefly, then try again. If it keeps failing, send feedback from Settings.".localized
                 }
                 if let lastSyncEventSummary {
                     return lastSyncEventSummary

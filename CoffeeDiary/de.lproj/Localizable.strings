@@ -362,7 +362,7 @@
 "iCloud Sync Issue" = "iCloud-Sync-Problem";
 "Connecting to iCloud…" = "Verbindung mit iCloud…";
 "Waiting for the first sync with iCloud. Keep the app open briefly with an internet connection." = "Warte auf den ersten Sync mit iCloud. Lass die App kurz mit Internetverbindung geöffnet.";
-"iCloud could not finish exporting data. If this persists on TestFlight, the Production CloudKit schema may need to be deployed from the CloudKit Dashboard." = "iCloud konnte Daten nicht fertig exportieren. Bleibt das in TestFlight bestehen, muss das Production-CloudKit-Schema im CloudKit Dashboard deployed werden.";
+"Sync couldn’t finish. Check your internet connection, keep the app open briefly, then try again. If it keeps failing, send feedback from Settings." = "Sync konnte nicht abgeschlossen werden. Prüfe die Internetverbindung, lass die App kurz geöffnet und versuche es erneut. Wenn es weiter scheitert, sende Feedback unter Einstellungen.";
 "iCloud container check failed: %@" = "iCloud-Container-Prüfung fehlgeschlagen: %@";
 "Live sync may be delayed until the next app open." = "Live-Sync kann verzögert sein, bis die App das nächste Mal geöffnet wird.";
 "Setup" = "Setup";
