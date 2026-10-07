@@ -69,7 +69,7 @@ Hinweise:
 
 - Bundle-ID: `YC.CoffeeDiary`
 - Team: `7PAQG44S9V`
-- CloudKit-Container `iCloud.YC.CoffeeDiary`: Schema im [CloudKit Dashboard](https://icloud.developer.apple.com/) von **Development → Production** deployen (TestFlight/Store nutzen Production; ohne Deploy schlägt Sync fehl)
+- CloudKit-Container `iCloud.YC.CoffeeDiary`: Schema im [CloudKit Dashboard](https://icloud.developer.apple.com/) von **Development → Production** deployen (TestFlight/Store nutzen Production; ohne Deploy schlägt Sync fehl). Siehe unten „CloudKit-Schema aktualisieren“.
 - PLA / Signing-Fehler in Xcode Cloud: zuerst [developer.apple.com/account](https://developer.apple.com/account) Vereinbarung akzeptieren
 
 ---
@@ -134,11 +134,12 @@ Fastlane lädt **kein** Binary hoch (`skip_binary_upload: true`) — der Build k
 | `bundle exec fastlane beta` | Kurzer Hinweis zum Ablauf |
 | `bundle exec fastlane metadata` | Nur Store-Texte hochladen |
 | `bundle exec fastlane release` | Texte + Build an Version + Submit for Review |
-| `bundle exec fastlane screenshots` | iPhone + iPad Screenshots, frameit, Store-Größen |
+| `bundle exec fastlane screenshots` | iPhone + iPad + iPhone Duo, frameit (Phone/Pad), Store-/Duo-Größen |
 | `bundle exec fastlane screenshots_iphone` | Nur iPhone-Screenshots |
 | `bundle exec fastlane screenshots_ipad` | Nur iPad-Screenshots |
-| `bundle exec fastlane screenshots_frame` | Roh-PNGs aus `raw/` einmal rahmen → `store/` |
-| `bundle exec fastlane screenshots_upload` | Screenshots aus `store/` in ASC ersetzen (ohne Review) |
+| `bundle exec fastlane screenshots_duo` | Nur iPhone-Duo Außen- + Innendisplay |
+| `bundle exec fastlane screenshots_frame` | Roh-PNGs aus `raw/` einmal rahmen → `store/` (+ Duo → `duo/`) |
+| `bundle exec fastlane screenshots_upload` | Screenshots aus `store/` in ASC ersetzen (ohne Review; ohne Duo) |
 
 ### Screenshots (de-DE)
 
@@ -149,9 +150,18 @@ brew install imagemagick   # falls noch nicht vorhanden
 bundle exec fastlane frameit download_frames
 ```
 
-Pipeline: Capture schreibt nach `fastlane/screenshots/raw/de-DE/`. Framing schreibt **nur** nach `fastlane/screenshots/store/de-DE/` und überschreibt die Raws nie — so entstehen keine Doppel-Rahmen.
+**iPhone Duo** braucht zusätzlich **Xcode 27.1**, die **iOS-27.1-Simulator-Runtime** und **macOS Tahoe 26.6+**. Xcode 27.1 neben dem normalen Xcode lassen; optional `DUO_DEVELOPER_DIR` auf dessen `Contents/Developer` setzen. Runtime einmalig:
 
-Simulator vorher öffnen hilft auf langsamen Macs. Dann nacheinander:
+```bash
+export DEVELOPER_DIR=/Applications/Xcode-27.1-beta.app/Contents/Developer   # Pfad anpassen
+xcodebuild -downloadPlatform iOS
+```
+
+Pipeline: Capture schreibt nach `fastlane/screenshots/raw/de-DE/`. Framing schreibt Phone/Pad **nur** nach `fastlane/screenshots/store/de-DE/` und überschreibt die Raws nie — so entstehen keine Doppel-Rahmen. Duo-Raws werden von frameit ferngehalten und nach `fastlane/screenshots/duo/de-DE/` in den ASC-Größen 1398×2034 (außen) bzw. 2007×2853 (innen) gelegt. `screenshots_upload` lädt nur `store/` (deliver 2.240.1 kennt Duo-Größen noch nicht).
+
+Simulator vorher öffnen hilft auf langsamen Macs. Für Duo muss Device Hub die Pose setzen können (Closed bzw. Open + Rotate Right); die Lane klickt die Buttons per Accessibility — bei Bedarf Pose manuell setzen und erneut laufen lassen.
+
+Dann nacheinander:
 
 ```bash
 cd /Users/yannik/Documents/Privat/Coding/CoffeeDiary
@@ -166,17 +176,36 @@ Oder getrennt:
 ```bash
 bundle exec fastlane screenshots_iphone
 bundle exec fastlane screenshots_ipad
+bundle exec fastlane screenshots_duo
 bundle exec fastlane screenshots_frame
 bundle exec fastlane screenshots_upload
 ```
 
 `release` und `metadata` laden Screenshots bewusst nicht hoch (`skip_screenshots`), damit ein normaler Submit bestehende Store-Bilder nicht überschreibt.
 
+### CloudKit-Schema aktualisieren
+
+Nach jeder SwiftData-Model-Änderung (neue Entity/Attribute) **vor** TestFlight/Store:
+
+1. Simulator mit Apple-ID anmelden (Einstellungen → bei iPhone anmelden).
+2. Debug-Build mit Launch-Argument `-InitializeCloudKitSchema` starten, z. B.:
+
+```bash
+xcrun simctl launch --console-pty booted YC.CoffeeDiary -InitializeCloudKitSchema
+```
+
+   Log muss `CloudKitSchemaInitializer: SUCCESS` zeigen. Das schreibt das volle Schema (inkl. `CD_Brewer`) in die CloudKit-**Development**-Umgebung.
+3. [CloudKit Console](https://icloud.developer.apple.com/) → Container `iCloud.YC.CoffeeDiary` → Schema → prüfen, dass alle Record Types da sind → **Deploy Schema Changes…** → Production.
+4. Auf einem TestFlight-Gerät Sync prüfen (Einstellungen → Sync-Status / Formspree-Diagnose: `healthy=true`, `eventFailed=false`).
+
+Ohne diesen Schritt schlägt der Export oft mit `CKError 2 (partialFailure)` fehl, wenn ein Record Type in Production fehlt.
+
 ### Feedback (Formspree) & Tip Jar
 
 - In `CoffeeDiary/Info.plist` den Key `FeedbackFormEndpoint` auf deine Formspree-URL setzen (`https://formspree.io/f/…`). Die Empfänger-E-Mail nur im Formspree-Dashboard hinterlegen — nie in der App.
-- Tip-Produkte in App Store Connect: `coffee.tip.small` / `coffee.tip.medium` / `coffee.tip.large` / `coffee.tip.linea` (Consumable). Lokale Tests: `CoffeeDiary/Configuration/CoffeeDiaryTips.storekit` in Xcode als StoreKit Configuration wählen.
-- Paid Apps Agreement + Banking in ASC müssen aktiv sein, damit Tips ausgezahlt werden.
+- Tip-Produkte in App Store Connect: `coffee.tip.small` / `coffee.tip.medium` / `coffee.tip.large` / `coffee.tip.linea` (Consumable). Lokale Tests: Scheme **CoffeeDiary** nutzt `CoffeeDiary/Configuration/CoffeeDiaryTips.storekit` (Run Action).
+- **Paid Apps Agreement** + Bank-/Steuerdaten unter ASC → Zahlungen und Finanzberichte / Vereinbarungen müssen aktiv sein (sonst keine Käufe in TestFlight/Review).
+- Vor der Einreichung auf der Version (z. B. 1.5.0) unter **In-App-Käufe** die vier Tip-Produkte hinzufügen und je einen Review-Screenshot hinterlegen (ASC-UI oder API `inAppPurchaseAppStoreReviewScreenshots`).
 ---
 
 ## Typische Probleme
@@ -193,6 +222,9 @@ bundle exec fastlane screenshots_upload
 | Accessibility / AX Timeout | Simulator booten, nur `screenshots_iphone`, `SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT=120` |
 | ImageMagick / frameit | `brew install imagemagick` und `fastlane frameit download_frames` |
 | Simulator nicht gefunden | Xcode.app als Developer Dir; Geräte in `Snapfile` / Fastfile an `xcrun simctl list` anpassen |
+| iPhone Duo device type fehlt | Xcode 27.1 + iOS 27.1 Runtime; `DUO_DEVELOPER_DIR` setzen; macOS Tahoe 26.6+ |
+| Duo Pose / falsches Display | In Device Hub Closed bzw. Open + Rotate Right; Accessibility für Simulator erlauben |
+| Duo-Upload scheitert in deliver | Erwartet: Duo liegt unter `duo/`, nicht in `store/`; ASC-Slot + neuere Fastlane abwarten |
 
 ---
 
@@ -201,3 +233,4 @@ bundle exec fastlane screenshots_upload
 - Release allein über GitHub Actions (CI bleibt Build/Test)
 - Binary-Upload per Fastlane `gym` (übernimmt Xcode Cloud)
 - Kleinere iPhone-Screenshot-Größen (Store skaliert vom 6,9"-Satz)
+- Automatischer Upload der iPhone-Duo-Sets (eigene Display-Klasse; deliver kennt die Größen noch nicht)

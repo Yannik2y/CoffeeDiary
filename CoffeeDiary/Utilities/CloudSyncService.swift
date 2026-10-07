@@ -271,13 +271,13 @@ final class CloudSyncService {
 
     /// Flattens `CKError.partialFailure` and Cocoa wrappers so Formspree/diagnostics show the real cause
     /// (e.g. “Cannot create or modify field … in production schema”).
-    static func detailedCloudKitErrorDescription(_ error: Error) -> String {
+    nonisolated static func detailedCloudKitErrorDescription(_ error: Error) -> String {
         var parts: [String] = []
         appendCloudKitErrorDetails(error, into: &parts, depth: 0)
         return parts.isEmpty ? error.localizedDescription : parts.joined(separator: " | ")
     }
 
-    private static func appendCloudKitErrorDetails(_ error: Error, into parts: inout [String], depth: Int) {
+    nonisolated private static func appendCloudKitErrorDetails(_ error: Error, into parts: inout [String], depth: Int) {
         guard depth < 4 else { return }
         let ns = error as NSError
         let headline = ns.localizedDescription

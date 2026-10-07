@@ -2,6 +2,10 @@ import SwiftUI
 import SwiftData
 
 struct MainTabView: View {
+    #if DEBUG
+    @State private var openTipJarForReview = CommandLine.arguments.contains("-OpenTipJar")
+    #endif
+
     var body: some View {
         TabView {
             BrewListView()
@@ -29,6 +33,11 @@ struct MainTabView: View {
                 .accessibilityIdentifier("tabSettings")
         }
         .modifier(BottomTabBarPreferredStyle())
+        #if DEBUG
+        .sheet(isPresented: $openTipJarForReview) {
+            TipJarView()
+        }
+        #endif
     }
 }
 

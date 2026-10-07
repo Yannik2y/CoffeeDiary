@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Defaults; Fastfile lanes override devices and run iPhone / iPad separately.
+# Defaults; Fastfile lanes override devices and run iPhone / iPad / iPhone Duo separately.
 devices([
   "iPhone 16 Pro Max"
 ])
@@ -15,7 +15,7 @@ output_directory("./fastlane/screenshots/raw")
 
 clear_previous_screenshots(true)
 
-# Status-bar override can contribute to AX load timeouts on some Simulator hosts.
+# false is more reliable for Accessibility load on this host; Fastfile can still override.
 override_status_bar(false)
 
 # App launch args for demo store + light UI. SnapshotHelper also injects FASTLANE_SNAPSHOT.

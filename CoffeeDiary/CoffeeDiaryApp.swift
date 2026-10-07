@@ -60,6 +60,12 @@ enum ModelContainerFactory {
             return makeSnapshotContainer()
         }
 
+        #if DEBUG
+        CloudKitSchemaInitializer.runIfRequested(
+            containerIdentifier: iCloudContainerIdentifier
+        )
+        #endif
+
         // Observe CloudKit events before container init; setup can finish during `ModelContainer(...)`.
         runOnMainActorSync {
             CloudSyncService.prepareForContainerLaunch()

@@ -55,13 +55,21 @@ Capture iPhone App Store screenshots only (de-DE)
 
 Capture iPad App Store screenshots only (de-DE)
 
+### ios screenshots_duo
+
+```sh
+[bundle exec] fastlane ios screenshots_duo
+```
+
+Capture iPhone Duo outer + inner App Store screenshots only (de-DE)
+
 ### ios screenshots
 
 ```sh
 [bundle exec] fastlane ios screenshots
 ```
 
-Capture iPhone then iPad screenshots, frame, and size for App Store (de-DE)
+Capture iPhone, iPad, then iPhone Duo screenshots; frame/size phone+pad for App Store (de-DE)
 
 ### ios screenshots_frame
 

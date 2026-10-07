@@ -6,6 +6,7 @@ ENV["LC_ALL"] ||= "en_US.UTF-8"
 require "dotenv"
 require "fileutils"
 require "shellwords"
+require "tempfile"
 Dotenv.load(".env") if File.exist?(".env")
 
 # Fastlane may run with cwd = project root OR ./fastlane. Anchor paths to this Fastfile.
@@ -13,9 +14,17 @@ SCREENSHOTS_ROOT = File.expand_path("screenshots", __dir__)
 # Raw captures (never overwrite with framed images — prevents double bezels).
 SCREENSHOTS_RAW = File.join(SCREENSHOTS_ROOT, "raw")
 SCREENSHOTS_RAW_LOCALE = File.join(SCREENSHOTS_RAW, "de-DE")
-# Framed + sized App Store deliverables for deliver/upload.
+# Temporary hold so frameit never sees Duo captures (no Duo device frames yet).
+SCREENSHOTS_DUO_STASH = File.join(SCREENSHOTS_RAW, ".duo_stash")
+# Framed + sized App Store deliverables for deliver/upload (iPhone + iPad only).
 SCREENSHOTS_STORE = File.join(SCREENSHOTS_ROOT, "store")
 SCREENSHOTS_STORE_LOCALE = File.join(SCREENSHOTS_STORE, "de-DE")
+# Sized Duo deliverables (kept out of store/ until deliver knows Duo display types).
+SCREENSHOTS_DUO = File.join(SCREENSHOTS_ROOT, "duo")
+SCREENSHOTS_DUO_LOCALE = File.join(SCREENSHOTS_DUO, "de-DE")
+IPHONE_DUO_DEVICE = "iPhone Duo"
+IPHONE_DUO_OUTER_SIZE = [1398, 2034].freeze
+IPHONE_DUO_INNER_SIZE = [2007, 2853].freeze
 
 default_platform(:ios)
 
@@ -85,7 +94,7 @@ platform :ios do
         device: "iPhone 16 Pro Max",
         clear_previous: true
       )
-      ensure_device_pngs!(device_matcher: /iPhone/i)
+      ensure_device_pngs!(device_matcher: /iPhone 16 Pro Max/i)
       UI.success("iPhone raw screenshots in #{SCREENSHOTS_RAW_LOCALE}. Run screenshots_ipad or screenshots_frame next.")
     ensure
       cleanup_snapshot_force_marker!
@@ -107,30 +116,59 @@ platform :ios do
     end
   end
 
-  desc "Capture iPhone then iPad screenshots, frame, and size for App Store (de-DE)"
+  desc "Capture iPhone Duo outer + inner App Store screenshots only (de-DE)"
+  lane :screenshots_duo do
+    prepare_snapshot_environment!
+    ensure_iphone_duo_ready!
+    begin
+      capture_iphone_duo_screenshots!
+      prepare_duo_deliverables!
+
+      count = duo_screenshot_pngs.size
+      UI.success(
+        "#{count} Duo screenshots ready under #{SCREENSHOTS_DUO_LOCALE}. " \
+        "Keep them out of screenshots_upload until deliver supports Duo sizes."
+      )
+    ensure
+      clear_duo_display_marker!
+      cleanup_snapshot_force_marker!
+    end
+  end
+
+  desc "Capture iPhone, iPad, then iPhone Duo screenshots; frame/size phone+pad for App Store (de-DE)"
   lane :screenshots do
     prepare_snapshot_environment!
     begin
-      UI.header("1/2 iPhone 16 Pro Max")
+      UI.header("1/3 iPhone 16 Pro Max")
       capture_device_screenshots!(
         device: "iPhone 16 Pro Max",
         clear_previous: true
       )
-      ensure_device_pngs!(device_matcher: /iPhone/i)
+      ensure_device_pngs!(device_matcher: /iPhone 16 Pro Max/i)
 
-      UI.header("2/2 iPad Pro 13-inch (M4)")
+      UI.header("2/3 iPad Pro 13-inch (M4)")
       capture_device_screenshots!(
         device: "iPad Pro 13-inch (M4)",
         clear_previous: false
       )
       ensure_device_pngs!(device_matcher: /iPad/i)
 
+      UI.header("3/3 iPhone Duo (outer + inner)")
+      ensure_iphone_duo_ready!
+      capture_iphone_duo_screenshots!
+
       UI.header("Framing & App Store sizes")
       frame_and_fit_screenshots!
 
-      count = store_screenshot_pngs.size
-      UI.success("#{count} screenshots ready under #{SCREENSHOTS_STORE}. Upload with: bundle exec fastlane screenshots_upload")
+      store_count = store_screenshot_pngs.size
+      duo_count = duo_screenshot_pngs.size
+      UI.success(
+        "#{store_count} iPhone/iPad screenshots under #{SCREENSHOTS_STORE}; " \
+        "#{duo_count} Duo screenshots under #{SCREENSHOTS_DUO}. " \
+        "Upload phone/pad with: bundle exec fastlane screenshots_upload"
+      )
     ensure
+      clear_duo_display_marker!
       cleanup_snapshot_force_marker!
     end
   end
@@ -141,16 +179,21 @@ platform :ios do
     pngs = raw_screenshot_pngs
     if pngs.empty?
       UI.user_error!(
-        "No raw screenshots in #{SCREENSHOTS_RAW_LOCALE}/. Capture first with screenshots_iphone / screenshots_ipad."
+        "No raw screenshots in #{SCREENSHOTS_RAW_LOCALE}/. Capture first with screenshots_iphone / screenshots_ipad / screenshots_duo."
       )
     end
 
     UI.header("Framing & App Store sizes")
-    UI.message("Framing #{pngs.size} raw PNGs → #{SCREENSHOTS_STORE_LOCALE}")
+    UI.message("Framing phone/pad raw PNGs → #{SCREENSHOTS_STORE_LOCALE} (Duo → #{SCREENSHOTS_DUO_LOCALE})")
     frame_and_fit_screenshots!
 
     count = store_screenshot_pngs.size
-    UI.success("#{count} marketing screenshots ready. Preview #{SCREENSHOTS_STORE_LOCALE}, then: bundle exec fastlane screenshots_upload")
+    duo_count = duo_screenshot_pngs.size
+    UI.success(
+      "#{count} marketing screenshots ready under #{SCREENSHOTS_STORE_LOCALE}" \
+      "#{duo_count.positive? ? ", #{duo_count} Duo under #{SCREENSHOTS_DUO_LOCALE}" : ""}. " \
+      "Preview, then: bundle exec fastlane screenshots_upload"
+    )
   end
 
   desc "Replace App Store Connect screenshots for the current version (de-DE only)"
@@ -193,11 +236,19 @@ platform :ios do
       sh("bundle exec fastlane frameit download_frames")
     end
 
-    # Only frame raw captures — never the store/ folder (avoids nested bezels).
-    FileUtils.rm_f(Dir[File.join(SCREENSHOTS_RAW_LOCALE, "*_framed.png")])
-    frameit(path: SCREENSHOTS_RAW)
-    copy_framed_and_raw_to_store!
-    fit_screenshots_to_app_store_sizes
+    # Duo has no frameit frames yet — keep those PNGs out of frameit/store.
+    stash_duo_raw_screenshots!
+    begin
+      # Only frame raw captures — never the store/ folder (avoids nested bezels).
+      FileUtils.rm_f(Dir[File.join(SCREENSHOTS_RAW_LOCALE, "*_framed.png")])
+      frameit(path: SCREENSHOTS_RAW)
+      copy_framed_and_raw_to_store!
+      fit_screenshots_to_app_store_sizes
+    ensure
+      restore_duo_raw_screenshots!
+    end
+
+    prepare_duo_deliverables! if duo_raw_pngs.any?
   end
 
   private_lane :ensure_frameit_assets! do
@@ -236,6 +287,7 @@ platform :ios do
   private_lane :prepare_snapshot_environment! do
     ensure_imagemagick!
     FileUtils.mkdir_p(SCREENSHOTS_RAW_LOCALE)
+    clear_duo_display_marker!
 
     ENV["DEVELOPER_DIR"] = "/Applications/Xcode.app/Contents/Developer"
     ENV["PATH"] = "#{ENV['DEVELOPER_DIR']}/usr/bin:#{ENV['PATH']}"
@@ -258,6 +310,121 @@ platform :ios do
     FileUtils.rm_f(marker)
   end
 
+  private_lane :capture_iphone_duo_screenshots! do
+    remove_duo_raw_pngs!
+
+    UI.header("iPhone Duo outer display (closed)")
+    set_iphone_duo_pose!(pose: :closed)
+    write_duo_display_marker!("outer")
+    capture_device_screenshots!(
+      device: IPHONE_DUO_DEVICE,
+      clear_previous: false
+    )
+    ensure_device_pngs!(device_matcher: /iPhone Duo Outer/i)
+
+    UI.header("iPhone Duo inner display (open portrait)")
+    set_iphone_duo_pose!(pose: :open_portrait)
+    write_duo_display_marker!("inner")
+    capture_device_screenshots!(
+      device: IPHONE_DUO_DEVICE,
+      clear_previous: false
+    )
+    ensure_device_pngs!(device_matcher: /iPhone Duo Inner/i)
+  end
+
+  private_lane :ensure_iphone_duo_ready! do
+    duo_developer_dir = resolve_iphone_duo_developer_dir!
+    ENV["DEVELOPER_DIR"] = duo_developer_dir
+    ENV["PATH"] = "#{duo_developer_dir}/usr/bin:#{ENV['PATH']}"
+    UI.message("Using DEVELOPER_DIR=#{duo_developer_dir} for iPhone Duo")
+
+    unless iphone_duo_device_type_available?
+      UI.user_error!(
+        "iPhone Duo simulator requires Xcode 27.1 + iOS 27.1 runtime (macOS Tahoe 26.6+). " \
+        "Install Xcode 27.1, run `xcodebuild -downloadPlatform iOS`, then retry. " \
+        "Set DUO_DEVELOPER_DIR if Xcode 27.1 lives outside /Applications."
+      )
+    end
+
+    ensure_iphone_duo_simulator_exists!
+    sh("open -a Simulator || true")
+    sleep(2)
+  end
+
+  def write_duo_display_marker!(display)
+    cache = File.expand_path("~/Library/Caches/tools.fastlane")
+    FileUtils.mkdir_p(cache)
+    File.write(File.join(cache, "duo_display.txt"), "#{display}\n")
+    ENV["SNAPSHOT_DUO_DISPLAY"] = display.to_s
+  end
+
+  def clear_duo_display_marker!
+    marker = File.expand_path("~/Library/Caches/tools.fastlane/duo_display.txt")
+    FileUtils.rm_f(marker)
+    ENV.delete("SNAPSHOT_DUO_DISPLAY")
+  end
+
+  private_lane :set_iphone_duo_pose! do |options|
+    pose = options.fetch(:pose)
+    case pose
+    when :closed
+      click_simulator_device_hub_button!("Closed")
+    when :open_portrait
+      click_simulator_device_hub_button!("Open")
+      sleep(2)
+      click_simulator_device_hub_button!("Rotate Right")
+      sleep(1)
+    else
+      UI.user_error!("Unknown iPhone Duo pose: #{pose.inspect}")
+    end
+    sleep(2)
+  end
+
+  def click_simulator_device_hub_button!(name)
+    UI.message("Device Hub: click #{name.inspect} (Simulator accessibility)")
+    script = <<~APPLESCRIPT
+      tell application "Simulator" to activate
+      delay 0.8
+      tell application "System Events"
+        tell process "Simulator"
+          set frontmost to true
+          delay 0.3
+          set clicked to false
+          repeat with w in windows
+            try
+              if exists (button "#{name}" of w) then
+                click button "#{name}" of w
+                set clicked to true
+                exit repeat
+              end if
+            end try
+            try
+              set matches to (every button of w whose name is "#{name}")
+              if (count of matches) > 0 then
+                click item 1 of matches
+                set clicked to true
+                exit repeat
+              end if
+            end try
+          end repeat
+          if clicked is false then error "Button #{name} not found in Simulator"
+        end tell
+      end tell
+    APPLESCRIPT
+    begin
+      Tempfile.create(["iphone_duo_pose", ".applescript"]) do |file|
+        file.write(script)
+        file.flush
+        sh("osascript #{file.path.shellescape}")
+      end
+    rescue StandardError => e
+      UI.important(
+        "Could not click Simulator Device Hub button #{name.inspect}: #{e.message}. " \
+        "Set the pose manually (Closed, or Open then Rotate Right), then re-run."
+      )
+    end
+  end
+
   private_lane :capture_device_screenshots! do |options|
     device = options.fetch(:device)
     clear_previous = options.fetch(:clear_previous)
@@ -268,12 +435,13 @@ platform :ios do
       devices: [device],
       output_directory: SCREENSHOTS_RAW,
       clear_previous_screenshots: clear_previous,
-      override_status_bar: true,
+      override_status_bar: false,
       stop_after_first_error: true,
       concurrent_simulators: false,
       erase_simulator: false,
       headless: false,
       number_of_retries: 2,
+      skip_helper_version_check: true,
       launch_arguments: ["--snapshot", "-AppleInterfaceStyle", "Light"],
       only_testing: ["CoffeeDiaryUITests/SnapshotTests/testAppStoreScreenshots"]
     )
@@ -302,8 +470,62 @@ platform :ios do
     Dir[File.join(SCREENSHOTS_RAW_LOCALE, "*.png")].reject { |p| p.include?("_framed") }
   end
 
+  def duo_raw_pngs
+    raw_screenshot_pngs.select { |p| File.basename(p).match?(/iPhone Duo/i) }
+  end
+
   def store_screenshot_pngs
     Dir[File.join(SCREENSHOTS_STORE_LOCALE, "*.png")]
+  end
+
+  def duo_screenshot_pngs
+    Dir[File.join(SCREENSHOTS_DUO_LOCALE, "*.png")]
+  end
+
+  def remove_duo_raw_pngs!
+    duo_raw_pngs.each { |path| FileUtils.rm_f(path) }
+  end
+
+  def resolve_iphone_duo_developer_dir!
+    candidates = [
+      ENV["DUO_DEVELOPER_DIR"],
+      "/Applications/Xcode-27.1-beta.app/Contents/Developer",
+      "/Applications/Xcode-27.1.app/Contents/Developer",
+      "/Applications/Xcode.app/Contents/Developer"
+    ].compact.map { |p| File.expand_path(p) }.uniq
+
+    selected = candidates.find { |dir| File.directory?(dir) }
+    UI.user_error!("No Xcode developer dir found for iPhone Duo. Set DUO_DEVELOPER_DIR.") if selected.nil?
+    selected
+  end
+
+  def iphone_duo_device_type_available?
+    output = `xcrun simctl list devicetypes 2>/dev/null`.to_s
+    output.include?("iPhone Duo") || output.include?("iPhone-Duo")
+  end
+
+  def ensure_iphone_duo_simulator_exists!
+    devices = `xcrun simctl list devices available 2>/dev/null`.to_s
+    return if devices.match?(/iPhone Duo\s+\(/)
+
+    runtime = iphone_duo_runtime_identifier!
+    UI.message("Creating simulator #{IPHONE_DUO_DEVICE.inspect} with #{runtime}")
+    sh(
+      "xcrun simctl create #{IPHONE_DUO_DEVICE.shellescape} " \
+      "com.apple.CoreSimulator.SimDeviceType.iPhone-Duo #{runtime.shellescape}"
+    )
+  end
+
+  def iphone_duo_runtime_identifier!
+    runtimes = `xcrun simctl list runtimes 2>/dev/null`.to_s
+    match = runtimes.lines.find { |line| line.include?("iOS 27.1") && line.include?("com.apple.CoreSimulator.SimRuntime") }
+    if match && (id = match[/com\.apple\.CoreSimulator\.SimRuntime\.[\w-]+/])
+      return id
+    end
+
+    UI.user_error!(
+      "iOS 27.1 simulator runtime not installed. With Xcode 27.1: `xcodebuild -downloadPlatform iOS`"
+    )
   end
 
   private_lane :ensure_asc_env! do
@@ -327,6 +549,8 @@ platform :ios do
 
     framed = Dir.glob(File.join(SCREENSHOTS_RAW_LOCALE, "*_framed.png"))
     framed.each do |path|
+      next if File.basename(path).match?(/iPhone Duo/i)
+
       dest = File.join(SCREENSHOTS_STORE_LOCALE, File.basename(path).sub(/_framed\.png\z/, ".png"))
       FileUtils.cp(path, dest)
       FileUtils.rm_f(path)
@@ -334,11 +558,75 @@ platform :ios do
     end
 
     raw_screenshot_pngs.each do |raw|
+      next if File.basename(raw).match?(/iPhone Duo/i)
+
       dest = File.join(SCREENSHOTS_STORE_LOCALE, File.basename(raw))
       next if File.exist?(dest)
 
       FileUtils.cp(raw, dest)
       UI.message("Store unframed (no device frame): #{File.basename(dest)}")
+    end
+  end
+
+  private_lane :stash_duo_raw_screenshots! do
+    FileUtils.mkdir_p(SCREENSHOTS_DUO_STASH)
+    FileUtils.rm_f(Dir[File.join(SCREENSHOTS_DUO_STASH, "*.png")])
+    duo_raw_pngs.each do |path|
+      FileUtils.mv(path, File.join(SCREENSHOTS_DUO_STASH, File.basename(path)))
+      UI.message("Stashed Duo raw (skip frameit): #{File.basename(path)}")
+    end
+  end
+
+  private_lane :restore_duo_raw_screenshots! do
+    FileUtils.mkdir_p(SCREENSHOTS_RAW_LOCALE)
+    Dir[File.join(SCREENSHOTS_DUO_STASH, "*.png")].each do |path|
+      FileUtils.mv(path, File.join(SCREENSHOTS_RAW_LOCALE, File.basename(path)))
+      UI.message("Restored Duo raw: #{File.basename(path)}")
+    end
+  end
+
+  private_lane :prepare_duo_deliverables! do
+    pngs = duo_raw_pngs
+    if pngs.empty?
+      UI.message("No iPhone Duo raw screenshots to size into #{SCREENSHOTS_DUO_LOCALE}")
+      next
+    end
+
+    ensure_imagemagick!
+    FileUtils.mkdir_p(SCREENSHOTS_DUO_LOCALE)
+    FileUtils.rm_f(Dir[File.join(SCREENSHOTS_DUO_LOCALE, "*.png")])
+
+    background = "#F5EDE4"
+    tool = `which magick`.strip
+    tool = `which convert`.strip if tool.empty?
+
+    pngs.each do |raw|
+      basename = File.basename(raw)
+      dest = File.join(SCREENSHOTS_DUO_LOCALE, basename)
+      FileUtils.cp(raw, dest)
+
+      target =
+        if basename.match?(/iPhone Duo Inner/i)
+          IPHONE_DUO_INNER_SIZE
+        elsif basename.match?(/iPhone Duo Outer/i)
+          IPHONE_DUO_OUTER_SIZE
+        else
+          UI.important("Skipping Duo size fit (unknown label): #{basename}")
+          next
+        end
+
+      width, height = target
+      cmd = [
+        tool,
+        dest.shellescape,
+        "-resize", "#{width}x#{height}",
+        "-background", background.shellescape,
+        "-gravity", "center",
+        "-extent", "#{width}x#{height}",
+        dest.shellescape
+      ].join(" ")
+      sh(cmd)
+      UI.message("Duo fitted #{basename} → #{width}x#{height}")
     end
   end
 
@@ -349,6 +637,7 @@ platform :ios do
 
     Dir.glob(File.join(SCREENSHOTS_STORE_LOCALE, "*.png")).each do |path|
       next if File.basename(path).start_with?(".")
+      next if path.match?(/iPhone Duo/i)
 
       target =
         if path.match?(/iPad/i)

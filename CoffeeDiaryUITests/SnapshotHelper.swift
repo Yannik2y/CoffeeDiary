@@ -13,6 +13,7 @@
 // -----------------------------------------------------
 
 import Foundation
+import UIKit
 import XCTest
 
 @MainActor
@@ -62,6 +63,10 @@ open class Snapshot: NSObject {
     }
     static var deviceLanguage = ""
     static var currentLocale = ""
+
+    /// App Store Connect sizes for iPhone Duo (3x): outer 1398×2034, inner 2007×2853.
+    private static let duoOuterPixelSizes: Set<[Int]> = [[1398, 2034], [2034, 1398]]
+    private static let duoInnerPixelSizes: Set<[Int]> = [[2007, 2853], [2853, 2007]]
 
     open class func setupSnapshot(_ app: XCUIApplication, waitForAnimations: Bool = true) {
 
@@ -167,7 +172,7 @@ open class Snapshot: NSObject {
                 return
             }
 
-            let screenshot = XCUIScreen.main.screenshot()
+            let screenshot = preferredScreenshot()
             #if os(iOS) && !targetEnvironment(macCatalyst)
             let image = XCUIDevice.shared.orientation.isLandscape ?  fixLandscapeOrientation(image: screenshot.image) : screenshot.image
             #else
@@ -182,6 +187,11 @@ open class Snapshot: NSObject {
                 let range = NSRange(location: 0, length: simulator.count)
                 simulator = regex.stringByReplacingMatches(in: simulator, range: range, withTemplate: "")
 
+                if simulator.localizedCaseInsensitiveContains("Duo"),
+                   let duoLabel = duoDeviceFileLabel() {
+                    simulator = duoLabel
+                }
+
                 let path = screenshotsDir.appendingPathComponent("\(simulator)-\(name).png")
                 #if swift(<5.0)
                     try UIImagePNGRepresentation(image)?.write(to: path, options: .atomic)
@@ -193,6 +203,65 @@ open class Snapshot: NSObject {
                 NSLog(error.localizedDescription)
             }
         #endif
+    }
+
+    /// Prefer outer/inner Duo display when `duo_display.txt` or `SNAPSHOT_DUO_DISPLAY` requests it.
+    /// `XCUIScreen.main` stays on the outer panel even when the app is on the inner display.
+    class func preferredScreenshot() -> XCUIScreenshot {
+        #if os(iOS)
+        guard let preference = duoDisplayPreference() else {
+            return XCUIScreen.main.screenshot()
+        }
+
+        let allowed = preference == "inner" ? duoInnerPixelSizes : duoOuterPixelSizes
+        for screen in XCUIScreen.screens {
+            let shot = screen.screenshot()
+            if allowed.contains(pixelSize(of: shot.image)) {
+                NSLog("snapshot: using Duo \(preference) display \(pixelSize(of: shot.image))")
+                return shot
+            }
+        }
+
+        NSLog("snapshot: Duo \(preference) display not found among \(XCUIScreen.screens.count) screens; using main")
+        #endif
+        return XCUIScreen.main.screenshot()
+    }
+
+    class func duoDeviceFileLabel() -> String? {
+        guard let preference = duoDisplayPreference() else { return nil }
+        return preference == "inner" ? "iPhone Duo Inner" : "iPhone Duo Outer"
+    }
+
+    /// `outer` / `inner` from Fastlane cache marker or process environment.
+    class func duoDisplayPreference() -> String? {
+        let env = ProcessInfo.processInfo.environment["SNAPSHOT_DUO_DISPLAY"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        if env == "outer" || env == "inner" { return env }
+
+        let candidates: [URL] = {
+            var urls: [URL] = []
+            if let cacheDirectory { urls.append(cacheDirectory.appendingPathComponent("duo_display.txt")) }
+            let hostHome = ProcessInfo.processInfo.environment["SIMULATOR_HOST_HOME"] ?? NSHomeDirectory()
+            urls.append(
+                URL(fileURLWithPath: hostHome)
+                    .appendingPathComponent("Library/Caches/tools.fastlane/duo_display.txt")
+            )
+            return urls
+        }()
+
+        for url in candidates {
+            guard let raw = try? String(contentsOf: url, encoding: .utf8) else { continue }
+            let value = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if value == "outer" || value == "inner" { return value }
+        }
+        return nil
+    }
+
+    class func pixelSize(of image: UIImage) -> [Int] {
+        let width = Int((image.size.width * image.scale).rounded())
+        let height = Int((image.size.height * image.scale).rounded())
+        return [width, height]
     }
 
     class func fixLandscapeOrientation(image: UIImage) -> UIImage {
@@ -311,3 +380,4 @@ private extension CGFloat {
 // Please don't remove the lines below
 // They are used to detect outdated configuration files
 // SnapshotHelperVersion [1.30]
+// (local Duo capture extensions; keep version token matching fastlane gem)
