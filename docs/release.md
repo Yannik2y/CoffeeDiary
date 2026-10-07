@@ -175,7 +175,7 @@ bundle exec fastlane screenshots_upload
 ### Feedback (Formspree) & Tip Jar
 
 - In `CoffeeDiary/Info.plist` den Key `FeedbackFormEndpoint` auf deine Formspree-URL setzen (`https://formspree.io/f/…`). Die Empfänger-E-Mail nur im Formspree-Dashboard hinterlegen — nie in der App.
-- Tip-Produkte in App Store Connect anlegen: `coffee.tip.small` / `coffee.tip.medium` / `coffee.tip.large` (Consumable). Lokale Tests: `CoffeeDiary/Configuration/CoffeeDiaryTips.storekit` in Xcode als StoreKit Configuration wählen.
+- Tip-Produkte in App Store Connect: `coffee.tip.small` / `coffee.tip.medium` / `coffee.tip.large` / `coffee.tip.linea` (Consumable). Lokale Tests: `CoffeeDiary/Configuration/CoffeeDiaryTips.storekit` in Xcode als StoreKit Configuration wählen.
 - Paid Apps Agreement + Banking in ASC müssen aktiv sein, damit Tips ausgezahlt werden.
 ---
 

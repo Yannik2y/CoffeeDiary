@@ -92,9 +92,11 @@ struct TipJarView: View {
         case "coffee.tip.small":
             return "Espresso".localized
         case "coffee.tip.medium":
-            return "Cappuccino".localized
+            return "Doppelter Espresso".localized
         case "coffee.tip.large":
             return "Coffee & cake".localized
+        case "coffee.tip.linea":
+            return "Linea Mini".localized
         default:
             return product.displayName
         }

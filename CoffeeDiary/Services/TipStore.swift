@@ -8,7 +8,8 @@ final class TipStore {
     static let productIDs = [
         "coffee.tip.small",
         "coffee.tip.medium",
-        "coffee.tip.large"
+        "coffee.tip.large",
+        "coffee.tip.linea"
     ]
 
     private(set) var products: [Product] = []
