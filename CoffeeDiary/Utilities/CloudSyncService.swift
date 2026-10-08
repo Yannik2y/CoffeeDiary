@@ -156,8 +156,12 @@ final class CloudSyncService {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in
-                await self?.refreshAccountStatus()
+            // Observer already delivers on the main queue.
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                Task {
+                    await self.refreshAccountStatus()
+                }
             }
         }
 
@@ -166,7 +170,8 @@ final class CloudSyncService {
             object: nil,
             queue: .main
         ) { [weak self] notification in
-            Task { @MainActor in
+            // Avoid capturing non-Sendable `Notification` across a `@Sendable` Task hop.
+            MainActor.assumeIsolated {
                 self?.handleCloudKitEvent(notification)
             }
         }

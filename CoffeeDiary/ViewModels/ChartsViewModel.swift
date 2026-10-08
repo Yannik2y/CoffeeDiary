@@ -23,8 +23,9 @@ final class ChartsViewModel {
     private(set) var cachedBeansWithBrews: [(id: UUID, name: String)] = []
     private var updateTask: Task<Void, Never>?
 
-    init(filterOptions: ChartFilterOptions = ChartFilterOptions()) {
-        var options = filterOptions
+    init(filterOptions: ChartFilterOptions? = nil) {
+        // Default arg expressions are nonisolated; construct the fallback inside the MainActor init.
+        var options = filterOptions ?? ChartFilterOptions()
         // App Store screenshots: espresso metrics/charts look polished; "All" mixed poorly before.
         if SnapshotLaunch.isEnabled, options.brewStyle == nil {
             options.brewStyle = .espresso
@@ -35,19 +36,17 @@ final class ChartsViewModel {
     func update(brews: [BrewEntry]) {
         updateTask?.cancel()
         let options = filterOptions
-        // Snapshot value-type metrics off the model objects before leaving MainActor.
+        // Snapshot SwiftData models into value types, then build charts on the MainActor.
+        // (Module uses SWIFT_DEFAULT_ACTOR_ISOLATION=MainActor, so analytics can't run in Task.detached.)
         let records = brews.map(ChartBrewRecord.init)
-        updateTask = Task {
-            let (snapshot, beans) = await Task.detached(priority: .userInitiated) {
-                let snapshot = ChartAnalyticsService.buildDashboard(from: records, options: options)
-                let beans = ChartAnalyticsService.beansWithBrews(
-                    in: ChartAnalyticsService.filter(
-                        records,
-                        options: ChartFilterOptions(timeRange: options.timeRange, brewStyle: options.brewStyle)
-                    )
+        updateTask = Task { @MainActor in
+            let snapshot = ChartAnalyticsService.buildDashboard(from: records, options: options)
+            let beans = ChartAnalyticsService.beansWithBrews(
+                in: ChartAnalyticsService.filter(
+                    records,
+                    options: ChartFilterOptions(timeRange: options.timeRange, brewStyle: options.brewStyle)
                 )
-                return (snapshot, beans)
-            }.value
+            )
             guard !Task.isCancelled else { return }
             dashboard = snapshot
             cachedBeansWithBrews = beans

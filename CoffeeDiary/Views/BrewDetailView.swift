@@ -268,6 +268,7 @@ struct BrewDetailView: View {
             .background(AppTheme.subtleBackground)
         }
         .navigationTitle("Brew".localized)
+        .toolbar(.hidden, for: .tabBar)
         .tint(AppTheme.accent)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

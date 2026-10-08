@@ -56,7 +56,7 @@
 
 // MARK: - Shot Types
 "Single" = "Single";
-"Double" = "Double";
+"Double" = "Doppel";
 "Triple" = "Triple";
 
 // MARK: - Equipment
@@ -501,4 +501,7 @@
 "Coffee & cake" = "Kaffee und Kuchen";
 "Doppelter Espresso" = "Doppelter Espresso";
 "Linea Mini" = "Linea Mini";
+"Great dial-in! Your last shot scored %d stars — consider saving this as a reference." = "Guter Dial-in! Dein letzter Bezug hat %d Sterne — speichere ihn als Referenz.";
+"Try adjusting yield ±1g or grind finer based on your last %d shots." = "Passe die Ausbeute um ±1 g an oder mahle feiner, basierend auf deinen letzten %d Bezügen.";
+"Day %d since roast" = "Tag %d seit der Röstung";
 "Help & FAQ" = "Hilfe & FAQ";
