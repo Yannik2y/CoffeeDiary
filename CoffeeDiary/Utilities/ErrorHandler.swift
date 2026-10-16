@@ -3,6 +3,9 @@ import SwiftData
 
 /// Utility for handling SwiftData save operations with user-facing error messages.
 /// Delegates to BrewStore so there is a single save + notification path.
+/// Explicit `@MainActor`: CI builds with Xcode 16.4 do not apply
+/// `SWIFT_DEFAULT_ACTOR_ISOLATION=MainActor` (that flag needs newer toolchains).
+@MainActor
 enum ErrorHandler {
     /// Saves the model context and shows an error alert if the save fails
     @discardableResult
@@ -19,7 +22,6 @@ enum ErrorHandler {
     }
 
     /// Saves the model context asynchronously (still on MainActor via BrewStore).
-    @MainActor
     @discardableResult
     static func saveAsync(
         _ modelContext: ModelContext,

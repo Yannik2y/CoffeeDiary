@@ -36,20 +36,22 @@ final class ChartsViewModel {
     func update(brews: [BrewEntry]) {
         updateTask?.cancel()
         let options = filterOptions
-        // Snapshot SwiftData models into value types, then build charts on the MainActor.
-        // (Module uses SWIFT_DEFAULT_ACTOR_ISOLATION=MainActor, so analytics can't run in Task.detached.)
+        // Snapshot SwiftData models on the main actor, then aggregate off-main.
         let records = brews.map(ChartBrewRecord.init)
-        updateTask = Task { @MainActor in
-            let snapshot = ChartAnalyticsService.buildDashboard(from: records, options: options)
-            let beans = ChartAnalyticsService.beansWithBrews(
-                in: ChartAnalyticsService.filter(
-                    records,
-                    options: ChartFilterOptions(timeRange: options.timeRange, brewStyle: options.brewStyle)
+        updateTask = Task { [records, options] in
+            let result = await Task.detached(priority: .userInitiated) {
+                let snapshot = ChartAnalyticsService.buildDashboard(from: records, options: options)
+                let beans = ChartAnalyticsService.beansWithBrews(
+                    in: ChartAnalyticsService.filter(
+                        records,
+                        options: ChartFilterOptions(timeRange: options.timeRange, brewStyle: options.brewStyle)
+                    )
                 )
-            )
+                return (snapshot, beans)
+            }.value
             guard !Task.isCancelled else { return }
-            dashboard = snapshot
-            cachedBeansWithBrews = beans
+            dashboard = result.0
+            cachedBeansWithBrews = result.1
         }
     }
 

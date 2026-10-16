@@ -31,6 +31,15 @@ struct PrecisionValueControl: View {
                         .multilineTextAlignment(.trailing)
                         .frame(minWidth: 72, minHeight: 44)
                         .accessibilityLabel(unit)
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                Spacer()
+                                Button("Done".localized) {
+                                    commitText()
+                                    isFocused = false
+                                }
+                            }
+                        }
                     Text(unit)
                         .font(.headline)
                         .foregroundStyle(.secondary)

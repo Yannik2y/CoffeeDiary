@@ -12,11 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
-        continue-on-error: true
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+      - name: Show available simulators
+        run: xcrun simctl list devices available | head -80
       - name: Build
-        run: xcodebuild -scheme CoffeeDiary -destination 'platform=iOS Simulator,name=iPhone 16' -quiet build
+        run: xcodebuild -scheme CoffeeDiary -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' -quiet build
       - name: Test
-        run: xcodebuild -scheme CoffeeDiary -destination 'platform=iOS Simulator,name=iPhone 16' -quiet test
+        run: xcodebuild -scheme CoffeeDiary -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' -quiet test
         env:
           CI: true

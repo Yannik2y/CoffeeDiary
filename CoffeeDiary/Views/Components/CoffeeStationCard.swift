@@ -32,8 +32,12 @@ struct CoffeeStationCard: View {
     private var canLogEspresso: Bool { activeMachine != nil }
     private var canLogFilter: Bool { !brewers.isEmpty }
 
+    private var hasAnyStationEquipment: Bool {
+        activeMachine != nil || activeGrinder != nil || !brewers.isEmpty
+    }
+
     var body: some View {
-        if activeMachine != nil || activeGrinder != nil {
+        if hasAnyStationEquipment {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Coffee Station".localized)
                     .font(.headline)
@@ -168,6 +172,7 @@ struct CoffeeStationCard: View {
                     title: machine.name,
                     subtitle: equipmentSubtitle(brand: machine.brand, model: machine.model, fallback: "Machine".localized),
                     photoData: machine.displayPhotoData,
+                    cacheId: machine.id.uuidString,
                     silhouette: machine.silhouette,
                     isFiltering: isFiltered
                 )
@@ -227,6 +232,7 @@ struct CoffeeStationCard: View {
                     title: grinder.name,
                     subtitle: equipmentSubtitle(brand: grinder.brand, model: grinder.model, fallback: "Grinder".localized),
                     photoData: grinder.displayPhotoData,
+                    cacheId: grinder.id.uuidString,
                     silhouette: grinder.silhouette,
                     isFiltering: isFiltered
                 )
@@ -296,12 +302,19 @@ struct StationTile: View {
     let title: String
     let subtitle: String
     let photoData: Data?
+    var cacheId: String? = nil
     let silhouette: EquipmentSilhouette
     var isFiltering: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            EquipmentVisual(photoData: photoData, silhouette: silhouette, cornerRadius: 16)
+            EquipmentVisual(
+                photoData: photoData,
+                silhouette: silhouette,
+                cornerRadius: 16,
+                thumbnailDimension: 200,
+                cacheId: cacheId
+            )
                 .aspectRatio(1, contentMode: .fit)
                 .overlay(alignment: .topTrailing) {
                     if isFiltering {

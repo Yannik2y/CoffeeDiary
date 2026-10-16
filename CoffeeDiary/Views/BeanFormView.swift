@@ -41,11 +41,11 @@ struct BeanFormView: View {
         NavigationStack {
             Form {
                 Section("Bean".localized) {
-                    TextField("Name", text: $name)
-                    TextField("Roaster", text: $roaster)
-                    TextField("Origin", text: $origin)
-                    TextField("Process", text: $process)
-                    TextField("Variety", text: $variety)
+                    TextField("Name".localized, text: $name)
+                    TextField("Roaster".localized, text: $roaster)
+                    TextField("Origin".localized, text: $origin)
+                    TextField("Process".localized, text: $process)
+                    TextField("Variety".localized, text: $variety)
                     Toggle("Favorite".localized, isOn: $isFavorite)
                     Toggle("Archived".localized, isOn: $isArchived)
                 }
@@ -55,14 +55,14 @@ struct BeanFormView: View {
                 Section("Blend".localized) {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Arabica")
+                            Text("Arabica".localized)
                             Spacer()
                             Text("\(Int(arabicaPercentage))%")
                                 .foregroundStyle(AppTheme.textSecondary)
                         }
                         Slider(value: $arabicaPercentage, in: 0...100, step: 1)
                         HStack {
-                            Text("Robusta")
+                            Text("Robusta".localized)
                             Spacer()
                             Text("\(Int(robustaPercentage))%")
                                 .foregroundStyle(AppTheme.textSecondary)
@@ -71,16 +71,16 @@ struct BeanFormView: View {
                 }
                 
                 Section("Notes".localized) {
-                    TextField("Optional notes", text: $notes, axis: .vertical)
+                    TextField("Optional notes".localized, text: $notes, axis: .vertical)
                 }
             }
-            .navigationTitle(isEditing ? "Edit Bean" : "New Bean")
+            .navigationTitle(isEditing ? "Edit Bean".localized : "New Bean".localized)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel".localized) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditing ? "Save" : "Add") {
+                    Button(isEditing ? "Save".localized : "Add".localized) {
                         Task { await save() }
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
@@ -98,7 +98,11 @@ struct BeanFormView: View {
         defer { isSaving = false }
         let compressedPhoto: Data?
         if let photoData {
-            compressedPhoto = await PhotoStorage.compressedJPEGAsync(from: photoData)
+            guard let compressed = await PhotoStorage.compressedJPEGAsync(from: photoData) else {
+                attachmentError = "Couldn't process the photo. Please try another image.".localized
+                return
+            }
+            compressedPhoto = compressed
         } else {
             compressedPhoto = nil
         }

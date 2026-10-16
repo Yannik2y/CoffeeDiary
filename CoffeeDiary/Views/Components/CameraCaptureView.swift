@@ -43,7 +43,12 @@ enum CameraCapturePresenter {
         onDismiss: @escaping () -> Void,
         onUnavailable: @escaping () -> Void
     ) {
+        guard activeDelegate == nil else { return }
         guard let presenter = UIApplication.shared.coffeeDiaryTopViewController() else {
+            onUnavailable()
+            return
+        }
+        guard presenter.presentedViewController == nil else {
             onUnavailable()
             return
         }

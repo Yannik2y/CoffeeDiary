@@ -408,6 +408,17 @@
 "Import Image" = "Bild importieren";
 "Only image files are supported." = "Nur Bilddateien werden unterstützt.";
 "Camera is not available." = "Kamera ist nicht verfügbar.";
+"Couldn't load the selected photo." = "Das ausgewählte Foto konnte nicht geladen werden.";
+"Couldn't process the photo. Please try another image." = "Das Foto konnte nicht verarbeitet werden. Bitte ein anderes Bild wählen.";
+"Filters" = "Filter";
+"From" = "Von";
+"To" = "Bis";
+"Clear start date" = "Startdatum löschen";
+"Clear end date" = "Enddatum löschen";
+"Clear ratio filters" = "Ratio-Filter löschen";
+"Unfavorite" = "Favorit entfernen";
+"Style (e.g. V60, Chemex)" = "Stil (z. B. V60, Chemex)";
+"Archived" = "Archiviert";
 "Shot Time" = "Bezugszeit";
 "Brew Time" = "Brühzeit";
 "Shot" = "Shot";

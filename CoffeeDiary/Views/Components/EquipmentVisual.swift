@@ -5,7 +5,8 @@ struct EquipmentVisual: View {
     let photoData: Data?
     let silhouette: EquipmentSilhouette
     var cornerRadius: CGFloat = 16
-    var thumbnailDimension: CGFloat = 400
+    var thumbnailDimension: CGFloat = 200
+    var cacheId: String? = nil
 
     var body: some View {
         // The well defines the layout size; the overlay may overflow (fill photo) and is clipped.
@@ -13,7 +14,11 @@ struct EquipmentVisual: View {
             .fill(Color.accentColor.opacity(0.12))
             .overlay {
                 if photoData != nil {
-                    CachedThumbnailImage(data: photoData, maxDimension: thumbnailDimension)
+                    CachedThumbnailImage(
+                        data: photoData,
+                        cacheId: cacheId,
+                        maxDimension: thumbnailDimension
+                    )
                 } else {
                     EquipmentSilhouetteView(silhouette: silhouette)
                         .padding(8)

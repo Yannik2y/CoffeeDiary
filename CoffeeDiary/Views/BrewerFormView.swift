@@ -32,26 +32,26 @@ struct BrewerFormView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Brewer") {
-                    TextField("Name", text: $name)
-                    TextField("Brand", text: $brand)
-                    TextField("Style (e.g. V60, Chemex)", text: $style)
-                    Toggle("Favorite", isOn: $isFavorite)
+                Section("Brewer".localized) {
+                    TextField("Name".localized, text: $name)
+                    TextField("Brand".localized, text: $brand)
+                    TextField("Style (e.g. V60, Chemex)".localized, text: $style)
+                    Toggle("Favorite".localized, isOn: $isFavorite)
                 }
                 
                 EquipmentPhotoPicker(photoData: $photoData, attachmentError: $attachmentError)
                 
-                Section("Notes") {
-                    TextField("Optional notes", text: $notes, axis: .vertical)
+                Section("Notes".localized) {
+                    TextField("Optional notes".localized, text: $notes, axis: .vertical)
                 }
             }
-            .navigationTitle(isEditing ? "Edit Brewer" : "New Brewer")
+            .navigationTitle(isEditing ? "Edit Brewer".localized : "New Brewer".localized)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel".localized) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditing ? "Save" : "Add") {
+                    Button(isEditing ? "Save".localized : "Add".localized) {
                         Task { await save() }
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
@@ -65,7 +65,11 @@ struct BrewerFormView: View {
         defer { isSaving = false }
         let compressedPhoto: Data?
         if let photoData {
-            compressedPhoto = await PhotoStorage.compressedJPEGAsync(from: photoData)
+            guard let compressed = await PhotoStorage.compressedJPEGAsync(from: photoData) else {
+                attachmentError = "Couldn't process the photo. Please try another image.".localized
+                return
+            }
+            compressedPhoto = compressed
         } else {
             compressedPhoto = nil
         }
