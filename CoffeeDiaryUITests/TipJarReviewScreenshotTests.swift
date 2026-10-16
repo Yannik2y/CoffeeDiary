@@ -1,13 +1,22 @@
 import XCTest
 
 /// Captures a Tip Jar screenshot for App Store Connect IAP review metadata.
+/// Not run in GitHub Actions (`ci.yml` uses `-skip-testing` for this class).
 final class TipJarReviewScreenshotTests: XCTestCase {
     @MainActor
     func testCaptureTipJarReviewScreenshot() throws {
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["CI"] == "true"
+                || ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true",
+            "Tip Jar review screenshot is local/manual; skipped on CI"
+        )
+
         let app = XCUIApplication()
         app.launchArguments += [
             "--ui-testing",
             "-OpenTipJar",
+            "-AppleLanguages", "(en)",
+            "-AppleLocale", "en_US",
             "-AppleInterfaceStyle", "Light"
         ]
         app.launch()

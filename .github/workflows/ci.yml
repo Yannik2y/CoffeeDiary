@@ -18,6 +18,12 @@ jobs:
       - name: Build
         run: xcodebuild -scheme CoffeeDiary -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' -quiet build
       - name: Test
-        run: xcodebuild -scheme CoffeeDiary -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' -quiet test
+        # TipJarReviewScreenshotTests is a local StoreKit screenshot helper for App Store review;
+        # skip it on CI (XCTSkip from setUp is still reported as failure by xcodebuild).
+        run: >
+          xcodebuild -scheme CoffeeDiary
+          -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5'
+          -skip-testing:CoffeeDiaryUITests/TipJarReviewScreenshotTests
+          -quiet test
         env:
           CI: true
