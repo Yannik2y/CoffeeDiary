@@ -34,7 +34,13 @@ struct EquipmentPhotoPicker: View {
             }
 
             if cameraAvailable {
-                Button { showingCamera = true } label: {
+                Button {
+                    guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+                        attachmentError = "Camera is not available.".localized
+                        return
+                    }
+                    showingCamera = true
+                } label: {
                     Label("Take Photo".localized, systemImage: "camera")
                 }
             }
@@ -67,10 +73,16 @@ struct EquipmentPhotoPicker: View {
             }
         }
         .fullScreenCover(isPresented: $showingCamera) {
-            CameraCaptureView(onCapture: { data in
-                handleAttachmentData(data)
-                showingCamera = false
-            }, onDismiss: { showingCamera = false })
+            CameraCaptureView(
+                onCapture: { data in
+                    handleAttachmentData(data)
+                    showingCamera = false
+                },
+                onDismiss: { showingCamera = false },
+                onUnavailable: {
+                    attachmentError = "Camera is not available.".localized
+                }
+            )
         }
     }
 

@@ -232,33 +232,36 @@ struct BrewEntryFlowView: View {
         NavigationStack {
             VStack(spacing: 16) {
                 progressHeader
-                Group {
-                    if let currentStep = safeCurrentStep {
-                        switch currentStep {
-                        case .shotType: questionShotType
-                        case .grinderSetting: questionGrinder
-                        case .grinderTimer: questionGrinderTimer
-                        case .dose: questionDose
-                        case .yield: questionYield
-                        case .time: questionTime
-                        case .preInfusionTime: questionPreInfusionTime
-                        case .brewPressure: questionBrewPressure
-                        case .brewerSelection: questionBrewer
-                        case .bloom: questionBloom
-                        case .totalWater: questionTotalWater
-                        case .waterTemp: questionWaterTemp
-                        case .gear: questionGear
-                        case .notes: questionNotes
-                        case .rating: questionRating
-                        case .weather: questionWeather
-                        case .review: reviewView
+                ScrollView {
+                    Group {
+                        if let currentStep = safeCurrentStep {
+                            switch currentStep {
+                            case .shotType: questionShotType
+                            case .grinderSetting: questionGrinder
+                            case .grinderTimer: questionGrinderTimer
+                            case .dose: questionDose
+                            case .yield: questionYield
+                            case .time: questionTime
+                            case .preInfusionTime: questionPreInfusionTime
+                            case .brewPressure: questionBrewPressure
+                            case .brewerSelection: questionBrewer
+                            case .bloom: questionBloom
+                            case .totalWater: questionTotalWater
+                            case .waterTemp: questionWaterTemp
+                            case .gear: questionGear
+                            case .notes: questionNotes
+                            case .rating: questionRating
+                            case .weather: questionWeather
+                            case .review: reviewView
+                            }
+                        } else {
+                            reviewView
                         }
-                    } else {
-                        reviewView
                     }
+                    .frame(maxWidth: .infinity)
+                    .animation(.easeInOut, value: stepIndex)
                 }
-                .animation(.easeInOut, value: stepIndex)
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 controls
             }
             .padding()
@@ -584,7 +587,7 @@ struct BrewEntryFlowView: View {
             ) {
                 Text("None".localized).tag(PickerSelection.none)
                 ForEach(beans.filter { !$0.isArchived }) { bean in
-                    Text(bean.name).tag(bean.id)
+                    Text(bean.listTitle).tag(bean.id)
                 }
             }
 
@@ -826,7 +829,7 @@ struct BrewEntryFlowView: View {
                         Text(String(format: "%.1f bar", brewPressureBar))
                     }
                 }
-                if let bean = selectedBean { HStack { Text("Bean".localized); Spacer(); Text(bean.name) } }
+                if let bean = selectedBean { HStack { Text("Bean".localized); Spacer(); Text(bean.listTitle) } }
                 if let grinder = selectedGrinder { HStack { Text("Grinder".localized); Spacer(); Text(grinder.name) } }
                 if flow == .espresso, let machine = selectedMachine {
                     HStack { Text("Machine".localized); Spacer(); Text(machine.name) }

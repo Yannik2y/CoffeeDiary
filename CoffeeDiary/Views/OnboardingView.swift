@@ -201,29 +201,13 @@ struct OnboardingView: View {
     
     private var beanStepContent: some View {
         VStack(spacing: 16) {
-            if beans.isEmpty {
-                Button {
-                    showingBeanForm = true
-                } label: {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title3)
-                        Text("Add Bean".localized)
-                            .font(.headline)
-                    }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(AppTheme.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-            } else {
+            if !beans.isEmpty {
                 VStack(spacing: 12) {
                     ForEach(beans.prefix(3)) { bean in
                         HStack {
                             Image(systemName: "leaf.fill")
                                 .foregroundStyle(AppTheme.accent)
-                            Text(bean.name)
+                            Text(bean.listTitle)
                                 .foregroundStyle(AppTheme.textPrimary)
                             Spacer()
                         }
@@ -256,7 +240,6 @@ struct OnboardingView: View {
             items: grinders,
             icon: "gearshape.fill",
             itemName: { $0.name },
-            addButtonText: "Add Grinder".localized,
             addAnotherText: "Add Another Grinder".localized,
             onAdd: { showingGrinderForm = true }
         )
@@ -267,7 +250,6 @@ struct OnboardingView: View {
             items: machines,
             icon: "cup.and.saucer.fill",
             itemName: { $0.name },
-            addButtonText: "Add Machine".localized,
             addAnotherText: "Add Another Machine".localized,
             onAdd: { showingMachineForm = true }
         )
@@ -278,7 +260,6 @@ struct OnboardingView: View {
             items: brewers,
             icon: "drop.circle.fill",
             itemName: { $0.name },
-            addButtonText: "Add Brewer".localized,
             addAnotherText: "Add Another Brewer".localized,
             onAdd: { showingBrewerForm = true }
         )
@@ -288,28 +269,11 @@ struct OnboardingView: View {
         items: [T],
         icon: String,
         itemName: @escaping (T) -> String,
-        addButtonText: String,
         addAnotherText: String,
         onAdd: @escaping () -> Void
     ) -> some View {
         VStack(spacing: 16) {
-            if items.isEmpty {
-                Button {
-                    onAdd()
-                } label: {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title3)
-                        Text(addButtonText)
-                            .font(.headline)
-                    }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(AppTheme.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-            } else {
+            if !items.isEmpty {
                 VStack(spacing: 12) {
                     ForEach(Array(items.prefix(3)), id: \.id) { item in
                         EquipmentItemRow(

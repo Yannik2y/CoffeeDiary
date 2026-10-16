@@ -62,7 +62,7 @@ struct BrewRow: View {
             if entry.bean != nil || entry.grinder != nil || entry.brewer != nil {
                 HStack(spacing: 10) {
                     if let bean = entry.bean {
-                        EquipmentTag(icon: "leaf.fill", text: bean.name)
+                        EquipmentTag(icon: "leaf.fill", text: bean.listTitle)
                     }
                     if let grinder = entry.grinder {
                         EquipmentTag(icon: "gearshape.fill", text: grinder.name)

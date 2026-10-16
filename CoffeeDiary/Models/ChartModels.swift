@@ -197,7 +197,7 @@ struct ChartBrewRecord: Sendable, Equatable {
             rating: brew.rating,
             weatherTemperatureCelsius: brew.weatherTemperatureCelsius,
             beanId: brew.bean?.id,
-            beanName: brew.bean?.name
+            beanName: brew.bean?.listTitle
         )
     }
 }

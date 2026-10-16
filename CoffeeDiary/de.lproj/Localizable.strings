@@ -407,6 +407,7 @@
 "OK" = "OK";
 "Import Image" = "Bild importieren";
 "Only image files are supported." = "Nur Bilddateien werden unterstützt.";
+"Camera is not available." = "Kamera ist nicht verfügbar.";
 "Shot Time" = "Bezugszeit";
 "Brew Time" = "Brühzeit";
 "Shot" = "Shot";

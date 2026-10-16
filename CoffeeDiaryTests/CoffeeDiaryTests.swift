@@ -223,6 +223,21 @@ struct BeanModelTests {
         let bean = Bean(name: "Old", roastDate: Calendar.current.date(byAdding: .day, value: -30, to: Date()))
         #expect(bean.isPastPeak == true)
     }
+
+    @Test func listTitleCombinesRoasterAndName() {
+        let bean = Bean(name: "Yirgacheffe", roaster: "Square Mile")
+        #expect(bean.listTitle == "Square Mile — Yirgacheffe")
+    }
+
+    @Test func listTitleFallsBackToNameWithoutRoaster() {
+        let bean = Bean(name: "House Blend")
+        #expect(bean.listTitle == "House Blend")
+    }
+
+    @Test func listTitleTrimsWhitespace() {
+        let bean = Bean(name: "  Ethiopia  ", roaster: "  Sey  ")
+        #expect(bean.listTitle == "Sey — Ethiopia")
+    }
 }
 
 struct DialInAssistantTests {
