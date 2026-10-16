@@ -82,6 +82,7 @@ platform :ios do
 
     deliver(
       api_key: api_key,
+      app_version: marketing_version_from_xcode,
       submit_for_review: false,
       automatic_release: false,
       force: true,
