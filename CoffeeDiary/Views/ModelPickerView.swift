@@ -96,7 +96,12 @@ struct ModelPickerView: View {
         } else {
             Section {
                 ForEach(searchResults) { model in
-                    modelRow(model, showBrand: true)
+                    ModelPickerRow(
+                        model: model,
+                        showBrand: true,
+                        isSelected: selectedModelId == model.id,
+                        onSelect: selectModel
+                    )
                 }
             }
             customRowSection
@@ -106,11 +111,14 @@ struct ModelPickerView: View {
     @ViewBuilder
     private var browseSections: some View {
         if let preferredBrand, !preferredModels.isEmpty {
-            Section(preferredBrand.name) {
-                ForEach(preferredModels) { model in
-                    modelRow(model, showBrand: false)
-                }
-            }
+            // Separate View keeps Section+ForEach out of this ViewBuilder nesting
+            // (Xcode 16.4 otherwise resolves nested ForEach to Charts.ChartContentBuilder).
+            BrandModelsSection(
+                name: preferredBrand.name,
+                models: preferredModels,
+                selectedModelId: selectedModelId,
+                onSelect: selectModel
+            )
         }
 
         if showsOnlyPreferredBrand {
@@ -123,14 +131,13 @@ struct ModelPickerView: View {
                 .accessibilityIdentifier("modelPickerShowAllBrands")
             }
         } else {
-            // Precomputed brand→models groups keep List content as plain Section/ForEach
-            // and avoid Xcode 16.4 resolving nested builders to Charts.ChartContentBuilder.
             ForEach(otherBrandModels) { group in
-                Section(group.name) {
-                    ForEach(group.models) { model in
-                        modelRow(model, showBrand: false)
-                    }
-                }
+                BrandModelsSection(
+                    name: group.name,
+                    models: group.models,
+                    selectedModelId: selectedModelId,
+                    onSelect: selectModel
+                )
             }
         }
 
@@ -151,10 +158,43 @@ struct ModelPickerView: View {
         }
     }
 
-    private func modelRow(_ model: EquipmentModel, showBrand: Bool) -> some View {
+    private func selectModel(_ model: EquipmentModel) {
+        onSelect(model)
+        dismiss()
+    }
+}
+
+/// Isolated section view so nested List Section/ForEach type-checks as ViewBuilder,
+/// not Charts.ChartContentBuilder, under Xcode 16.4.
+private struct BrandModelsSection: View {
+    let name: String
+    let models: [EquipmentModel]
+    let selectedModelId: String?
+    let onSelect: (EquipmentModel) -> Void
+
+    var body: some View {
+        Section(name) {
+            ForEach(models) { model in
+                ModelPickerRow(
+                    model: model,
+                    showBrand: false,
+                    isSelected: selectedModelId == model.id,
+                    onSelect: onSelect
+                )
+            }
+        }
+    }
+}
+
+private struct ModelPickerRow: View {
+    let model: EquipmentModel
+    let showBrand: Bool
+    let isSelected: Bool
+    let onSelect: (EquipmentModel) -> Void
+
+    var body: some View {
         Button {
             onSelect(model)
-            dismiss()
         } label: {
             HStack(spacing: 12) {
                 EquipmentVisual(photoData: nil, silhouette: model.silhouette, cornerRadius: 10)
@@ -163,7 +203,7 @@ struct ModelPickerView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(showBrand ? "\(model.brandName) \(model.name)" : model.name)
                         .foregroundStyle(Color.primary)
-                    if let detail = detailText(for: model) {
+                    if let detail = detailText {
                         Text(detail)
                             .font(.caption)
                             .foregroundStyle(Color.secondary)
@@ -172,7 +212,7 @@ struct ModelPickerView: View {
 
                 Spacer()
 
-                if selectedModelId == model.id {
+                if isSelected {
                     Image(systemName: "checkmark")
                         .foregroundStyle(Color.accentColor)
                         .accessibilityLabel("Selected".localized)
@@ -182,7 +222,7 @@ struct ModelPickerView: View {
         .accessibilityIdentifier("modelPickerRow_\(model.id)")
     }
 
-    private func detailText(for model: EquipmentModel) -> String? {
+    private var detailText: String? {
         let parts = [model.silhouette.title, model.burrDescription].compactMap { $0 }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
