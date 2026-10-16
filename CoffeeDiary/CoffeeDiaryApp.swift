@@ -165,8 +165,9 @@ enum ModelContainerFactory {
                 migrationPlan: CoffeeDiaryMigrationPlan.self,
                 configurations: [config]
             )
-            SnapshotDemoData.seedIfNeeded(context: container.mainContext)
-            Task { @MainActor in
+            // `mainContext` is MainActor-isolated; this factory can run off-main at launch.
+            runOnMainActorSync {
+                SnapshotDemoData.seedIfNeeded(context: container.mainContext)
                 CloudSyncService.shared.setStorageMode(.memory)
             }
             return container

@@ -109,18 +109,23 @@ struct ModelPickerView: View {
                 .accessibilityIdentifier("modelPickerShowAllBrands")
             }
         } else {
-            // Qualify as SwiftUI.ForEach: nested ForEach+Section can resolve to Charts'
-            // ChartContentBuilder under Xcode 16.4 and fail type-checking.
-            SwiftUI.ForEach(otherBrands) { brand in
-                Section(brand.name) {
-                    SwiftUI.ForEach(EquipmentCatalog.models(for: category, brandId: brand.id)) { model in
-                        modelRow(model, showBrand: false)
-                    }
-                }
+            // Extracted helper avoids nested ForEach+Section resolving to Charts' ChartContentBuilder.
+            ForEach(otherBrands) { brand in
+                brandModelsSection(brand)
             }
         }
 
         customRowSection
+    }
+
+    @ViewBuilder
+    private func brandModelsSection(_ brand: CoffeeBrand) -> some View {
+        let models = EquipmentCatalog.models(for: category, brandId: brand.id)
+        Section(brand.name) {
+            ForEach(models) { model in
+                modelRow(model, showBrand: false)
+            }
+        }
     }
 
     private var customRowSection: some View {
