@@ -25,6 +25,7 @@ struct CameraCaptureView: UIViewControllerRepresentable {
     
     let onCapture: (Data) -> Void
     let onDismiss: () -> Void
+    var onUnavailable: (() -> Void)? = nil
     
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -32,13 +33,20 @@ struct CameraCaptureView: UIViewControllerRepresentable {
     
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
-        picker.sourceType = .camera
         picker.allowsEditing = false
         picker.delegate = context.coordinator
+        
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            DispatchQueue.main.async {
+                self.onUnavailable?()
+                self.onDismiss()
+            }
+            return picker
+        }
+        
+        picker.sourceType = .camera
         return picker
     }
     
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
 }
-
-

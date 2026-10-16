@@ -148,7 +148,7 @@ struct BrewFormView: View {
                     Picker("Bean".localized, selection: $selectedBeanId) {
                         Text("None".localized).tag(nil as UUID?)
                         ForEach(beans) { bean in
-                            Text(bean.name).tag(Optional(bean.id))
+                            Text(bean.listTitle).tag(Optional(bean.id))
                         }
                     }
                     .onChange(of: selectedBeanId) { _, newId in

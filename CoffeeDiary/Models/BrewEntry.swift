@@ -176,6 +176,16 @@ extension Bean {
         return days > 28
     }
 
+    /// Display title for lists and pickers: "Roaster — Name" when a roaster is set.
+    var listTitle: String {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedRoaster = roaster?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !trimmedRoaster.isEmpty, !trimmedName.isEmpty {
+            return "\(trimmedRoaster) — \(trimmedName)"
+        }
+        return trimmedName
+    }
+
     var displayPhotoData: Data? {
         if let photoData { return photoData }
         return PhotoStorage.loadPhoto(path: photoPath)

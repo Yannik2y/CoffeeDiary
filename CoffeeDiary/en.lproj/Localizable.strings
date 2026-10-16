@@ -87,6 +87,7 @@
 "OK" = "OK";
 "Import Image" = "Import Image";
 "Only image files are supported." = "Only image files are supported.";
+"Camera is not available." = "Camera is not available.";
 "Shot Time" = "Shot Time";
 "Brew Time" = "Brew Time";
 "Shot" = "Shot";

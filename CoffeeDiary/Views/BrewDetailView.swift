@@ -217,7 +217,7 @@ struct BrewDetailView: View {
                 if entry.bean != nil || entry.grinder != nil || entry.machine != nil || entry.brewer != nil {
                     VStack(alignment: .leading, spacing: 16) {
                         if let bean = entry.bean {
-                            EquipmentRow(icon: "leaf.fill", label: "Bean".localized, value: bean.name)
+                            EquipmentRow(icon: "leaf.fill", label: "Bean".localized, value: bean.listTitle)
                             if entry.grinder != nil || entry.machine != nil || entry.brewer != nil {
                                 Divider()
                                     .background(AppTheme.textSecondary.opacity(0.2))

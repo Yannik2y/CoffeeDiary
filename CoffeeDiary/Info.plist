@@ -6,6 +6,10 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>We need camera access to take photos of your coffee equipment and beans.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Coffee Diary needs photo library access so you can attach photos of your coffee equipment and beans.</string>
 	<!-- Formspree endpoint; email is configured only in the Formspree dashboard. -->
 	<key>FeedbackFormEndpoint</key>
 	<string>https://formspree.io/f/xeaodznw</string>

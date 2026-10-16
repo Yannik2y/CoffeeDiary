@@ -226,7 +226,7 @@ enum EquipmentItem: Identifiable {
 
     var name: String {
         switch self {
-        case .bean(let b): return b.name
+        case .bean(let b): return b.listTitle
         case .grinder(let g): return g.name
         case .machine(let m): return m.name
         case .brewer(let b): return b.name
@@ -237,9 +237,13 @@ enum EquipmentItem: Identifiable {
         switch self {
         case .bean(let b):
             if let days = b.daysSinceRoast {
-                return "\(b.roaster ?? b.origin ?? "") · \("Day %d since roast".localized(with: days))"
+                let dayText = "Day %d since roast".localized(with: days)
+                if let origin = b.origin, !origin.isEmpty {
+                    return "\(origin) · \(dayText)"
+                }
+                return dayText
             }
-            return b.roaster ?? b.origin
+            return b.origin
         case .grinder(let g):
             let parts = [g.brand, g.model].compactMap { $0 }.filter { !$0.isEmpty }
             return parts.isEmpty ? g.burrType : parts.joined(separator: " ")
