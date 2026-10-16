@@ -13,10 +13,18 @@ struct ModelPickerView: View {
     @State private var searchText = ""
     @State private var showingAllBrands = false
 
-    private struct BrandModels: Identifiable {
-        let id: String
-        let name: String
-        let models: [EquipmentModel]
+    /// Flat list rows avoid nested `ForEach { Section { ForEach } }`, which Xcode 16.4
+    /// mis-resolves as `Charts.ChartContentBuilder` when Charts is linked in the target.
+    fileprivate enum BrowseItem: Identifiable {
+        case brandHeader(id: String, name: String)
+        case model(EquipmentModel)
+
+        var id: String {
+            switch self {
+            case .brandHeader(let id, _): return "header-\(id)"
+            case .model(let model): return "model-\(model.id)"
+            }
+        }
     }
 
     private var trimmedSearch: String {
@@ -43,15 +51,20 @@ struct ModelPickerView: View {
         preferredBrand != nil && !preferredModels.isEmpty && !showingAllBrands
     }
 
-    private var otherBrandModels: [BrandModels] {
+    private var preferredBrowseItems: [BrowseItem] {
+        guard let preferredBrand, !preferredModels.isEmpty else { return [] }
+        return [.brandHeader(id: preferredBrand.id, name: preferredBrand.name)]
+            + preferredModels.map { .model($0) }
+    }
+
+    private var otherBrowseItems: [BrowseItem] {
         EquipmentCatalog.brands(for: category)
             .filter { $0.id != preferredBrandId }
-            .map { brand in
-                BrandModels(
-                    id: brand.id,
-                    name: brand.name,
-                    models: EquipmentCatalog.models(for: category, brandId: brand.id)
-                )
+            .flatMap { brand -> [BrowseItem] in
+                let models = EquipmentCatalog.models(for: category, brandId: brand.id)
+                guard !models.isEmpty else { return [] }
+                return [.brandHeader(id: brand.id, name: brand.name)]
+                    + models.map { .model($0) }
             }
     }
 
@@ -110,15 +123,16 @@ struct ModelPickerView: View {
 
     @ViewBuilder
     private var browseSections: some View {
-        if let preferredBrand, !preferredModels.isEmpty {
-            // Separate View keeps Section+ForEach out of this ViewBuilder nesting
-            // (Xcode 16.4 otherwise resolves nested ForEach to Charts.ChartContentBuilder).
-            BrandModelsSection(
-                name: preferredBrand.name,
-                models: preferredModels,
-                selectedModelId: selectedModelId,
-                onSelect: selectModel
-            )
+        if !preferredBrowseItems.isEmpty {
+            Section {
+                ForEach(preferredBrowseItems) { item in
+                    ModelPickerBrowseRow(
+                        item: item,
+                        selectedModelId: selectedModelId,
+                        onSelect: selectModel
+                    )
+                }
+            }
         }
 
         if showsOnlyPreferredBrand {
@@ -130,14 +144,15 @@ struct ModelPickerView: View {
                 }
                 .accessibilityIdentifier("modelPickerShowAllBrands")
             }
-        } else {
-            ForEach(otherBrandModels) { group in
-                BrandModelsSection(
-                    name: group.name,
-                    models: group.models,
-                    selectedModelId: selectedModelId,
-                    onSelect: selectModel
-                )
+        } else if !otherBrowseItems.isEmpty {
+            Section {
+                ForEach(otherBrowseItems) { item in
+                    ModelPickerBrowseRow(
+                        item: item,
+                        selectedModelId: selectedModelId,
+                        onSelect: selectModel
+                    )
+                }
             }
         }
 
@@ -164,24 +179,26 @@ struct ModelPickerView: View {
     }
 }
 
-/// Isolated section view so nested List Section/ForEach type-checks as ViewBuilder,
-/// not Charts.ChartContentBuilder, under Xcode 16.4.
-private struct BrandModelsSection: View {
-    let name: String
-    let models: [EquipmentModel]
+private struct ModelPickerBrowseRow: View {
+    let item: ModelPickerView.BrowseItem
     let selectedModelId: String?
     let onSelect: (EquipmentModel) -> Void
 
     var body: some View {
-        Section(name) {
-            ForEach(models) { model in
-                ModelPickerRow(
-                    model: model,
-                    showBrand: false,
-                    isSelected: selectedModelId == model.id,
-                    onSelect: onSelect
-                )
-            }
+        switch item {
+        case .brandHeader(_, let name):
+            Text(name)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 4, trailing: 20))
+                .accessibilityAddTraits(.isHeader)
+        case .model(let model):
+            ModelPickerRow(
+                model: model,
+                showBrand: false,
+                isSelected: selectedModelId == model.id,
+                onSelect: onSelect
+            )
         }
     }
 }
