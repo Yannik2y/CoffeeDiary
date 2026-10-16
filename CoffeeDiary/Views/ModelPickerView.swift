@@ -13,6 +13,12 @@ struct ModelPickerView: View {
     @State private var searchText = ""
     @State private var showingAllBrands = false
 
+    private struct BrandModels: Identifiable {
+        let id: String
+        let name: String
+        let models: [EquipmentModel]
+    }
+
     private var trimmedSearch: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
@@ -37,8 +43,16 @@ struct ModelPickerView: View {
         preferredBrand != nil && !preferredModels.isEmpty && !showingAllBrands
     }
 
-    private var otherBrands: [CoffeeBrand] {
-        EquipmentCatalog.brands(for: category).filter { $0.id != preferredBrandId }
+    private var otherBrandModels: [BrandModels] {
+        EquipmentCatalog.brands(for: category)
+            .filter { $0.id != preferredBrandId }
+            .map { brand in
+                BrandModels(
+                    id: brand.id,
+                    name: brand.name,
+                    models: EquipmentCatalog.models(for: category, brandId: brand.id)
+                )
+            }
     }
 
     var body: some View {
@@ -109,23 +123,18 @@ struct ModelPickerView: View {
                 .accessibilityIdentifier("modelPickerShowAllBrands")
             }
         } else {
-            // Extracted helper avoids nested ForEach+Section resolving to Charts' ChartContentBuilder.
-            ForEach(otherBrands) { brand in
-                brandModelsSection(brand)
+            // Precomputed brand→models groups keep List content as plain Section/ForEach
+            // and avoid Xcode 16.4 resolving nested builders to Charts.ChartContentBuilder.
+            ForEach(otherBrandModels) { group in
+                Section(group.name) {
+                    ForEach(group.models) { model in
+                        modelRow(model, showBrand: false)
+                    }
+                }
             }
         }
 
         customRowSection
-    }
-
-    @ViewBuilder
-    private func brandModelsSection(_ brand: CoffeeBrand) -> some View {
-        let models = EquipmentCatalog.models(for: category, brandId: brand.id)
-        Section(brand.name) {
-            ForEach(models) { model in
-                modelRow(model, showBrand: false)
-            }
-        }
     }
 
     private var customRowSection: some View {
