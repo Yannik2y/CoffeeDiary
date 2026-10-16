@@ -1,17 +1,16 @@
 import XCTest
 
 /// Captures a Tip Jar screenshot for App Store Connect IAP review metadata.
-/// Skipped in GitHub Actions — StoreKit configuration is unreliable under `xcodebuild test` CI.
+/// Not run in GitHub Actions (`ci.yml` uses `-skip-testing` for this class).
 final class TipJarReviewScreenshotTests: XCTestCase {
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-        if ProcessInfo.processInfo.environment["CI"] == "true" {
-            throw XCTSkip("Tip Jar review screenshot is local/manual; skipped on CI")
-        }
-    }
-
     @MainActor
     func testCaptureTipJarReviewScreenshot() throws {
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["CI"] == "true"
+                || ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true",
+            "Tip Jar review screenshot is local/manual; skipped on CI"
+        )
+
         let app = XCUIApplication()
         app.launchArguments += [
             "--ui-testing",
