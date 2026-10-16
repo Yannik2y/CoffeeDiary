@@ -47,11 +47,18 @@ platform :ios do
       in_house: false
     )
 
-    # Create/select the marketing version from the Xcode project when ASC has no
-    # editable version yet (e.g. first 1.5.1 submission after TestFlight-only builds).
     marketing_version = marketing_version_from_xcode
+    build_number = ENV["ASC_BUILD_NUMBER"].to_s.strip
+    build_number = nil if build_number.empty?
 
-    deliver(
+    # deliver alone often fails with "Cannot find edit app store version" when ASC
+    # has no Prepare-for-Submission version yet — create/wait via Spaceship first.
+    ensure_editable_app_store_version!(
+      api_key: api_key,
+      version_string: marketing_version
+    )
+
+    deliver_options = {
       api_key: api_key,
       app_version: marketing_version,
       submit_for_review: true,
@@ -60,12 +67,17 @@ platform :ios do
       skip_binary_upload: true,
       skip_screenshots: true,
       precheck_include_in_app_purchases: false,
+      # ASC can take minutes to surface a freshly created version.
+      version_check_wait_retry_limit: 12,
       submission_information: {
         add_id_info_uses_idfa: false,
         export_compliance_uses_encryption: false,
         export_compliance_is_exempt: true
       }
-    )
+    }
+    deliver_options[:build_number] = build_number if build_number
+
+    deliver(deliver_options)
   end
 
   desc "Dry-run: push metadata only (no submit for review)"
@@ -552,6 +564,58 @@ platform :ios do
     UI.user_error!("Could not read MARKETING_VERSION from #{pbx}") if version.to_s.strip.empty?
     UI.message("Using App Store version #{version}")
     version
+  end
+
+  private_lane :ensure_editable_app_store_version! do |options|
+    api_key = options.fetch(:api_key)
+    version_string = options.fetch(:version_string)
+    platform = Spaceship::ConnectAPI::Platform::IOS
+
+    token_args = {
+      key_id: api_key[:key_id],
+      issuer_id: api_key[:issuer_id]
+    }
+    if api_key[:key]
+      token_args[:key] = api_key[:key]
+    else
+      token_args[:filepath] = File.expand_path(ENV.fetch("ASC_KEY_PATH"))
+    end
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(**token_args)
+
+    bundle_id = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+    app = Spaceship::ConnectAPI::App.find(bundle_id)
+    UI.user_error!("App not found for bundle id #{bundle_id}") if app.nil?
+
+    UI.message("Ensuring editable App Store version #{version_string}…")
+    app.ensure_version!(version_string, platform: platform)
+
+    edit_version = nil
+    tries = 12
+    wait_time = 10
+    tries.times do |i|
+      edit_version = app.get_edit_app_store_version(platform: platform)
+      break if edit_version
+
+      sleep_time = [wait_time, 5 * 60].min
+      UI.message(
+        "Waiting for ASC editable version #{version_string}… " \
+        "retry in #{sleep_time}s (#{i + 1}/#{tries})"
+      )
+      sleep(sleep_time)
+      wait_time *= 2
+    end
+
+    UI.user_error!(
+      "ASC still has no editable version for #{version_string}. " \
+      "In App Store Connect → App Store, create version #{version_string} manually, then re-run."
+    ) if edit_version.nil?
+
+    if edit_version.version_string != version_string
+      UI.message("Updating editable version string #{edit_version.version_string} → #{version_string}")
+      edit_version.update(attributes: { versionString: version_string })
+    end
+
+    UI.success("Editable App Store version ready: #{edit_version.version_string} (#{edit_version.app_version_state})")
   end
 
   private_lane :ensure_imagemagick! do
