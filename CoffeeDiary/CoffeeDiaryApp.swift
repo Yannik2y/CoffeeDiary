@@ -35,7 +35,7 @@ struct CoffeeDiaryApp: App {
             .task {
                 guard !isSnapshotLaunch else { return }
                 await CloudSyncService.shared.refreshAccountStatus()
-                PhotoMigrationService.migrateIfNeeded(container: sharedModelContainer)
+                await PhotoMigrationService.migrateIfNeeded(container: sharedModelContainer)
             }
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active, !isSnapshotLaunch else { return }

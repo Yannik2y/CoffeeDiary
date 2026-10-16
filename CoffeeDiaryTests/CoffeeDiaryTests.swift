@@ -385,7 +385,7 @@ struct PhotoStorageTests {
 }
 
 struct PhotoMigrationServiceTests {
-    @Test @MainActor func migratesDiskPhotoIntoCloudKitReadyData() throws {
+    @Test @MainActor func migratesDiskPhotoIntoCloudKitReadyData() async throws {
         let schema = Schema(versionedSchema: CoffeeDiarySchemaV1.self)
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: [config])
@@ -402,13 +402,13 @@ struct PhotoMigrationServiceTests {
         context.insert(bean)
         try context.save()
 
-        PhotoMigrationService.migrateForTesting(container: container)
+        await PhotoMigrationService.migrateForTesting(container: container)
 
         #expect(bean.photoData != nil)
         #expect(bean.photoPath == nil)
     }
 
-    @Test @MainActor func compressesExistingInlinePhotoData() throws {
+    @Test @MainActor func compressesExistingInlinePhotoData() async throws {
         let schema = Schema(versionedSchema: CoffeeDiarySchemaV1.self)
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: [config])
@@ -423,14 +423,14 @@ struct PhotoMigrationServiceTests {
         context.insert(bean)
         try context.save()
 
-        PhotoMigrationService.migrateForTesting(container: container)
+        await PhotoMigrationService.migrateForTesting(container: container)
 
         #expect(bean.photoData != nil)
         #expect(bean.photoPath == nil)
         #expect(bean.photoData!.count <= sourceData.count)
     }
 
-    @Test @MainActor func keepsPhotoPathWhenDataIsNotAnImage() throws {
+    @Test @MainActor func keepsPhotoPathWhenDataIsNotAnImage() async throws {
         let schema = Schema(versionedSchema: CoffeeDiarySchemaV1.self)
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: [config])
@@ -444,7 +444,7 @@ struct PhotoMigrationServiceTests {
         context.insert(bean)
         try context.save()
 
-        PhotoMigrationService.migrateForTesting(container: container)
+        await PhotoMigrationService.migrateForTesting(container: container)
 
         #expect(bean.photoData == nil)
         #expect(bean.photoPath == filename)

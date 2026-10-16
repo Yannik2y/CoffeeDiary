@@ -9,6 +9,7 @@ struct EquipmentPhotoPicker: View {
 
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showingDocumentPicker = false
+    @State private var isProcessingAttachment = false
 
     private let attachmentLimitBytes = 8 * 1024 * 1024
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
@@ -31,6 +32,7 @@ struct EquipmentPhotoPicker: View {
             PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
                 Label(photoData == nil ? "Add Photo".localized : "Replace Photo".localized, systemImage: "photo.on.rectangle")
             }
+            .disabled(isProcessingAttachment)
 
             if cameraAvailable {
                 Button {
@@ -38,10 +40,17 @@ struct EquipmentPhotoPicker: View {
                 } label: {
                     Label("Take Photo".localized, systemImage: "camera")
                 }
+                .disabled(isProcessingAttachment)
             }
 
             Button { showingDocumentPicker = true } label: {
                 Label("Import Image".localized, systemImage: "photo")
+            }
+            .disabled(isProcessingAttachment)
+
+            if isProcessingAttachment {
+                ProgressView()
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             if let attachmentError {
@@ -53,18 +62,38 @@ struct EquipmentPhotoPicker: View {
         .onChange(of: selectedPhoto) { _, item in
             guard let item else { return }
             Task {
-                if let data = try? await item.loadTransferable(type: Data.self) {
-                    await MainActor.run { handleAttachmentData(data) }
+                do {
+                    guard let data = try await item.loadTransferable(type: Data.self) else {
+                        await MainActor.run {
+                            attachmentError = "Couldn't load the selected photo.".localized
+                        }
+                        return
+                    }
+                    await handleAttachmentData(data)
+                } catch {
+                    await MainActor.run {
+                        attachmentError = "Couldn't load the selected photo.".localized
+                    }
                 }
             }
         }
         .fileImporter(isPresented: $showingDocumentPicker, allowedContentTypes: [.image]) { result in
-            if case .success(let url) = result {
-                let accessing = url.startAccessingSecurityScopedResource()
-                defer { if accessing { url.stopAccessingSecurityScopedResource() } }
-                if let data = try? Data(contentsOf: url) {
-                    handleAttachmentData(data)
+            switch result {
+            case .success(let url):
+                Task {
+                    let accessing = url.startAccessingSecurityScopedResource()
+                    defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+                    do {
+                        let data = try Data(contentsOf: url)
+                        await handleAttachmentData(data)
+                    } catch {
+                        await MainActor.run {
+                            attachmentError = "Couldn't load the selected photo.".localized
+                        }
+                    }
                 }
+            case .failure:
+                attachmentError = "Couldn't load the selected photo.".localized
             }
         }
     }
@@ -75,7 +104,7 @@ struct EquipmentPhotoPicker: View {
         DispatchQueue.main.async {
             CameraCapturePresenter.present(
                 onCapture: { data in
-                    handleAttachmentData(data)
+                    Task { await handleAttachmentData(data) }
                 },
                 onUnavailable: {
                     attachmentError = "Camera is not available.".localized
@@ -84,17 +113,21 @@ struct EquipmentPhotoPicker: View {
         }
     }
 
-    private func handleAttachmentData(_ data: Data) {
+    @MainActor
+    private func handleAttachmentData(_ data: Data) async {
         if data.count > attachmentLimitBytes {
             attachmentError = "Files must be smaller than 8 MB.".localized
             return
         }
-        // Reject non-image payloads early (e.g. mislabeled files) so saves don't silently drop them.
-        guard UIImage(data: data) != nil else {
+        isProcessingAttachment = true
+        defer { isProcessingAttachment = false }
+
+        // Compress off the main actor so forms never keep multi‑MB camera originals.
+        guard let compressed = await PhotoStorage.compressedJPEGAsync(from: data) else {
             attachmentError = "Only image files are supported.".localized
             return
         }
         attachmentError = nil
-        photoData = data
+        photoData = compressed
     }
 }

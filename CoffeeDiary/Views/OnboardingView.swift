@@ -15,6 +15,8 @@ struct OnboardingView: View {
     @State private var showingGrinderForm = false
     @State private var showingMachineForm = false
     @State private var showingBrewerForm = false
+    /// Advance after the bean sheet fully dismisses to avoid changing steps under an active presentation.
+    @State private var pendingBeanStepAdvance = false
     
     enum OnboardingStep: Int, CaseIterable {
         case welcome = 0
@@ -129,7 +131,12 @@ struct OnboardingView: View {
                     .padding(.bottom, 40)
             }
         }
-        .sheet(isPresented: $showingBeanForm) {
+        .sheet(isPresented: $showingBeanForm, onDismiss: {
+            if pendingBeanStepAdvance {
+                pendingBeanStepAdvance = false
+                nextStep()
+            }
+        }) {
             BeanFormView { bean in
                 modelContext.insert(bean)
                 ErrorHandler.save(modelContext, errorMessage: "Failed to save bean. Please try again.".localized)
@@ -166,7 +173,7 @@ struct OnboardingView: View {
         .onChange(of: beans.count) { oldCount, newCount in
             // Auto-advance only when going from 0 to 1 (first bean added)
             if currentStep == .bean && oldCount == 0 && newCount > 0 {
-                nextStep()
+                pendingBeanStepAdvance = true
             }
         }
     }
@@ -443,30 +450,16 @@ extension OnboardingView {
                         }
                     }
                 } else {
-                    HStack(spacing: 12) {
-                        Button {
-                            skipStep()
-                        } label: {
-                            Text("Skip".localized)
-                                .font(.headline)
-                                .foregroundStyle(AppTheme.textSecondary)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(AppTheme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
-                        
-                        Button {
-                            nextStep()
-                        } label: {
-                            Text("Continue".localized)
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(AppTheme.accent)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
+                    Button {
+                        nextStep()
+                    } label: {
+                        Text("Continue".localized)
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(AppTheme.accent)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                 }
             case .machine:
@@ -497,30 +490,16 @@ extension OnboardingView {
                         }
                     }
                 } else {
-                    HStack(spacing: 12) {
-                        Button {
-                            skipStep()
-                        } label: {
-                            Text("Skip".localized)
-                                .font(.headline)
-                                .foregroundStyle(AppTheme.textSecondary)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(AppTheme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
-                        
-                        Button {
-                            nextStep()
-                        } label: {
-                            Text("Continue".localized)
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(AppTheme.accent)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
+                    Button {
+                        nextStep()
+                    } label: {
+                        Text("Continue".localized)
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(AppTheme.accent)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                 }
             case .brewer:
@@ -551,30 +530,16 @@ extension OnboardingView {
                         }
                     }
                 } else {
-                    HStack(spacing: 12) {
-                        Button {
-                            skipStep()
-                        } label: {
-                            Text("Skip".localized)
-                                .font(.headline)
-                                .foregroundStyle(AppTheme.textSecondary)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(AppTheme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
-                        
-                        Button {
-                            nextStep()
-                        } label: {
-                            Text("Continue".localized)
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(AppTheme.accent)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
+                    Button {
+                        nextStep()
+                    } label: {
+                        Text("Continue".localized)
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(AppTheme.accent)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                 }
             case .complete:

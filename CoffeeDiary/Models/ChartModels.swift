@@ -1,6 +1,6 @@
 import Foundation
 
-enum ChartTimeRange: String, CaseIterable, Identifiable {
+enum ChartTimeRange: String, CaseIterable, Identifiable, Sendable {
     case last7Days
     case last30Days
     case last90Days
@@ -27,7 +27,7 @@ enum ChartTimeRange: String, CaseIterable, Identifiable {
     }
 }
 
-struct ChartPoint: Identifiable, Equatable {
+struct ChartPoint: Identifiable, Equatable, Sendable {
     let id: UUID
     let brewId: UUID
     let date: Date?
@@ -54,13 +54,13 @@ struct ChartPoint: Identifiable, Equatable {
     }
 }
 
-struct ChartTrendLine {
+struct ChartTrendLine: Sendable {
     let start: (x: Double, y: Double)
     let end: (x: Double, y: Double)
     let r2: Double
 }
 
-struct ChartSeries: Identifiable {
+struct ChartSeries: Identifiable, Sendable {
     let id: String
     let title: String
     let insight: String
@@ -73,14 +73,14 @@ struct ChartSeries: Identifiable {
     var hasEnoughData: Bool { points.count >= minimumSamples }
 }
 
-struct KPIStat: Identifiable, Equatable {
+struct KPIStat: Identifiable, Equatable, Sendable {
     let id: String
     let title: String
     let value: String
     let delta: String?
 }
 
-struct DimensionBreakdown: Identifiable, Equatable {
+struct DimensionBreakdown: Identifiable, Equatable, Sendable {
     let id: String
     let name: String
     let averageRating: Double
@@ -89,21 +89,21 @@ struct DimensionBreakdown: Identifiable, Equatable {
     let coffeeName: String?
 }
 
-struct ShotTimeBucket: Identifiable, Equatable {
+struct ShotTimeBucket: Identifiable, Equatable, Sendable {
     let id: String
     let bucketStart: Int
     let shotType: ShotType
     let count: Int
 }
 
-struct WeeklyRatingBucket: Identifiable, Equatable {
+struct WeeklyRatingBucket: Identifiable, Equatable, Sendable {
     let id: Date
     let weekStart: Date
     let averageRating: Double
     let count: Int
 }
 
-struct TopBrewRow: Identifiable, Equatable {
+struct TopBrewRow: Identifiable, Equatable, Sendable {
     let id: UUID
     let coffeeName: String
     let rating: Int
@@ -111,7 +111,7 @@ struct TopBrewRow: Identifiable, Equatable {
     let date: Date
 }
 
-struct ChartsDashboardSnapshot {
+struct ChartsDashboardSnapshot: Sendable {
     let kpis: [KPIStat]
     let espressoTimedBrewCount: Int
     let ratioOverTime: ChartSeries
@@ -202,7 +202,7 @@ struct ChartBrewRecord: Sendable, Equatable {
     }
 }
 
-struct ChartFilterOptions: Equatable {
+struct ChartFilterOptions: Equatable, Sendable {
     var timeRange: ChartTimeRange = .all
     var brewStyle: BrewFlowType? = nil
     var beanId: UUID? = nil

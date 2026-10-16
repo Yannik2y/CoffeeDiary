@@ -4,23 +4,28 @@ import UIKit
 /// Decodes and caches a thumbnail-sized image so list rows don't re-decode full JPEGs every redraw.
 struct CachedThumbnailImage: View {
     let data: Data?
+    /// Stable identity for cache invalidation (preferred over hashing full JPEG bytes).
+    var cacheId: String? = nil
     var maxDimension: CGFloat = 200
     var contentMode: ContentMode = .fill
 
     @State private var image: UIImage?
 
-    private var cacheKey: Int {
-        guard let data else { return 0 }
+    private var taskId: String {
+        if let cacheId {
+            return "\(cacheId)|\(Int(maxDimension))|\(data?.count ?? 0)"
+        }
+        guard let data else { return "nil|\(Int(maxDimension))" }
         var hasher = Hasher()
         hasher.combine(data.count)
-        // Sample endpoints + midpoint so equal-length replacements still invalidate.
         hasher.combine(data.prefix(64))
         if data.count > 128 {
             let mid = data.count / 2
             hasher.combine(data[mid..<min(mid + 64, data.count)])
         }
         hasher.combine(data.suffix(64))
-        return hasher.finalize()
+        hasher.combine(Int(maxDimension))
+        return String(hasher.finalize())
     }
 
     var body: some View {
@@ -35,7 +40,7 @@ struct CachedThumbnailImage: View {
                 }
             }
             .clipped()
-            .task(id: cacheKey) {
+            .task(id: taskId) {
                 guard let data else {
                     image = nil
                     return

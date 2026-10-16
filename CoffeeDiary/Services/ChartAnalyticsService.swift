@@ -1,12 +1,12 @@
 import Foundation
 
 enum ChartAnalyticsService {
-    static let rollingWindow = 5
-    static let espressoReferenceRatio = 2.0
+    nonisolated static let rollingWindow = 5
+    nonisolated static let espressoReferenceRatio = 2.0
 
     // MARK: - Filtering
 
-    static func filter(
+    nonisolated static func filter(
         _ brews: [ChartBrewRecord],
         options: ChartFilterOptions,
         now: Date = .now,
@@ -34,7 +34,7 @@ enum ChartAnalyticsService {
         return result.sorted { $0.createdAt < $1.createdAt }
     }
 
-    static func previousPeriodBrews(
+    nonisolated static func previousPeriodBrews(
         _ brews: [ChartBrewRecord],
         options: ChartFilterOptions,
         now: Date = .now,
@@ -53,7 +53,7 @@ enum ChartAnalyticsService {
             .filter { $0.createdAt >= previousStart && $0.createdAt < currentStart }
     }
 
-    static func beansWithBrews(in brews: [ChartBrewRecord]) -> [(id: UUID, name: String)] {
+    nonisolated static func beansWithBrews(in brews: [ChartBrewRecord]) -> [(id: UUID, name: String)] {
         var seen = Set<UUID>()
         var result: [(UUID, String)] = []
         for brew in brews.sorted(by: { ($0.beanName ?? "") < ($1.beanName ?? "") }) {
@@ -66,7 +66,7 @@ enum ChartAnalyticsService {
 
     // MARK: - KPIs
 
-    static func buildKPIs(
+    nonisolated static func buildKPIs(
         current: [ChartBrewRecord],
         previous: [ChartBrewRecord],
         styleFilter: BrewFlowType?
@@ -120,7 +120,7 @@ enum ChartAnalyticsService {
     }
 
     /// Brews used for ratio / extraction-time style metrics.
-    static func brewsForRatioAndTime(
+    nonisolated static func brewsForRatioAndTime(
         _ brews: [ChartBrewRecord],
         styleFilter: BrewFlowType?
     ) -> [ChartBrewRecord] {
@@ -132,19 +132,19 @@ enum ChartAnalyticsService {
         }
     }
 
-    static func averageRating(_ brews: [ChartBrewRecord]) -> Double? {
+    nonisolated static func averageRating(_ brews: [ChartBrewRecord]) -> Double? {
         let rated = brews.filter { $0.rating > 0 }
         guard !rated.isEmpty else { return nil }
         return Double(rated.map(\.rating).reduce(0, +)) / Double(rated.count)
     }
 
-    static func averageRatio(_ brews: [ChartBrewRecord]) -> Double? {
+    nonisolated static func averageRatio(_ brews: [ChartBrewRecord]) -> Double? {
         let valid = brews.filter { $0.doseGrams > 0 }
         guard !valid.isEmpty else { return nil }
         return valid.map(\.brewRatio).reduce(0, +) / Double(valid.count)
     }
 
-    static func averageBrewTime(_ brews: [ChartBrewRecord]) -> Double? {
+    nonisolated static func averageBrewTime(_ brews: [ChartBrewRecord]) -> Double? {
         let timed = brews.filter { $0.brewTimeSeconds > 0 }
         guard !timed.isEmpty else { return nil }
         return Double(timed.map(\.brewTimeSeconds).reduce(0, +)) / Double(timed.count)
@@ -152,7 +152,7 @@ enum ChartAnalyticsService {
 
     // MARK: - Rolling average
 
-    static func rollingAverage(_ points: [(date: Date, value: Double)], window: Int) -> [ChartPoint] {
+    nonisolated static func rollingAverage(_ points: [(date: Date, value: Double)], window: Int) -> [ChartPoint] {
         guard window > 1, points.count >= window else { return [] }
         var result: [ChartPoint] = []
         for index in (window - 1)..<points.count {
@@ -174,7 +174,7 @@ enum ChartAnalyticsService {
 
     // MARK: - Trend
 
-    static func linearTrend(_ points: [(x: Double, y: Double)]) -> ChartTrendLine? {
+    nonisolated static func linearTrend(_ points: [(x: Double, y: Double)]) -> ChartTrendLine? {
         guard points.count >= 2 else { return nil }
         let n = Double(points.count)
         let sumX = points.reduce(0) { $0 + $1.x }
@@ -208,7 +208,7 @@ enum ChartAnalyticsService {
 
     // MARK: - Group breakdowns
 
-    static func topRatedGroups(_ brews: [ChartBrewRecord], minCount: Int = 3, limit: Int = 5) -> [DimensionBreakdown] {
+    nonisolated static func topRatedGroups(_ brews: [ChartBrewRecord], minCount: Int = 3, limit: Int = 5) -> [DimensionBreakdown] {
         var groups: [String: (name: String, beanId: UUID?, ratings: [Int], coffeeName: String?)] = [:]
 
         for brew in brews where brew.rating > 0 {
@@ -252,7 +252,7 @@ enum ChartAnalyticsService {
             .map { $0 }
     }
 
-    static func shotTimeBuckets(_ brews: [ChartBrewRecord], bucketSize: Int = 5) -> [ShotTimeBucket] {
+    nonisolated static func shotTimeBuckets(_ brews: [ChartBrewRecord], bucketSize: Int = 5) -> [ShotTimeBucket] {
         var counts: [String: Int] = [:]
         for brew in brews where brew.brewTimeSeconds > 0 {
             let bucket = (brew.brewTimeSeconds / bucketSize) * bucketSize
@@ -276,7 +276,7 @@ enum ChartAnalyticsService {
         .sorted { $0.bucketStart < $1.bucketStart }
     }
 
-    static func weeklyRatingBuckets(_ brews: [ChartBrewRecord], calendar: Calendar = .current) -> [WeeklyRatingBucket] {
+    nonisolated static func weeklyRatingBuckets(_ brews: [ChartBrewRecord], calendar: Calendar = .current) -> [WeeklyRatingBucket] {
         var groups: [Date: [Int]] = [:]
         for brew in brews where brew.rating > 0 {
             let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: brew.createdAt)
@@ -296,7 +296,7 @@ enum ChartAnalyticsService {
         .sorted { $0.weekStart < $1.weekStart }
     }
 
-    static func topBrews(_ brews: [ChartBrewRecord], limit: Int = 5) -> [TopBrewRow] {
+    nonisolated static func topBrews(_ brews: [ChartBrewRecord], limit: Int = 5) -> [TopBrewRow] {
         brews
             .filter { $0.rating > 0 }
             .sorted { lhs, rhs in
@@ -319,7 +319,7 @@ enum ChartAnalyticsService {
 
     // MARK: - Dashboard
 
-    static func buildDashboard(
+    nonisolated static func buildDashboard(
         from allBrews: [ChartBrewRecord],
         options: ChartFilterOptions,
         now: Date = .now,
@@ -480,7 +480,7 @@ enum ChartAnalyticsService {
 
     // MARK: - Insight helpers
 
-    private static func ratioInsight(_ brews: [ChartBrewRecord]) -> String {
+    private nonisolated static func ratioInsight(_ brews: [ChartBrewRecord]) -> String {
         guard let avg = averageRatio(brews) else {
             return "Log doses and yields to track ratio stability.".localized
         }
@@ -488,14 +488,14 @@ enum ChartAnalyticsService {
         return "Avg ratio %@ in this period.".localized(with: label)
     }
 
-    private static func grindInsight(_ brews: [ChartBrewRecord]) -> String {
+    private nonisolated static func grindInsight(_ brews: [ChartBrewRecord]) -> String {
         guard brews.count >= 3 else {
             return "Need at least 3 espresso brews.".localized
         }
         return "See how grind changes affect your ratio.".localized
     }
 
-    private static func waterTempInsight(_ brews: [ChartBrewRecord]) -> String {
+    private nonisolated static func waterTempInsight(_ brews: [ChartBrewRecord]) -> String {
         let valid = brews.filter { $0.waterTemperatureCelsius > 0 && $0.rating > 0 }
         guard valid.count >= 3 else {
             return "Need at least 3 rated filter brews with water temp.".localized
@@ -503,21 +503,21 @@ enum ChartAnalyticsService {
         return "Explore whether temperature correlates with taste.".localized
     }
 
-    private static func extractionInsight(_ brews: [ChartBrewRecord]) -> String {
+    private nonisolated static func extractionInsight(_ brews: [ChartBrewRecord]) -> String {
         guard let avg = averageBrewTime(brews) else {
             return "Record brew time to spot consistency trends.".localized
         }
         return "Avg time %@ in this period.".localized(with: Formatters.secondsString(Int(avg.rounded())))
     }
 
-    private static func weatherInsight(_ count: Int) -> String {
+    private nonisolated static func weatherInsight(_ count: Int) -> String {
         if count < 5 {
             return "Need at least 5 weather-tagged rated brews.".localized
         }
         return "Outdoor air temp vs rating · %d brews".localized(with: count)
     }
 
-    private static func shotTimeInsight(_ brews: [ChartBrewRecord], buckets: [ShotTimeBucket]) -> String {
+    private nonisolated static func shotTimeInsight(_ brews: [ChartBrewRecord], buckets: [ShotTimeBucket]) -> String {
         guard !buckets.isEmpty else {
             return "Record shot times to see consistency.".localized
         }
@@ -528,24 +528,24 @@ enum ChartAnalyticsService {
         return ""
     }
 
-    private static func weeklyRatingInsight(_ buckets: [WeeklyRatingBucket]) -> String {
+    private nonisolated static func weeklyRatingInsight(_ buckets: [WeeklyRatingBucket]) -> String {
         guard let latest = buckets.last, latest.count >= 3 else {
             return "Rate more brews each week for reliable averages.".localized
         }
         return "Latest week avg: %.1f stars (%d brews).".localized(with: latest.averageRating, latest.count)
     }
 
-    private static func averageRatioLabel(_ brews: [ChartBrewRecord]) -> String {
+    private nonisolated static func averageRatioLabel(_ brews: [ChartBrewRecord]) -> String {
         guard let avg = averageRatio(brews) else { return "—" }
         return Formatters.ratioString(dose: 1, yield: avg)
     }
 
-    private static func formatOptional(_ value: Double?, decimals: Int) -> String? {
+    private nonisolated static func formatOptional(_ value: Double?, decimals: Int) -> String? {
         guard let value else { return nil }
         return String(format: "%.\(decimals)f", value)
     }
 
-    private static func deltaString(current: Double, previous: Double, suffix: String) -> String? {
+    private nonisolated static func deltaString(current: Double, previous: Double, suffix: String) -> String? {
         guard previous > 0 || current > 0 else { return nil }
         let diff = current - previous
         if abs(diff) < 0.05 { return "vs prior period".localized }
@@ -554,7 +554,7 @@ enum ChartAnalyticsService {
         return "\(arrow) \(formatted)\(suffix) \("vs prior period".localized)"
     }
 
-    private static func deltaOptional(
+    private nonisolated static func deltaOptional(
         current: Double?,
         previous: Double?,
         suffix: String,

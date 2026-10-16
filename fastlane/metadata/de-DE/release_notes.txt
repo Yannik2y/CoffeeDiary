@@ -1,4 +1,5 @@
-• Absturz beim Fotografieren von Equipment behoben (Kamera statt Mediathek)
-• Espresso-Workflow auf dem iPad: Speichern ist wieder erreichbar
-• Onboarding: Button zum Hinzufügen von Equipment erscheint nur noch einmal
-• Bohnenliste zeigt jetzt Rösterei und Name gemeinsam
+• Espresso-Workflow: Tastatur verdeckt Speichern/Weiter nicht mehr
+• Coffee Station auch für Filter-only Setups
+• Fotos bleiben beim Speichern erhalten; Kamera robuster
+• Onboarding ohne doppelte Buttons und Sheet-Races
+• Stats flüssiger; Equipment-Listen mit leichteren Vorschaubildern

@@ -262,10 +262,17 @@ struct BrewEntryFlowView: View {
                     .animation(.easeInOut, value: stepIndex)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                controls
+                .scrollDismissesKeyboard(.interactively)
             }
             .padding()
             .background(AppTheme.subtleBackground)
+            .safeAreaInset(edge: .bottom) {
+                controls
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
+                    .background(AppTheme.subtleBackground.ignoresSafeArea(edges: .bottom))
+            }
             .navigationTitle(flow.title)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

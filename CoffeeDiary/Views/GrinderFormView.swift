@@ -101,7 +101,11 @@ struct GrinderFormView: View {
         let trimmedBurr = burrType.trimmingCharacters(in: .whitespacesAndNewlines)
         let compressedPhoto: Data?
         if let photoData {
-            compressedPhoto = await PhotoStorage.compressedJPEGAsync(from: photoData)
+            guard let compressed = await PhotoStorage.compressedJPEGAsync(from: photoData) else {
+                attachmentError = "Couldn't process the photo. Please try another image.".localized
+                return
+            }
+            compressedPhoto = compressed
         } else {
             compressedPhoto = nil
         }
