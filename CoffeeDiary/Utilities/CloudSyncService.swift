@@ -204,6 +204,20 @@ final class CloudSyncService {
     }
 
     #if DEBUG
+    /// Clears mutable sync state so parallel/shared-singleton unit tests start clean.
+    func resetSyncStateForTesting() {
+        accountStatus = .couldNotDetermine
+        storageMode = .cloud
+        lastCheckedAt = nil
+        lastErrorMessage = nil
+        containerInitErrorMessage = nil
+        lastSyncEventAt = nil
+        lastSyncEventSummary = nil
+        lastSyncEventFailed = false
+        hasCompletedCloudKitEvent = false
+        pushRegistrationWarning = nil
+    }
+
     func setAccountStatusForTesting(_ status: CKAccountStatus) {
         accountStatus = status
     }

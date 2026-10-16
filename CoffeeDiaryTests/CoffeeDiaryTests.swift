@@ -82,9 +82,17 @@ struct BrewEntryModelTests {
 
 }
 
+@Suite(.serialized)
 struct CloudSyncServiceTests {
-    @Test @MainActor func cloudStorageWithAvailableAccountIsSyncReady() {
+    @MainActor
+    private func prepareService() -> CloudSyncService {
         let service = CloudSyncService.shared
+        service.resetSyncStateForTesting()
+        return service
+    }
+
+    @Test @MainActor func cloudStorageWithAvailableAccountIsSyncReady() {
+        let service = prepareService()
         service.setStorageMode(.cloud)
         service.setAccountStatusForTesting(.available)
         service.setHasCompletedCloudKitEventForTesting(true)
@@ -94,7 +102,7 @@ struct CloudSyncServiceTests {
     }
 
     @Test @MainActor func cloudStorageWithoutCompletedEventIsConnecting() {
-        let service = CloudSyncService.shared
+        let service = prepareService()
         service.setStorageMode(.cloud)
         service.setAccountStatusForTesting(.available)
         service.setHasCompletedCloudKitEventForTesting(false)
@@ -104,7 +112,7 @@ struct CloudSyncServiceTests {
     }
 
     @Test @MainActor func localStorageIsNeverSyncReady() {
-        let service = CloudSyncService.shared
+        let service = prepareService()
         service.setStorageMode(.local)
         service.setAccountStatusForTesting(.available)
         #expect(service.isSyncAvailable == false)
@@ -112,7 +120,7 @@ struct CloudSyncServiceTests {
     }
 
     @Test @MainActor func cloudStorageWithoutAccountShowsSignIn() {
-        let service = CloudSyncService.shared
+        let service = prepareService()
         service.setStorageMode(.cloud)
         service.setAccountStatusForTesting(.noAccount)
         #expect(service.isSyncAvailable == false)
