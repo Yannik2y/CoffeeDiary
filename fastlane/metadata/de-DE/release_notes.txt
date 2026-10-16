@@ -1,6 +1,4 @@
-• Statistik-Charts mit kurzen Erklärungen (Info-Button)
-• Diagramme und Listen laufen flüssiger
-• Wetter-Chart klarer benannt: Außentemperatur vs. Bewertung
-• Espresso- und Filter-Schnellaktionen kompakter
-• Tagebuch nutzt den Bildschirm besser
-• Stabilität und kleinere Fixes rund um Fotos und Ausrüstung
+• Espresso-Workflow auf dem iPad: Speichern ist wieder erreichbar
+• Onboarding: Button zum Hinzufügen von Equipment erscheint nur noch einmal
+• Absturz beim Fotografieren von Equipment behoben
+• Bohnenliste zeigt jetzt Rösterei und Name gemeinsam
