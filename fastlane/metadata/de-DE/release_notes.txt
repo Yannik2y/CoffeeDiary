@@ -1,5 +1,1 @@
-• Fertig und Weiter überlappen sich nicht mehr bei Zahleneingabe
-• Weiter sitzt mit Fertig auf der Tastaturleiste
-• Espresso-Workflow: Tastatur verdeckt Speichern/Weiter nicht mehr
-• Coffee Station auch für Filter-only Setups
-• Fotos bleiben beim Speichern erhalten; Kamera robuster
+UI/UX-Optimierungen für einen flüssigeren Workflow.
