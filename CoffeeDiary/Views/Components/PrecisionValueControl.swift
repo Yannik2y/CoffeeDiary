@@ -9,6 +9,11 @@ struct PrecisionValueControl: View {
     var suggestedRange: ClosedRange<Double>? = nil
     var rangeHint: String? = nil
     var fractionDigits: Int = 1
+    /// Optional trailing keyboard action (e.g. flow "Next") so it shares the bar with Done
+    /// instead of fighting a bottom footer while the keyboard is up.
+    var keyboardAdvanceTitle: String? = nil
+    var onKeyboardAdvance: (() -> Void)? = nil
+    var keyboardAdvanceDisabled: Bool = false
 
     @State private var text: String = ""
     @FocusState private var isFocused: Bool
@@ -33,10 +38,21 @@ struct PrecisionValueControl: View {
                         .accessibilityLabel(unit)
                         .toolbar {
                             ToolbarItemGroup(placement: .keyboard) {
-                                Spacer()
                                 Button("Done".localized) {
                                     commitText()
                                     isFocused = false
+                                }
+                                .accessibilityIdentifier("precisionKeyboardDone")
+
+                                if let keyboardAdvanceTitle, let onKeyboardAdvance {
+                                    Spacer()
+                                    Button(keyboardAdvanceTitle) {
+                                        commitText()
+                                        isFocused = false
+                                        onKeyboardAdvance()
+                                    }
+                                    .disabled(keyboardAdvanceDisabled)
+                                    .accessibilityIdentifier("precisionKeyboardAdvance")
                                 }
                             }
                         }

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct BrewEntryFlowView: View {
     @Environment(\.dismiss) private var dismiss
@@ -12,6 +13,9 @@ struct BrewEntryFlowView: View {
     let flow: BrewFlowType
     
     @State private var stepIndex: Int = 0
+    /// Hide the bottom Back/Next bar while the keyboard is up so it does not sit under
+    /// the keyboard accessory (Done / Next).
+    @State private var isKeyboardVisible = false
     
     // Collected answers
     @State private var shotType: ShotType = .double
@@ -267,11 +271,21 @@ struct BrewEntryFlowView: View {
             .padding()
             .background(AppTheme.subtleBackground)
             .safeAreaInset(edge: .bottom) {
-                controls
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                    .padding(.bottom, 4)
-                    .background(AppTheme.subtleBackground.ignoresSafeArea(edges: .bottom))
+                if !isKeyboardVisible {
+                    controls
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+                        .padding(.bottom, 4)
+                        .background(AppTheme.subtleBackground.ignoresSafeArea(edges: .bottom))
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: isKeyboardVisible)
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+                isKeyboardVisible = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                isKeyboardVisible = false
             }
             .navigationTitle(flow.title)
             .toolbar {
@@ -378,7 +392,7 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            PrecisionValueControl(
+            flowPrecisionControl(
                 value: $grinderTimerSeconds,
                 step: 0.1,
                 unit: "s".localized,
@@ -425,7 +439,7 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            PrecisionValueControl(
+            flowPrecisionControl(
                 value: $bloomWaterGrams,
                 step: 1,
                 unit: "g".localized,
@@ -446,7 +460,7 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            PrecisionValueControl(
+            flowPrecisionControl(
                 value: $totalWaterGrams,
                 step: 5,
                 unit: "g".localized,
@@ -462,7 +476,7 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            PrecisionValueControl(
+            flowPrecisionControl(
                 value: $waterTemperatureCelsius,
                 step: 1,
                 unit: "°C".localized,
@@ -478,7 +492,7 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            PrecisionValueControl(
+            flowPrecisionControl(
                 value: $doseGrams,
                 step: 0.1,
                 unit: "g".localized,
@@ -494,7 +508,7 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            PrecisionValueControl(
+            flowPrecisionControl(
                 value: $yieldGrams,
                 step: 0.5,
                 unit: "g".localized,
@@ -547,7 +561,7 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            PrecisionValueControl(
+            flowPrecisionControl(
                 value: preInfusionTimeDouble,
                 step: 1,
                 unit: "s".localized,
@@ -564,7 +578,7 @@ struct BrewEntryFlowView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            PrecisionValueControl(
+            flowPrecisionControl(
                 value: $brewPressureBar,
                 step: 0.1,
                 unit: "bar".localized,
@@ -907,12 +921,39 @@ struct BrewEntryFlowView: View {
                     .disabled(doseGrams <= 0)
                     .accessibilityIdentifier("flowSaveButton")
             } else if let current = safeCurrentStep {
-                Button("Next".localized) { stepIndex = min(stepIndex + 1, max(steps.count - 1, 0)) }
+                Button("Next".localized) { advanceStep() }
                     .buttonStyle(.borderedProminent)
                     .disabled(!canProceedFrom(step: current))
                     .accessibilityIdentifier("flowNextButton")
             }
         }
+    }
+
+    /// Numeric steps share Done + Next on the keyboard bar while the bottom footer is hidden.
+    private func flowPrecisionControl(
+        value: Binding<Double>,
+        step: Double = 0.1,
+        unit: String,
+        suggestedRange: ClosedRange<Double>? = nil,
+        rangeHint: String? = nil,
+        fractionDigits: Int = 1
+    ) -> some View {
+        let canAdvance = safeCurrentStep.map(canProceedFrom) ?? false
+        return PrecisionValueControl(
+            value: value,
+            step: step,
+            unit: unit,
+            suggestedRange: suggestedRange,
+            rangeHint: rangeHint,
+            fractionDigits: fractionDigits,
+            keyboardAdvanceTitle: "Next".localized,
+            onKeyboardAdvance: advanceStep,
+            keyboardAdvanceDisabled: !canAdvance
+        )
+    }
+
+    private func advanceStep() {
+        stepIndex = min(stepIndex + 1, max(steps.count - 1, 0))
     }
     
     private func canProceedFrom(step: Step) -> Bool {
