@@ -12,7 +12,8 @@ enum StorageMode: String {
 @Observable
 @MainActor
 final class CloudSyncService {
-    static let iCloudContainerIdentifier = "iCloud.YC.CoffeeDiary"
+    /// Nonisolated so container factories can read it off the main actor at launch.
+    nonisolated static let iCloudContainerIdentifier = "iCloud.YC.CoffeeDiary"
     static let shared = CloudSyncService()
 
     private(set) var accountStatus: CKAccountStatus = .couldNotDetermine
