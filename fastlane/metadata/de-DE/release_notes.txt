@@ -1,4 +1,4 @@
+• Absturz beim Fotografieren von Equipment behoben (Kamera statt Mediathek)
 • Espresso-Workflow auf dem iPad: Speichern ist wieder erreichbar
 • Onboarding: Button zum Hinzufügen von Equipment erscheint nur noch einmal
-• Absturz beim Fotografieren von Equipment behoben
 • Bohnenliste zeigt jetzt Rösterei und Name gemeinsam
