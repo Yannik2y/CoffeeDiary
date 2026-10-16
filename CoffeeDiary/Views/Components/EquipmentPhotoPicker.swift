@@ -9,7 +9,6 @@ struct EquipmentPhotoPicker: View {
 
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showingDocumentPicker = false
-    @State private var showingCamera = false
 
     private let attachmentLimitBytes = 8 * 1024 * 1024
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
@@ -35,11 +34,7 @@ struct EquipmentPhotoPicker: View {
 
             if cameraAvailable {
                 Button {
-                    guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
-                        attachmentError = "Camera is not available.".localized
-                        return
-                    }
-                    showingCamera = true
+                    presentCamera()
                 } label: {
                     Label("Take Photo".localized, systemImage: "camera")
                 }
@@ -72,13 +67,16 @@ struct EquipmentPhotoPicker: View {
                 }
             }
         }
-        .fullScreenCover(isPresented: $showingCamera) {
-            CameraCaptureView(
+    }
+
+    private func presentCamera() {
+        // Present on the next run loop so the Form row finishes its own interaction
+        // before UIKit presents the camera (avoids nested presentation races).
+        DispatchQueue.main.async {
+            CameraCapturePresenter.present(
                 onCapture: { data in
                     handleAttachmentData(data)
-                    showingCamera = false
                 },
-                onDismiss: { showingCamera = false },
                 onUnavailable: {
                     attachmentError = "Camera is not available.".localized
                 }
