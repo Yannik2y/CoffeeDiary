@@ -215,3 +215,9 @@
 "Doppelter Espresso" = "Double espresso";
 "Linea Mini" = "Linea Mini";
 "Help & FAQ" = "Help & FAQ";
+
+/* Equipment duplicate name */
+"Duplicate name" = "Duplicate name";
+"Save Anyway" = "Save Anyway";
+"An item with this name already exists. Save anyway?" = "An item with this name already exists. Save anyway?";
+

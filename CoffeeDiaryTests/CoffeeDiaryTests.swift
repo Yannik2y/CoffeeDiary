@@ -658,3 +658,40 @@ struct GeneratedCoffeeNameTests {
     }
 }
 
+struct EquipmentDuplicateNameTests {
+    @Test func detectsCaseAndWhitespaceInsensitiveMatch() {
+        let id = UUID()
+        let existing = [(id: id, name: "Niche Zero"), (id: UUID(), name: "DF64")]
+        #expect(
+            EquipmentDuplicateName.hasDuplicate(
+                candidate: "  niche zero ",
+                existing: existing,
+                excludingId: nil
+            )
+        )
+    }
+
+    @Test func ignoresSelfWhenEditing() {
+        let id = UUID()
+        let existing = [(id: id, name: "Bianca")]
+        #expect(
+            !EquipmentDuplicateName.hasDuplicate(
+                candidate: "Bianca",
+                existing: existing,
+                excludingId: id
+            )
+        )
+    }
+
+    @Test func emptyCandidateIsNotDuplicate() {
+        let existing = [(id: UUID(), name: "V60")]
+        #expect(!EquipmentDuplicateName.hasDuplicate(candidate: "   ", existing: existing))
+    }
+
+    @Test func detectsDiacriticInsensitiveMatch() {
+        let existing = [(id: UUID(), name: "Café")]
+        #expect(EquipmentDuplicateName.hasDuplicate(candidate: "Cafe", existing: existing))
+    }
+}
+
+

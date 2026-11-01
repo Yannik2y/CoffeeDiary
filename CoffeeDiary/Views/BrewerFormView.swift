@@ -3,6 +3,7 @@ import SwiftData
 
 struct BrewerFormView: View {
     @Environment(\.dismiss) private var dismiss
+    @Query private var brewers: [Brewer]
     
     private let brewer: Brewer?
     private let onSave: (Brewer) -> Void
@@ -15,6 +16,7 @@ struct BrewerFormView: View {
     @State private var photoData: Data?
     @State private var attachmentError: String?
     @State private var isSaving = false
+    @State private var showingDuplicateWarning = false
     
     init(brewer: Brewer? = nil, onSave: @escaping (Brewer) -> Void) {
         self.brewer = brewer
@@ -28,6 +30,14 @@ struct BrewerFormView: View {
     }
     
     private var isEditing: Bool { brewer != nil }
+
+    private var hasDuplicateName: Bool {
+        EquipmentDuplicateName.hasDuplicate(
+            candidate: name,
+            existing: brewers.map { ($0.id, $0.name) },
+            excludingId: brewer?.id
+        )
+    }
     
     var body: some View {
         NavigationStack {
@@ -52,10 +62,18 @@ struct BrewerFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isEditing ? "Save".localized : "Add".localized) {
-                        Task { await save() }
+                        DuplicateNameSaveAction.request(
+                            hasDuplicate: hasDuplicateName,
+                            presentWarning: $showingDuplicateWarning
+                        ) {
+                            Task { await save() }
+                        }
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
                 }
+            }
+            .duplicateNameSaveConfirmation(isPresented: $showingDuplicateWarning) {
+                Task { await save() }
             }
         }
     }

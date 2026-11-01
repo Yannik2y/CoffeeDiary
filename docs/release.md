@@ -183,6 +183,8 @@ bundle exec fastlane screenshots_upload
 
 `release` und `metadata` laden Screenshots bewusst nicht hoch (`skip_screenshots`), damit ein normaler Submit bestehende Store-Bilder nicht überschreibt.
 
+PNGs unter `fastlane/screenshots/` sind gitignored; Capture braucht Xcode + Simulatoren (iPhone 16 Pro Max, iPad Pro 13″).
+
 ### CloudKit-Schema aktualisieren
 
 Nach jeder SwiftData-Model-Änderung (neue Entity/Attribute) **vor** TestFlight/Store:
@@ -217,6 +219,7 @@ Ohne diesen Schritt schlägt der Export oft mit `CKError 2 (partialFailure)` feh
 | No build available | Xcode-Cloud-Build abwarten; Version in ASC muss zur Marketing-Version passen |
 | PLA / membership | Developer-Agreement akzeptieren |
 | Screenshots fehlen / veraltet | `bundle exec fastlane screenshots` dann `screenshots_upload` |
+| App-Store-Suche ohne Preview-Screens | Bei installierter App (Button „Öffnen“) blendet Apple die 3 Search-Previews aus — auf Gerät ohne App prüfen. Fehlen Screens auch dort: ASC Media Manager (de-DE, iPhone 6.7″) bzw. `screenshots` → `screenshots_upload`. |
 | SnapshotTests skipped | Lane setzt `SNAPSHOT_FORCE` + Cache-Marker; Simulator.app öffnen und Retry |
 | Doppelte iPhone-Rahmen | Nie `store/` erneut framieren; Capture → `raw/`, Frame → `store/` |
 | Accessibility / AX Timeout | Simulator booten, nur `screenshots_iphone`, `SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT=120` |
