@@ -517,3 +517,9 @@
 "Try adjusting yield ±1g or grind finer based on your last %d shots." = "Passe die Ausbeute um ±1 g an oder mahle feiner, basierend auf deinen letzten %d Bezügen.";
 "Day %d since roast" = "Tag %d seit der Röstung";
 "Help & FAQ" = "Hilfe & FAQ";
+
+// MARK: - Equipment duplicate name
+"Duplicate name" = "Doppelter Name";
+"Save Anyway" = "Trotzdem speichern";
+"An item with this name already exists. Save anyway?" = "Es gibt bereits einen Eintrag mit diesem Namen. Trotzdem speichern?";
+

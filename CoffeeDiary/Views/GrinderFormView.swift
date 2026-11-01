@@ -3,6 +3,7 @@ import SwiftData
 
 struct GrinderFormView: View {
     @Environment(\.dismiss) private var dismiss
+    @Query private var grinders: [Grinder]
     
     private let grinder: Grinder?
     private let onSave: (Grinder) -> Void
@@ -20,6 +21,7 @@ struct GrinderFormView: View {
     @State private var isActive: Bool
     @State private var attachmentError: String?
     @State private var isSaving = false
+    @State private var showingDuplicateWarning = false
     
     init(grinder: Grinder? = nil, onSave: @escaping (Grinder) -> Void) {
         self.grinder = grinder
@@ -41,6 +43,14 @@ struct GrinderFormView: View {
 
     private var silhouette: EquipmentSilhouette {
         EquipmentSilhouette.resolve(silhouetteId: silhouetteId, modelId: modelId, category: .grinder)
+    }
+
+    private var hasDuplicateName: Bool {
+        EquipmentDuplicateName.hasDuplicate(
+            candidate: name,
+            existing: grinders.map { ($0.id, $0.name) },
+            excludingId: grinder?.id
+        )
     }
     
     var body: some View {
@@ -85,10 +95,18 @@ struct GrinderFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isEditing ? "Save".localized : "Add".localized) {
-                        Task { await save() }
+                        DuplicateNameSaveAction.request(
+                            hasDuplicate: hasDuplicateName,
+                            presentWarning: $showingDuplicateWarning
+                        ) {
+                            Task { await save() }
+                        }
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
                 }
+            }
+            .duplicateNameSaveConfirmation(isPresented: $showingDuplicateWarning) {
+                Task { await save() }
             }
         }
     }

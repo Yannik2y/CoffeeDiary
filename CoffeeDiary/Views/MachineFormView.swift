@@ -3,6 +3,7 @@ import SwiftData
 
 struct MachineFormView: View {
     @Environment(\.dismiss) private var dismiss
+    @Query private var machines: [Machine]
     
     private let machine: Machine?
     private let onSave: (Machine) -> Void
@@ -18,6 +19,7 @@ struct MachineFormView: View {
     @State private var isActive: Bool
     @State private var attachmentError: String?
     @State private var isSaving = false
+    @State private var showingDuplicateWarning = false
     
     init(machine: Machine? = nil, onSave: @escaping (Machine) -> Void) {
         self.machine = machine
@@ -37,6 +39,14 @@ struct MachineFormView: View {
 
     private var silhouette: EquipmentSilhouette {
         EquipmentSilhouette.resolve(silhouetteId: silhouetteId, modelId: modelId, category: .machine)
+    }
+
+    private var hasDuplicateName: Bool {
+        EquipmentDuplicateName.hasDuplicate(
+            candidate: name,
+            existing: machines.map { ($0.id, $0.name) },
+            excludingId: machine?.id
+        )
     }
     
     var body: some View {
@@ -71,10 +81,18 @@ struct MachineFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isEditing ? "Save".localized : "Add".localized) {
-                        Task { await save() }
+                        DuplicateNameSaveAction.request(
+                            hasDuplicate: hasDuplicateName,
+                            presentWarning: $showingDuplicateWarning
+                        ) {
+                            Task { await save() }
+                        }
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
                 }
+            }
+            .duplicateNameSaveConfirmation(isPresented: $showingDuplicateWarning) {
+                Task { await save() }
             }
         }
     }

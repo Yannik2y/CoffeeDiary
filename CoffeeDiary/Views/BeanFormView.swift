@@ -3,6 +3,7 @@ import SwiftData
 
 struct BeanFormView: View {
     @Environment(\.dismiss) private var dismiss
+    @Query private var beans: [Bean]
     
     private let bean: Bean?
     private let onSave: (Bean) -> Void
@@ -19,6 +20,7 @@ struct BeanFormView: View {
     @State private var attachmentError: String?
     @State private var arabicaPercentage: Double
     @State private var isSaving = false
+    @State private var showingDuplicateWarning = false
     
     init(bean: Bean? = nil, onSave: @escaping (Bean) -> Void) {
         self.bean = bean
@@ -36,6 +38,14 @@ struct BeanFormView: View {
     }
     
     private var isEditing: Bool { bean != nil }
+
+    private var hasDuplicateName: Bool {
+        EquipmentDuplicateName.hasDuplicate(
+            candidate: name,
+            existing: beans.map { ($0.id, $0.name) },
+            excludingId: bean?.id
+        )
+    }
     
     var body: some View {
         NavigationStack {
@@ -81,10 +91,18 @@ struct BeanFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isEditing ? "Save".localized : "Add".localized) {
-                        Task { await save() }
+                        DuplicateNameSaveAction.request(
+                            hasDuplicate: hasDuplicateName,
+                            presentWarning: $showingDuplicateWarning
+                        ) {
+                            Task { await save() }
+                        }
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
                 }
+            }
+            .duplicateNameSaveConfirmation(isPresented: $showingDuplicateWarning) {
+                Task { await save() }
             }
         }
     }
