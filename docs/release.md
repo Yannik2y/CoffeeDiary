@@ -139,7 +139,7 @@ Fastlane lädt **kein** Binary hoch (`skip_binary_upload: true`) — der Build k
 | `bundle exec fastlane screenshots_ipad` | Nur iPad-Screenshots |
 | `bundle exec fastlane screenshots_duo` | Nur iPhone-Duo Außen- + Innendisplay |
 | `bundle exec fastlane screenshots_frame` | Roh-PNGs aus `raw/` einmal rahmen → `store/` (+ Duo → `duo/`) |
-| `bundle exec fastlane screenshots_upload` | Screenshots aus `store/` in ASC ersetzen (ohne Review; ohne Duo) |
+| `bundle exec fastlane screenshots_upload` | Screenshots aus `store/` + `duo/` in ASC ersetzen (ohne Review; Fastlane ≥ 2.241.1) |
 
 ### Screenshots (de-DE)
 
@@ -157,7 +157,7 @@ export DEVELOPER_DIR=/Applications/Xcode-27.1-beta.app/Contents/Developer   # Pf
 xcodebuild -downloadPlatform iOS
 ```
 
-Pipeline: Capture schreibt nach `fastlane/screenshots/raw/de-DE/`. Framing schreibt Phone/Pad **nur** nach `fastlane/screenshots/store/de-DE/` und überschreibt die Raws nie — so entstehen keine Doppel-Rahmen. Duo-Raws werden von frameit ferngehalten und nach `fastlane/screenshots/duo/de-DE/` in den ASC-Größen 1398×2034 (außen) bzw. 2007×2853 (innen) gelegt. `screenshots_upload` lädt nur `store/` (deliver 2.240.1 kennt Duo-Größen noch nicht).
+Pipeline: Capture schreibt nach `fastlane/screenshots/raw/de-DE/`. Framing schreibt Phone/Pad **nur** nach `fastlane/screenshots/store/de-DE/` und überschreibt die Raws nie — so entstehen keine Doppel-Rahmen. Duo-Raws werden von frameit ferngehalten und nach `fastlane/screenshots/duo/de-DE/` in den ASC-Größen 1398×2034 (außen) bzw. 2007×2853 (innen) gelegt. `screenshots_upload` staged `store/` + `duo/` nach `upload/de-DE/` und lädt beides hoch (deliver ≥ 2.241.1 mappt Duo-Größen auf `APP_IPHONE_DUO`). Wenn der Duo-Slot von der API abgelehnt wird: PNGs aus `duo/de-DE/` manuell im ASC Media Manager (iPhone Duo) ablegen.
 
 Simulator vorher öffnen hilft auf langsamen Macs. Für Duo muss Device Hub die Pose setzen können (Closed bzw. Open + Rotate Right); die Lane klickt die Buttons per Accessibility — bei Bedarf Pose manuell setzen und erneut laufen lassen.
 
@@ -183,7 +183,25 @@ bundle exec fastlane screenshots_upload
 
 `release` und `metadata` laden Screenshots bewusst nicht hoch (`skip_screenshots`), damit ein normaler Submit bestehende Store-Bilder nicht überschreibt.
 
-PNGs unter `fastlane/screenshots/` sind gitignored; Capture braucht Xcode + Simulatoren (iPhone 16 Pro Max, iPad Pro 13″).
+PNGs unter `fastlane/screenshots/` sind gitignored; Capture braucht Xcode + Simulatoren (iPhone 16 Pro Max, iPad Pro 13″, iPhone Duo).
+
+### iPhone Duo (App)
+
+Die App behält Deployment Target **17.0**. Hinge-, Fold- und Cover-Camera-APIs liegen hinter dem Compile-Flag **`ENABLE_DUO_APIS`** (Xcode 27.1+):
+
+```bash
+# Lokal mit Duo-APIs bauen
+xcodebuild -scheme CoffeeDiary \
+  -destination 'platform=iOS Simulator,name=iPhone Duo' \
+  DUO_COMPILATION_CONDITIONS=ENABLE_DUO_APIS \
+  build
+```
+
+In Xcode: Build Setting `DUO_COMPILATION_CONDITIONS` = `ENABLE_DUO_APIS` setzen (oder User-Defined). Ohne Flag kompiliert CI weiterhin mit Xcode 16.4; Duo-Code wird ausgelassen, Fallback bleibt `UIImagePickerController`.
+
+Enthalten u. a.: Hinge-Tracking (`observeDuoHinge`), fold-sichere Bottom-Insets im Brew-Flow, Cover-Display-Prompt beim Equipment-Foto (`CameraCaptureAccessory`).
+
+Ein Duo-optimiertes Store-Binary (volle Display-Nutzung / Badge) braucht einen Release-Build mit dem **iOS-27.1-SDK** (Xcode Cloud / lokal).
 
 ### CloudKit-Schema aktualisieren
 
@@ -227,7 +245,7 @@ Ohne diesen Schritt schlägt der Export oft mit `CKError 2 (partialFailure)` feh
 | Simulator nicht gefunden | Xcode.app als Developer Dir; Geräte in `Snapfile` / Fastfile an `xcrun simctl list` anpassen |
 | iPhone Duo device type fehlt | Xcode 27.1 + iOS 27.1 Runtime; `DUO_DEVELOPER_DIR` setzen; macOS Tahoe 26.6+ |
 | Duo Pose / falsches Display | In Device Hub Closed bzw. Open + Rotate Right; Accessibility für Simulator erlauben |
-| Duo-Upload scheitert in deliver | Erwartet: Duo liegt unter `duo/`, nicht in `store/`; ASC-Slot + neuere Fastlane abwarten |
+| Duo-Upload scheitert in deliver | Fastlane ≥ 2.241.1 + PNGs in `duo/de-DE/`; sonst manuell in ASC Media Manager (iPhone Duo). Phone/Pad bleiben in `store/`. |
 
 ---
 
@@ -236,4 +254,3 @@ Ohne diesen Schritt schlägt der Export oft mit `CKError 2 (partialFailure)` feh
 - Release allein über GitHub Actions (CI bleibt Build/Test)
 - Binary-Upload per Fastlane `gym` (übernimmt Xcode Cloud)
 - Kleinere iPhone-Screenshot-Größen (Store skaliert vom 6,9"-Satz)
-- Automatischer Upload der iPhone-Duo-Sets (eigene Display-Klasse; deliver kennt die Größen noch nicht)

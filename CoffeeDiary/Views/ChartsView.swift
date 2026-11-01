@@ -30,6 +30,7 @@ struct ChartsView: View {
                     }
                 }
                 .padding()
+                .duoWideContentPadding()
             }
             .background(AppTheme.subtleBackground)
             .navigationTitle("Stats".localized)
