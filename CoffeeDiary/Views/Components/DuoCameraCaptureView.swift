@@ -171,7 +171,6 @@ private struct DuoCameraPreview: UIViewRepresentable {
 
 enum DuoCameraCapturePresenter {
     /// `true` when this build includes Duo APIs and the OS is new enough to present them.
-    @MainActor
     static var isAvailable: Bool {
         #if ENABLE_DUO_APIS
         if #available(iOS 27.1, *) { return true }
