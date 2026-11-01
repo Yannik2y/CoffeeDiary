@@ -658,6 +658,22 @@ struct GeneratedCoffeeNameTests {
     }
 }
 
+struct DuoHingeStateTests {
+    @Test func fullyOpenPrefersWideLayout() {
+        #expect(DuoHingeState(status: .fullyOpen, angleDegrees: 180).prefersWideLayout)
+        #expect(!DuoHingeState(status: .closed, angleDegrees: 0).prefersWideLayout)
+        #expect(!DuoHingeState(status: .partiallyOpen, angleDegrees: 90).prefersWideLayout)
+        #expect(!DuoHingeState().prefersWideLayout)
+    }
+
+    @Test func duoCameraPresenterUnavailableWithoutDuoFlag() {
+        // Without ENABLE_DUO_APIS the presenter always reports unavailable.
+        #if !ENABLE_DUO_APIS
+        #expect(!DuoCameraCapturePresenter.isAvailable)
+        #endif
+    }
+}
+
 struct EquipmentDuplicateNameTests {
     @Test func detectsCaseAndWhitespaceInsensitiveMatch() {
         let id = UUID()

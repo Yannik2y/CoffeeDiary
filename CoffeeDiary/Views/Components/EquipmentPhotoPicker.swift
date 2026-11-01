@@ -10,6 +10,7 @@ struct EquipmentPhotoPicker: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showingDocumentPicker = false
     @State private var isProcessingAttachment = false
+    @State private var showingDuoCamera = false
 
     private let attachmentLimitBytes = 8 * 1024 * 1024
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
@@ -96,9 +97,27 @@ struct EquipmentPhotoPicker: View {
                 attachmentError = "Couldn't load the selected photo.".localized
             }
         }
+        #if ENABLE_DUO_APIS
+        .fullScreenCover(isPresented: $showingDuoCamera) {
+            if #available(iOS 27.1, *) {
+                DuoCameraCaptureView(
+                    onCapture: { data in
+                        showingDuoCamera = false
+                        Task { await handleAttachmentData(data) }
+                    },
+                    onCancel: { showingDuoCamera = false }
+                )
+            }
+        }
+        #endif
     }
 
     private func presentCamera() {
+        // Prefer Duo cover-display capture when built with Xcode 27.1 Duo APIs.
+        if DuoCameraCapturePresenter.isAvailable {
+            showingDuoCamera = true
+            return
+        }
         // Present on the next run loop so the Form row finishes its own interaction
         // before UIKit presents the camera (avoids nested presentation races).
         DispatchQueue.main.async {

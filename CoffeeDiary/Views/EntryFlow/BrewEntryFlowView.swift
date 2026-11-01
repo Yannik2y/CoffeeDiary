@@ -280,6 +280,8 @@ struct BrewEntryFlowView: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
+            .duoFoldSafeBottomInset()
+            .duoWideContentPadding()
             .animation(.easeInOut(duration: 0.2), value: isKeyboardVisible)
             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
                 isKeyboardVisible = true

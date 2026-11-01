@@ -32,6 +32,7 @@ struct CoffeeDiaryApp: App {
                 }
             }
             .tint(Color.accentColor)
+            .observeDuoHinge()
             .task {
                 guard !isSnapshotLaunch else { return }
                 await CloudSyncService.shared.refreshAccountStatus()

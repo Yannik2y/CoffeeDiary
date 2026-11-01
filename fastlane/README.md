@@ -85,7 +85,7 @@ Frame raw screenshots into store/ (never re-frames store deliverables)
 [bundle exec] fastlane ios screenshots_upload
 ```
 
-Replace App Store Connect screenshots for the current version (de-DE only)
+Replace App Store Connect screenshots for the current version (de-DE; phone/pad + Duo)
 
 ----
 

@@ -523,3 +523,8 @@
 "Save Anyway" = "Trotzdem speichern";
 "An item with this name already exists. Save anyway?" = "Es gibt bereits einen Eintrag mit diesem Namen. Trotzdem speichern?";
 
+// MARK: - iPhone Duo camera accessory
+"Hold still" = "Bitte stillhalten";
+"Capturing your gear photo…" = "Foto deines Equipments wird aufgenommen…";
+"Hold still. Capturing your gear photo." = "Bitte stillhalten. Foto deines Equipments wird aufgenommen.";
+
