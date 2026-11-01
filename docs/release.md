@@ -183,14 +183,7 @@ bundle exec fastlane screenshots_upload
 
 `release` und `metadata` laden Screenshots bewusst nicht hoch (`skip_screenshots`), damit ein normaler Submit bestehende Store-Bilder nicht überschreibt.
 
-**Search-Preview wiederherstellen (ohne App-Update):** Wenn die App in der Suche ohne die drei Screens auftaucht, zuerst prüfen, ob die App auf dem Gerät installiert ist (Button „Öffnen“) — dann zeigt Apple oft keine Previews. Sonst auf dem Mac:
-
-```bash
-bundle exec fastlane screenshots          # Capture + Frame → store/
-bundle exec fastlane screenshots_upload   # ersetzt de-DE Screenshots in ASC
-```
-
-PNGs liegen unter `fastlane/screenshots/` und sind gitignored; Capture braucht Xcode + Simulatoren (iPhone 16 Pro Max, iPad Pro 13″).
+PNGs unter `fastlane/screenshots/` sind gitignored; Capture braucht Xcode + Simulatoren (iPhone 16 Pro Max, iPad Pro 13″).
 
 ### CloudKit-Schema aktualisieren
 
@@ -226,7 +219,7 @@ Ohne diesen Schritt schlägt der Export oft mit `CKError 2 (partialFailure)` feh
 | No build available | Xcode-Cloud-Build abwarten; Version in ASC muss zur Marketing-Version passen |
 | PLA / membership | Developer-Agreement akzeptieren |
 | Screenshots fehlen / veraltet | `bundle exec fastlane screenshots` dann `screenshots_upload` |
-| App-Store-Suche ohne Preview-Screens | 1) Auf Gerät **ohne** installierte App prüfen — bei „Öffnen“ blendet Apple oft die 3 Preview-Screens aus. 2) In ASC Media Manager prüfen, dass **de-DE** iPhone-Screens (6.7″) auf der **Live-Version** liegen. 3) Neu capturen + hochladen: `bundle exec fastlane screenshots` → `screenshots_upload` (ohne Review; Live-Assets aktualisieren sich nach Processing). |
+| App-Store-Suche ohne Preview-Screens | Bei installierter App (Button „Öffnen“) blendet Apple die 3 Search-Previews aus — auf Gerät ohne App prüfen. Fehlen Screens auch dort: ASC Media Manager (de-DE, iPhone 6.7″) bzw. `screenshots` → `screenshots_upload`. |
 | SnapshotTests skipped | Lane setzt `SNAPSHOT_FORCE` + Cache-Marker; Simulator.app öffnen und Retry |
 | Doppelte iPhone-Rahmen | Nie `store/` erneut framieren; Capture → `raw/`, Frame → `store/` |
 | Accessibility / AX Timeout | Simulator booten, nur `screenshots_iphone`, `SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT=120` |
